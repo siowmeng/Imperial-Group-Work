@@ -16,5 +16,3 @@ This is yet another test Stevennnn.
 This is George, again
 
 This is Cecilia
-
-This is Nikhita
