@@ -45,6 +45,8 @@ genres_df <- data.frame(Title = movies$movie_title, mat)
 options(warn = 0)
 
 
+
+
 ### Summary statistics ###
 
 # Take a glimpse at the dataset
