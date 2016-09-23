@@ -18,7 +18,6 @@ movie_title_processing <- function(str){
 movies$movie_title <- sapply(movies$movie_title, FUN = movie_title_processing)
 
 # Find all possible genres of movies
-# Stiil haven't figured out how they can be used and stored properly
 genres <- c()
 i <- 1
 
@@ -35,6 +34,15 @@ for (ins in movies$genres){
   }
 }
 
+# Create a dataframe with all generations of movies: 1 mean the movie belongs to this category, 0 otherwise
+options(warn = -1)
+mat <- c()
+for (ins in movies$genres){
+  mat <- rbind(mat, as.integer(genres == strsplit(ins, "[|]")[[1]]))
+}
+colnames(mat) <- genres
+genres_df <- data.frame(Title = movies$movie_title, mat)
+options(warn = 0)
 
 
 ### Summary statistics ###
