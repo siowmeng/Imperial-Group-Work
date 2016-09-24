@@ -7,6 +7,8 @@ movies <- read.csv("movie_metadata.csv", header = T, stringsAsFactors = F)
 
 # Remove instances which have at least one NA variblae
 movies <- movies[complete.cases(movies), ]
+# Remove instances which are duplicated (duplicated based on title)
+movies <- movies[!duplicated(movies$movie_title),]
 
 # Function to remove Â, leading and trailing whitespace from movies$movie_title
 movie_title_processing <- function(str){
@@ -17,33 +19,147 @@ movie_title_processing <- function(str){
 # Apply previous function
 movies$movie_title <- sapply(movies$movie_title, FUN = movie_title_processing)
 
-# Find all possible genres of movies
-genres <- c()
-i <- 1
+# Write clean dataset in a csv file
+write.csv(movies, "movie_clean.csv")
 
+### Add columns ###
+
+# profit = revenue - budget
+movies$profit <- movies$gross - movies$budget
+
+# roi = revenue / budget
+movies$roi <- movies$gross / movies$budget
+
+# Profitable movies: profit > 0
+movies$profitable <- F
+movies$profitable[movies$profit > 0] <- T
+
+
+
+### ###
+
+# Genres of movies and the number of movies that belong to each genre
+# note: Each movies can belong to more than one genres
+genres <- c()
+gsum <- c()
+i <- 1
 for (ins in movies$genres){
   #print(ins)
   g <- strsplit(ins, "[|]")
-  #print(g)
   for (gnr in g[[1]]){
-    #print(gnr)
+    # if the current genre doesn't exist in the vector
     if (!(gnr %in% genres)){
       genres[i] <- gnr
+      gsum[i] <- 1
       i =  i + 1
+    } else{
+      gsum[which(genres == gnr)] = gsum[which(genres == gnr)] + 1
     }
   }
 }
+genres_sum <- data.frame(genres = factor(genres), sum = gsum)
 
-# Create a dataframe with all generations of movies: 1 mean the movie belongs to this category, 0 otherwise
-options(warn = -1)
-mat <- c()
-for (ins in movies$genres){
-  mat <- rbind(mat, as.integer(genres == strsplit(ins, "[|]")[[1]]))
+# Explore keywords in movies
+# note: each movie can have more then one keywords
+keywords <- c()
+kwsum <- c()
+i <- 1
+for (ins in movies$plot_keywords){
+  kw <- strsplit(ins, "[|]")
+  for (kword in kw[[1]]){
+    # if the current keyword doesn't exist in the vector
+    if (!(kword %in% keywords)){
+      keywords[i] <- kword
+      kwsum[i] <- 1
+      i = i + 1
+    } else{
+      kwsum[which(keywords == kword)] = kwsum[which(keywords == kword)] + 1
+    }
+  }
 }
-colnames(mat) <- genres
-genres_df <- data.frame(Title = movies$movie_title, mat)
-options(warn = 0)
+keywords_sum <- data.frame(keywords = keywords, sum = kwsum)
+keywords_sum <- keywords_sum[order(keywords_sum$sum, decreasing = T),]
 
+
+
+# Explore actors and their popularity
+actors1 <- data.frame(name = movies$actor_1_name, fb_likes = movies$actor_1_facebook_likes)
+actors2 <- data.frame(name = movies$actor_2_name, fb_likes = movies$actor_2_facebook_likes)
+actors3 <- data.frame(name = movies$actor_3_name, fb_likes = movies$actor_3_facebook_likes)
+actors <- rbind(actors1, actors2, actors3)
+occurences <- table(unlist(actors$name))
+occurences <- as.data.frame(occurences[order(occurences, decreasing = T)])
+colnames(occurences) <- c("name", "movies_played")
+actors <- actors[!duplicated(actors), ]
+actors_full <- merge(occurences, actors, by = "name")
+
+### Create beautiful plots ###
+library(ggplot2)
+
+# Number of movies belonging to each genre
+ggplot(genres_sum, aes(x = reorder(genres, sum), y = sum, fill = reorder(genres, sum))) + 
+  geom_bar(stat = "identity", colour = "black") + coord_flip() +
+  labs(title = "Movie genres", x = "", y = "") + 
+  geom_text(aes(label = sum), hjust = -0.2, vjust = 0.4) + 
+  theme(axis.text.x=element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank()) + 
+  theme(legend.position = "None")
+
+# Number of 30 most popular keywords  
+ggplot(keywords_sum[1:30, ], aes(x = reorder(keywords, sum), y = sum, fill = reorder(keywords, sum))) + 
+  geom_bar(stat = "identity", colour = "black") + coord_flip() +
+  labs(title = "Keywords", x = "", y = "") + 
+  geom_text(aes(label = sum), hjust = -0.2, vjust = 0.4) + 
+  theme(axis.text.x=element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank()) + 
+  theme(legend.position = "None")
+
+# Number of movies in each language
+ggplot(movies, aes(factor(language))) + 
+  geom_bar(colour = "black") + coord_flip() +
+  labs(title = "Language", x = "", y = "") + 
+  theme(axis.ticks.y = element_blank()) 
+  
+# IMDb score and Budget of movie
+ggplot(movies, aes(x = budget, y = imdb_score)) + 
+  geom_jitter(alpha = 0.25) + 
+  scale_x_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                labels = c("100", "10,000", "1 million", "100 millions", "1 billion")) +
+  labs(x = "Movie budget", y = "IMDb Score")
+
+# Facebook likes and Budget of movie
+# We remove those movies who have zero facebook likes (maybe they don't even have a facebook page)
+ggplot(movies[movies$movie_facebook_likes != 0, ], 
+       aes(x = movie_facebook_likes, y = imdb_score)) + 
+  geom_jitter(alpha = 0.25) + 
+  scale_x_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                labels = c("100", "10,000", "1 million", "100 millions", "1 billion")) +
+  scale_y_log10(breaks = c(0, 1e+02, 1e+04, 1e+06), 
+                labels = c("0", "100", "10,000", "100,000")) +
+  labs(x = "Facebook Likes", y = "IMDB Score") 
+
+# Gross revenue and Budget of movie
+ggplot(movies, aes(x = budget, y = gross, colour = (profitable))) + geom_abline(intercept = 0, size = 0.5) +
+  geom_jitter(alpha = 0.25) + 
+  scale_x_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                labels = c("100", "10,000", "1 million", "100 millions", "1 billion")) +
+  scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                labels = c("100", "10,000", "1 million", "100 millions", "1 billion")) +
+  labs(x = "Movie budget", y = "Gross Revenue") + 
+  theme(legend.position = "None") 
+
+
+
+# Most popular actors
+# We remove those actors who have zero facebook likes (maybe they don't even have a facebook page)
+ggplot(actors_full[actors_full$fb_likes != 0, ], aes(x = movies_played, y = fb_likes)) + 
+  geom_jitter(width = 0.75, alpha = 0.1) +
+  labs(title = "Actors", x = "Movies played", y = "Facebook likes") +
+  scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06), labels = c("100", "10,000", "1 million"))
+  
+# Movies per year
+ggplot(movies, aes(factor(title_year))) + 
+  geom_bar(colour = "black") + coord_flip() +
+  labs(title = "Language", x = "", y = "") + 
+  theme( axis.ticks.y = element_blank()) 
 
 
 
@@ -54,3 +170,13 @@ head(movies)
 dim(movies)
 str(movies)
 summary(movies)
+
+
+
+
+
+
+
+
+
+
