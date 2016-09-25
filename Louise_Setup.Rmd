@@ -25,8 +25,25 @@ sorted <- arrange(removednas,desc(freq))
 head <- sorted[1:10,]
 head$country <- factor(head$country, levels = head$country[order(head$freq)])
 
-ggplot(head, aes(x=country, y=freq, fill=country, label=freq)) + geom_bar(stat="identity") + coord_flip() + geom_text(size=3,nudge_y=150) + guides(fill=FALSE) + scale_y_continuous(expand = c(0, 0), limits = c(0,4100)) + ggtitle("Top 10 countries with multiple IMDB top 5000 movies") + labs(x = "", y="Frequency") 
+ggplot(head, aes(x=country, y=freq, fill=country, label=freq)) + geom_bar(stat="identity") + coord_flip() + geom_text(size=3,nudge_y=150) + guides(fill=FALSE) + scale_y_continuous(expand = c(0, 0)) +  expand_limits(y = c(0,1.08 * max(head$freq))) + ggtitle("Top 10 countries with multiple IMDB top 5000 movies") + labs(x = "", y="Frequency") 
 ```
+
+What directors make up the top 5000
+```{r}
+movies$director_name[movies$director_name == ""] <- NA
+counted <- count(movies, 'director_name')
+removednas <- counted[complete.cases(counted),]
+sorted <- arrange(removednas,desc(freq))
+head <- sorted[1:20,]
+head$director_name <- factor(head$director_name, levels = head$director_name[order(head$freq)])
+
+ggplot(head, aes(x=director_name, y=freq, fill=director_name)) + geom_bar(stat="identity") + coord_flip() + guides(fill=FALSE) + scale_y_continuous(expand = c(0, 0)) + ggtitle("Top 20 directors with multiple IMDB top 5000 movies") + labs(x = "", y="Frequency") +  scale_y_continuous(expand = c(0,0)) +  expand_limits(y = c(0,1.05 * max(head$freq)))
+
+dirpercentage <- round(100*length(sorted$freq[sorted$freq==1])/length(sorted$freq),2)
+
+```
+
+Approx  `r dirpercentage` of directors in the top 5000 have only 1 movie in the top 5000. So `r 100-dirpercentage` have more than 1.
 
 ##What is the rating frequency of the top 5000?
 ```{r}
@@ -101,9 +118,11 @@ Both of these look like they is correlated with movie facebook likes, and the nu
 * Is the sum of cast total facebook likes + movie facebook likes a predictor of gross / imdb score
 * Is gross correlated with budget(higher -> higher)
 * Is title year correlated with higher imdb score
+* Is # of director imdb top 5000 movies correlated with gross / imdb score (need to think carefully about the maths and inference here)
 
 ##Some plots it might be nice to see
 * Ratings broken down by genre (boxplot)
+* Top actors in terms of facebook likes
 * Ratings by year
 * Budget to Gross
 * Total number of facebook likes - histogram
