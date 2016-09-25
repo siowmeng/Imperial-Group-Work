@@ -5,7 +5,7 @@ movies <- read.csv("movie_metadata.csv", header = T, stringsAsFactors = F)
 
 ### Data cleaning ####
 
-# Remove instances which have at least one NA variblae
+# Remove instances which have at least one NA variable
 movies <- movies[complete.cases(movies), ]
 # Remove instances which are duplicated (duplicated based on title)
 movies <- movies[!duplicated(movies$movie_title),]
@@ -34,9 +34,21 @@ movies$roi <- movies$gross / movies$budget
 movies$profitable <- F
 movies$profitable[movies$profit > 0] <- T
 
+### Remove columns ###
 
+# We are not going to focus on these variables
+movies[, c("movie_imdb_link", "color", "content_rating", "aspect_ratio", "facenumber_in_poster")] <- NULL
 
-### ###
+### Reorder columns ###
+
+movies <- movies[c("movie_title", "imdb_score", "genres", "plot_keywords", "duration", "title_year", 
+                   "country", "language", "num_critic_for_reviews", "num_user_for_reviews", "num_voted_users",
+                   "movie_facebook_likes", "cast_total_facebook_likes",
+                   "director_name", "director_facebook_likes", "actor_1_name", "actor_1_facebook_likes",
+                   "actor_2_name", "actor_2_facebook_likes", "actor_3_name", "actor_3_facebook_likes",
+                   "budget", "gross", "profit", "roi", "profitable")]
+
+#### Edit columns ###
 
 # Genres of movies and the number of movies that belong to each genre
 # note: Each movies can belong to more than one genres
@@ -57,7 +69,31 @@ for (ins in movies$genres){
     }
   }
 }
+# A datafrma with genres and the number of movies belong to each genre
 genres_sum <- data.frame(genres = factor(genres), sum = gsum)
+
+# create a dataframe with logical values which indiactes in which
+# category each movie belongs to
+movies$genres <- strsplit(movies$genres, "[|]")
+genres_idx <- movies[, c("movie_title", "genres")]
+i = 1
+mat <- matrix(rep(0, (dim(movies)[1] * length(genres))), nrow = dim(movies)[1])
+for (g in genres_idx$genres){
+  idx <- which(genres %in% g)
+  mat[i, idx] <- 1
+  i = i + 1
+}
+colnames(mat) <- genres
+
+library(reshape2)
+movies_and_genres <- cbind(movie_title = genres_idx$movie_title, data.frame(mat), stringsAsFactors = F)
+movies_and_genres <- melt(movies_and_genres, id = "movie_title")
+x <- merge(movies_and_genres, movies, by = c("movie_title", "movie_title"))
+x$genres <- NULL
+
+library(ggplot2)
+ggplot(x, aes(x = profit, y = imdb_score, colour = variable)) + geom_point()
+
 
 # Explore keywords in movies
 # note: each movie can have more then one keywords
@@ -103,6 +139,7 @@ ggplot(genres_sum, aes(x = reorder(genres, sum), y = sum, fill = reorder(genres,
   geom_text(aes(label = sum), hjust = -0.2, vjust = 0.4) + 
   theme(axis.text.x=element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank()) + 
   theme(legend.position = "None")
+
 
 # Number of 30 most popular keywords  
 ggplot(keywords_sum[1:30, ], aes(x = reorder(keywords, sum), y = sum, fill = reorder(keywords, sum))) + 
