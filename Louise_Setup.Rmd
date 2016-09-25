@@ -6,6 +6,7 @@ output: pdf_document
 library(ggplot2)
 library(ggthemes)
 library(plyr)
+library(reshape2)
 ```
 
 
@@ -40,5 +41,57 @@ ggplot(movies, aes(x=imdb_score, color=countrynew)) + geom_histogram(binwidth = 
 Looks somewhat normal with a  bell curve.
 Looks like there are more around whole and half numbers, than there are around x.25 / x.65s - this is likely due to the fact that users enter scores that are whole numbers only.
 
+```{r}
+
+## Have a look at NAs
+
+  columnindex = integer()
+  columns = character()
+  nas = numeric()
+  napercentage = numeric ()
+  
+for (k in 1:dim(movies)[2])
+  {columnindex = c(columnindex,k)
+  columns = c(columns,colnames(movies)[k])
+  nas = c(nas,length(movies[[k]][is.na(movies[[k]])]))
+  napercentage = c(napercentage,round(length(movies[[k]][is.na(movies[[k]])])/nrow(movies),4)*100)}
+naanalysis <- data.frame(columnindex=columnindex,columns=columns,nas=nas,napercentage=napercentage)
+naanalysis
+```
+
+## Do some cleaning
+
+This bit doesn't work at the moment :)
+
+```{r eval=FALSE}
+  for (i in naanalysis$columnindex[naanalysis$napercentage < 1]){
+    k <- ncol(movies)+i
+    movies[[k]] <- movies[[i]]
+    movies[[k]][is.na(movies[[i]]==TRUE)] <- round(mean(movies[[i]], na.rm=TRUE),0)
+    }
 
 
+##replace NAs with mean values for analysis
+
+movies$durationclean <- movies$duration
+movies$durationclean[is.na(movies$duration)==TRUE] <- round(mean(movies$duration, na.rm=TRUE),0)
+
+movies$facenumber_in_posterclean <- movies$facenumber_in_poster
+movies$facenumber_in_posterclean[is.na(movies$facenumber_in_poster)==TRUE] <- round(mean(movies$facenumber_in_poster, na.rm=TRUE),0)
+
+movies$num_critic_for_reviewsclean <- movies$num_critic_for_reviews
+movies$num_critic_for_reviewsclean[is.na(movies$num_critic_for_reviews)==TRUE] <- round(mean(movies$num_critic_for_reviews, na.rm=TRUE),0)
+
+```
+
+```{r corellationplot}
+noncat <- movies[c("num_critic_for_reviews","durationclean","title_year","budget","imdb_score","aspect_ratio","movie_facebook_likes","num_user_for_reviews","facenumber_in_poster","gross")]
+##all not categorical variables except the facebook ones.
+
+##used pairwise complete obs to handle NAs  use="pairwise.complete.obs"
+corrmatrix <- round(cor(noncat),2)
+meltedmovies<- melt(corrmatrix)
+ggplot(data = meltedmovies, aes(x=Var1, y=Var2, fill=value)) + geom_tile() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(x="", y="") + ggtitle("Correlation Matrix")
+```
+
+Gross has `r grossnapercent` percentage of NAs
