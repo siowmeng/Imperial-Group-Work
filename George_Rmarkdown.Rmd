@@ -237,9 +237,10 @@ ggplot(genres_sum, aes(x = reorder(genres, sum), y = sum, fill = reorder(genres,
   geom_bar(stat = "identity", colour = "black") + coord_flip() +
   labs(title = "Movie genres", x = "", y = "") + 
   geom_text(aes(label = sum), hjust = -0.2, vjust = 0.4) + 
-  theme(axis.text.x=element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank()) + 
   theme_few() +
-  theme(legend.position = "None") 
+  theme(legend.position = "None") +
+  theme(axis.text.x=element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank()) 
+  
 
 ######################################################
 movies_and_genres <- cbind(movie_title = genres_idx$movie_title, score = movies$imdb_score, 
@@ -259,5 +260,69 @@ ggplot(movies_and_genres2, aes(x = profit, y = score, colour = variable)) +
   labs(x = "Profit", y = "IMDb Score") +
   theme_few()
 ```
+
+Now, let's see the most popular keywords.
+
+```{r, echo = F}
+
+# Explore keywords in movies
+# note: each movie can have more then one keywords
+keywords <- c()
+kwsum <- c()
+i <- 1
+for (ins in movies$plot_keywords){
+  kw <- strsplit(ins, "[|]")
+  for (kword in kw[[1]]){
+    # if the current keyword doesn't exist in the vector
+    if (!(kword %in% keywords)){
+      keywords[i] <- kword
+      kwsum[i] <- 1
+      i = i + 1
+    } else{
+      kwsum[which(keywords == kword)] = kwsum[which(keywords == kword)] + 1
+    }
+  }
+}
+keywords_sum <- data.frame(keywords = keywords, sum = kwsum)
+keywords_sum <- keywords_sum[order(keywords_sum$sum, decreasing = T),]
+
+# Number of 30 most popular keywords  
+ggplot(keywords_sum[1:30, ], aes(x = reorder(keywords, sum), y = sum, fill = reorder(keywords, sum))) + 
+  geom_bar(stat = "identity", colour = "black") + coord_flip() +
+  labs(title = "Keywords", x = "", y = "") + 
+  geom_text(aes(label = sum), hjust = -0.2, vjust = 0.4) + 
+  theme_few() +
+  theme(legend.position = "None") +
+  theme(axis.text.x=element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank()) 
+```
+
+Actors' time:
+
+```{r, echo = F}
+
+# Explore actors and their popularity
+actors1 <- data.frame(name = movies$actor_1_name, fb_likes = movies$actor_1_facebook_likes)
+actors2 <- data.frame(name = movies$actor_2_name, fb_likes = movies$actor_2_facebook_likes)
+actors3 <- data.frame(name = movies$actor_3_name, fb_likes = movies$actor_3_facebook_likes)
+actors <- rbind(actors1, actors2, actors3)
+occurences <- table(unlist(actors$name))
+occurences <- as.data.frame(occurences[order(occurences, decreasing = T)])
+colnames(occurences) <- c("name", "movies_played")
+actors <- actors[!duplicated(actors), ]
+actors_full <- merge(occurences, actors, by = "name")
+
+# Most popular actors
+# We remove those actors who have zero facebook likes (maybe they don't even have a facebook page)
+ggplot(actors_full[actors_full$fb_likes != 0, ], aes(x = movies_played, y = fb_likes)) + 
+  geom_jitter(width = 0.75, alpha = 0.1) +
+  labs(title = "Actors", x = "Movies played", y = "Facebook likes") +
+  scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06), labels = c("100", "10,000", "1 million")) +
+  theme_few()
+```
+
+
+
+
+
 
 
