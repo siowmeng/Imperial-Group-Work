@@ -6,6 +6,7 @@ output: pdf_document
 library(ggplot2)
 library(ggthemes)
 library(plyr)
+library(reshape2)
 ```
 
 
@@ -24,21 +25,123 @@ sorted <- arrange(removednas,desc(freq))
 head <- sorted[1:10,]
 head$country <- factor(head$country, levels = head$country[order(head$freq)])
 
-ggplot(head, aes(x=country, y=freq, fill=country, label=freq)) + geom_bar(stat="identity") + coord_flip() + geom_text(size=3,nudge_y=150) + guides(fill=FALSE) + scale_y_continuous(expand = c(0, 0), limits = c(0,4100)) + ggtitle("Top 10 countries with multiple IMDB top 5000 movies") + labs(x = "", y="Frequency") 
+ggplot(head, aes(x=country, y=freq, fill=country, label=freq)) + geom_bar(stat="identity") + coord_flip() + geom_text(size=3,nudge_y=150) + guides(fill=FALSE) + scale_y_continuous(expand = c(0, 0)) +  expand_limits(y = c(0,1.08 * max(head$freq))) + ggtitle("Top 10 countries with multiple IMDB top 5000 movies") + labs(x = "", y="Frequency") 
 ```
+
+What directors make up the top 5000
+```{r}
+movies$director_name[movies$director_name == ""] <- NA
+counted <- count(movies, 'director_name')
+removednas <- counted[complete.cases(counted),]
+sorted <- arrange(removednas,desc(freq))
+head <- sorted[1:20,]
+head$director_name <- factor(head$director_name, levels = head$director_name[order(head$freq)])
+
+ggplot(head, aes(x=director_name, y=freq, fill=director_name)) + geom_bar(stat="identity") + coord_flip() + guides(fill=FALSE) + scale_y_continuous(expand = c(0, 0)) + ggtitle("Top 20 directors with multiple IMDB top 5000 movies") + labs(x = "", y="Frequency") +  scale_y_continuous(expand = c(0,0)) +  expand_limits(y = c(0,1.05 * max(head$freq)))
+
+dirpercentage <- round(100*length(sorted$freq[sorted$freq==1])/length(sorted$freq),2)
+
+```
+
+Approx  `r dirpercentage` of directors in the top 5000 have only 1 movie in the top 5000. So `r 100-dirpercentage` have more than 1.
 
 ##What is the rating frequency of the top 5000?
 ```{r}
 
 ##replace non top 10 countries with Other
-movies$countrynew <- movies$country
-movies$countrynew[!(movies$country %in% head$country)] <- "Other"
+movies$country_new <- movies$country
+movies$country_new[!(movies$country %in% head$country)] <- "Other"
 
-ggplot(movies, aes(x=imdb_score, color=countrynew)) + geom_histogram(binwidth = 0.25)
+ggplot(movies, aes(x=imdb_score, color=country_new)) + geom_histogram(binwidth = 0.25)
 ```
 
 Looks somewhat normal with a  bell curve.
 Looks like there are more around whole and half numbers, than there are around x.25 / x.65s - this is likely due to the fact that users enter scores that are whole numbers only.
 
+```{r}
 
+## Have a look at NAs
+
+  columnindex = integer()
+  columns = character()
+  nas = numeric()
+  napercentage = numeric ()
+  
+for (k in 1:dim(movies)[2])
+  {columnindex = c(columnindex,k)
+  columns = c(columns,colnames(movies)[k])
+  nas = c(nas,length(movies[[k]][is.na(movies[[k]])]))
+  napercentage = c(napercentage,round(length(movies[[k]][is.na(movies[[k]])])/nrow(movies),4)*100)}
+naanalysis <- data.frame(columnindex=columnindex,columns=columns,nas=nas,napercentage=napercentage)
+naanalysis
+```
+
+## Do some cleaning
+
+For fields with a low value of NAs, replace those values with the mean for that field.
+
+```{r}
+  #this doesn't work atm  
+for (i in naanalysis$columnindex[naanalysis$napercentage > 0 & naanalysis$napercentage <1])
+    {
+    k = ncol(movies)+1
+    movies[[k]] <- movies[[i]]
+    movies[[k]][is.na(movies[[i]]==TRUE)] <- round(mean(movies[[i]], na.rm=TRUE),0)
+    colnames(movies)[[k]] <- paste(colnames(movies[i]), "_clean", sep="")
+}
+```
+
+
+## Make new correlation plot 
+```{r corellationplot}
+moviesnumeric<- movies[c("duration_clean","title_year","budget","imdb_score","aspect_ratio","movie_facebook_likes","actor_1_facebook_likes_clean","actor_2_facebook_likes_clean","actor_3_facebook_likes_clean","cast_total_facebook_likes","director_facebook_likes","num_user_for_reviews_clean","num_critic_for_reviews_clean","facenumber_in_poster_clean","gross")]
+##used pairwise complete obs to handle NAs for fields with a high number of nas
+corrmatrix <- round(cor(moviesnumeric, use="pairwise.complete.obs"),2)
+meltedmovies<- melt(corrmatrix)
+ggplot(data = meltedmovies, aes(x=Var1, y=Var2, fill=value)) + geom_tile() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(x="", y="") + ggtitle("Correlation Matrix")
+```
+
+There's a clear bundle of correlation for facebook likes (actors - cast which makes sense by design and cast - movies which makes sense as actors are likely to share their movies on facebook and encourage fans to like the movie, and fans of a movie are likely to allow like the actors in that movie.) Director facebook likes doesn't look like it's correlated with the rest. There are also quite a high percentage of director facebook like nas - this could suggest that directors aren't as active on facebook as actors.
+
+There is another bundle of correlation for number of critics and users for reviews. These two variables also seem correlated with movie facebook likes. These could all be a proxy for public interest in the movie / number of people who saw the movie.
+
+What is interesting is what "gross" and "imdb score" are correlated with as these are the "outcome" variables, that could be used to measure success.
+
+Both of these look like they is correlated with movie facebook likes, and the number of user and critic reviews, with gross being more highly correlated than imdb_score. Again, these could all be a proxy for public interest in the movie / number of people who saw the movie. Imdb_score and gross also look like they may be correlated with each other.
+
+
+
+###Some hypothesese it might be good to test
+
+* Is gross correlated with imdb score (higher -> higher)
+* Is gross - budget correlated with imdb score (higher -> higher)
+* Is the sum of cast total facebook likes + movie facebook likes a predictor of gross / imdb score
+* Is gross correlated with budget(higher -> higher)
+* Is title year correlated with higher imdb score
+* Is # of director imdb top 5000 movies correlated with gross / imdb score (need to think carefully about the maths and inference here)
+
+##Some plots it might be nice to see
+* Ratings broken down by genre (boxplot)
+* Top actors in terms of facebook likes
+* Ratings by year
+* Budget to Gross
+* Total number of facebook likes - histogram
+
+
+##Notes and things to be removed
+
+
+```{r eval = FALSE}
+##replace NAs with mean values for analysis
+
+movies$durationclean <- movies$duration
+movies$durationclean[is.na(movies$duration)==TRUE] <- round(mean(movies$duration, na.rm=TRUE),0)
+
+movies$facenumber_in_posterclean <- movies$facenumber_in_poster
+movies$facenumber_in_posterclean[is.na(movies$facenumber_in_poster)==TRUE] <- round(mean(movies$facenumber_in_poster, na.rm=TRUE),0)
+
+movies$num_critic_for_reviewsclean <- movies$num_critic_for_reviews
+movies$num_critic_for_reviewsclean[is.na(movies$num_critic_for_reviews)==TRUE] <- round(mean(movies$num_critic_for_reviews, na.rm=TRUE),0)
+
+```
 
