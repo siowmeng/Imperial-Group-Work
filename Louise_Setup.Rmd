@@ -37,7 +37,7 @@ movies$countrynew[!(movies$country %in% head$country)] <- "Other"
 ggplot(movies, aes(x=imdb_score, color=countrynew)) + geom_histogram(binwidth = 0.25)
 ```
 
-Looks somewhat normal witha  bell curve.
+Looks somewhat normal with a  bell curve.
 Looks like there are more around whole and half numbers, than there are around x.25 / x.65s - this is likely due to the fact that users enter scores that are whole numbers only.
 
 
