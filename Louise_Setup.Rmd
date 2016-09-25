@@ -63,7 +63,7 @@ naanalysis
 
 For fields with a low value of NAs, replace those values with the mean for that field.
 
-```{r eval=FALSE}
+```{r}
   #this doesn't work atm  
 for (i in naanalysis$columnindex[naanalysis$napercentage > 0 & naanalysis$napercentage <1])
     {
@@ -71,23 +71,20 @@ for (i in naanalysis$columnindex[naanalysis$napercentage > 0 & naanalysis$naperc
     movies[[k]] <- movies[[i]]
     movies[[k]][is.na(movies[[i]]==TRUE)] <- round(mean(movies[[i]], na.rm=TRUE),0)
     colnames(movies)[[k]] <- paste(colnames(movies[i]), "_clean", sep="")
-    }
+}
 ```
 
 
 ## Make new correlation plot 
 ```{r corellationplot}
-## noncat <- movies[c("duration_clean","title_year","budget","imdb_score","aspect_ratio","movie_facebook_likes","actor_1_facebook_likes_clean","actor_2_facebook_likes_clean","actor_3_facebook_likes_clean","cast_total_facebook_likes","num_user_for_reviews_clean","num_critic_for_reviews_clean","facenumber_in_poster_clean","gross")]
-
-numerical <- movies[,c(36,31)]
-
+moviesnumeric<- movies[c("duration_clean","title_year","budget","imdb_score","aspect_ratio","movie_facebook_likes","actor_1_facebook_likes_clean","actor_2_facebook_likes_clean","actor_3_facebook_likes_clean","cast_total_facebook_likes","director_facebook_likes","num_user_for_reviews_clean","num_critic_for_reviews_clean","facenumber_in_poster_clean","gross")]
 ##used pairwise complete obs to handle NAs for fields with a high number of nas
-corrmatrix <- round(cor(numerical, use="pairwise.complete.obs"),2)
+corrmatrix <- round(cor(moviesnumeric, use="pairwise.complete.obs"),2)
 meltedmovies<- melt(corrmatrix)
 ggplot(data = meltedmovies, aes(x=Var1, y=Var2, fill=value)) + geom_tile() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(x="", y="") + ggtitle("Correlation Matrix")
 ```
 
-There's a clear bundle of correlation for facebook likes (actors - cast which makes sense by design and cast - movies which makes sense as actors are likely to share their movies on facebook and encourage fans to like the movie, and fans of a movie are likely to allow like the actors in that movie.)
+There's a clear bundle of correlation for facebook likes (actors - cast which makes sense by design and cast - movies which makes sense as actors are likely to share their movies on facebook and encourage fans to like the movie, and fans of a movie are likely to allow like the actors in that movie.) Director facebook likes doesn't look like it's correlated with the rest. There are also quite a high percentage of director facebook like nas - this could suggest that directors aren't as active on facebook as actors.
 
 There is another bundle of correlation for number of critics and users for reviews. These two variables also seem correlated with movie facebook likes. These could all be a proxy for public interest in the movie / number of people who saw the movie.
 
