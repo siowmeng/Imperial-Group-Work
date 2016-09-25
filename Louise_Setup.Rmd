@@ -3,17 +3,21 @@ title: "Louise_Initial"
 output: pdf_document
 ---
 ```{r setup}
+library(ggplot2)
+library(ggthemes)
+library(plyr)
+```
+
+
+```{r loaddata}
 movies <- read.csv("movie_metadata.csv", header = T, stringsAsFactors = F)
 str(movies)
 ```
 
-## Some initial plots
+# Some initial plots
 
+What countries make up the top 5000
 ```{r}
-library(ggplot2)
-library(ggthemes)
-library(plyr)
-
 counted <- count(movies, 'country')
 removednas <- counted[complete.cases(counted),]
 sorted <- arrange(removednas,desc(freq))
@@ -22,6 +26,19 @@ head$country <- factor(head$country, levels = head$country[order(head$freq)])
 
 ggplot(head, aes(x=country, y=freq, fill=country, label=freq)) + geom_bar(stat="identity") + coord_flip() + geom_text(size=3,nudge_y=150) + guides(fill=FALSE) + scale_y_continuous(expand = c(0, 0), limits = c(0,4100)) + ggtitle("Top 10 countries with multiple IMDB top 5000 movies") + labs(x = "", y="Frequency") 
 ```
+
+##What is the rating frequency of the top 5000?
+```{r}
+
+##replace non top 10 countries with Other
+movies$countrynew <- movies$country
+movies$countrynew[!(movies$country %in% head$country)] <- "Other"
+
+ggplot(movies, aes(x=imdb_score, color=countrynew)) + geom_histogram(binwidth = 0.25)
+```
+
+Looks somewhat normal witha  bell curve.
+Looks like there are more around whole and half numbers, than there are around x.25 / x.65s - this is likely due to the fact that users enter scores that are whole numbers only.
 
 
 
