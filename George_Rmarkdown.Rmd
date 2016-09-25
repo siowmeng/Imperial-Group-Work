@@ -242,6 +242,7 @@ ggplot(genres_sum, aes(x = reorder(genres, sum), y = sum, fill = reorder(genres,
   theme(axis.text.x=element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank()) 
   
 
+
 ######################################################
 movies_and_genres <- cbind(movie_title = genres_idx$movie_title, score = movies$imdb_score, 
                            profit = movies$profit, movies_and_genres, stringsAsFactors = F)
