@@ -9,7 +9,9 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(ggthemes)
+library(ggrepel)
 library(reshape2)
+library(dplyr)
 ```
 
 ## Data Importing
@@ -152,7 +154,8 @@ The leading countries in producing movies are the USA and the UK, and then follo
 ggplot(movies, aes(title_year)) + 
   geom_bar(colour = "black") + coord_flip() +
   labs(title = "Year of Production", x = "", y = "") + 
-  theme(axis.ticks.y = element_blank()) +
+  theme(axis.ticks.y = element_blank()) + 
+  scale_x_continuous(breaks = seq(1920, 2016, by = 4))
   theme_few()
 ```
 
@@ -161,6 +164,7 @@ We see that during the last 3 years the production of films has decreased
 Next we will move on with IMDb score, budget, profit and facebook likes of the movies. 
 
 ```{r, echo = F}
+# Movie budget and IMDb score
 ggplot(movies, aes(x = budget, y = imdb_score)) + 
   geom_jitter(alpha = 0.2, width = 0.05) + 
   scale_x_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
@@ -168,7 +172,7 @@ ggplot(movies, aes(x = budget, y = imdb_score)) +
   labs(x = "Movie budget", y = "IMDb Score") +
   theme_few()
 
-# Facebook likes and Budget of movie
+# Facebook likes and IMDb score
 # We remove those movies who have zero facebook likes (maybe they don't even have a facebook page)
 ggplot(movies[movies$movie_facebook_likes != 0, ], 
        aes(x = movie_facebook_likes, y = imdb_score, colour = profitable)) + 
@@ -182,10 +186,10 @@ ggplot(movies[movies$movie_facebook_likes != 0, ],
 # Gross revenue and Budget of movie
 ggplot(movies, aes(x = budget, y = gross, colour = profitable)) +
   geom_jitter(alpha = 0.2, width = 0.05) + 
-  scale_x_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                labels = c("100", "10,000", "1 million", "100 millions", "1 billion")) +
-  scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                labels = c("100", "10,000", "1 million", "100 millions", "1 billion")) +
+  scale_x_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08), 
+                labels = c("100", "10,000", "1 million", "100 millions")) +
+  scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08), 
+                labels = c("100", "10,000", "1 million", "100 millions")) +
   labs(x = "Movie budget", y = "Gross Revenue") + 
   theme_few() +
   theme(legend.position = "None")
@@ -254,12 +258,17 @@ movies_and_genres2 <- melt(movies_and_genres, id = c("movie_title", "score", "pr
 x <- merge(movies_and_genres2, movies, by = c("movie_title", "movie_title"))
 x$genres <- NULL
 
-ggplot(movies_and_genres2, aes(x = profit, y = score, colour = variable)) + 
+movies_and_genres3 <- movies_and_genres2[movies_and_genres2$value == 1, ] 
+
+ggplot(movies_and_genres3, aes(x = profit, y = score)) + 
   geom_jitter(alpha = 0.1) +
   scale_x_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
                 labels = c("100", "10,000", "1 million", "100 millions", "1 billion")) +
   labs(x = "Profit", y = "IMDb Score") +
-  theme_few()
+  facet_wrap(~ variable, nrow = 3, ncol = 8) +
+  theme_few() 
+
+
 ```
 
 Now, let's see the most popular keywords.
@@ -319,11 +328,26 @@ ggplot(actors_full[actors_full$fb_likes != 0, ], aes(x = movies_played, y = fb_l
   labs(title = "Actors", x = "Movies played", y = "Facebook likes") +
   scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06), labels = c("100", "10,000", "1 million")) +
   theme_few()
+
+top_actors <- actors_full %>% arrange(desc(fb_likes)) %>% top_n(20, fb_likes)
+
+ggplot(top_actors, aes(x = movies_played, y = fb_likes)) + 
+  geom_point(size = 1.5) + 
+  geom_text_repel(aes(label = name), size = 3) +
+  labs(title = "Most Famous Actors", x = "Movies played", y = "Facebook likes") +
+  scale_y_log10(breaks = c(25e+03, 5e+04,1e+05, 2e+05, 4e+05), labels = c("25,000", "50,000", "100,000", "200,000", "400,000")) +
+  theme_few()
 ```
 
+We will now focus on the most profitable movies:
+
+```{r}
+movies_prof <- movies %>% top_n(100, profit)
+# All of them are profitable and are in English
+movies_prof$profitable <- NULL
+movies_prof$language <- NULL
 
 
 
-
-
+```
 
