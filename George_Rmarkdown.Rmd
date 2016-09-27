@@ -269,6 +269,7 @@ ggplot(movies_and_genres3, aes(x = profit, y = score)) +
   theme_few() 
 
 
+
 ```
 
 Now, let's see the most popular keywords.
