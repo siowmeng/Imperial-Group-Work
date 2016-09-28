@@ -1,0 +1,103 @@
+---
+title: "R Group Work"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+Loading packages
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(knitr)
+```
+
+Extracting the data and removing duplicates
+
+```{r}
+imdbmovie <- read.csv("C:/Users/nikhi/Desktop/Mathematics and Statistics Foundations/R Group Assignment/imdbmovie.csv")
+imdbmovie <- na.omit(imdbmovie)
+```
+
+
+Cleaning the data
+
+```{r}
+imdbmovie[,c("color", "aspect_ratio", "content_rating", "facenumber_in_poster", "actor_2_facebook_likes", "actor_3_name", "actor_3_facebook_likes", "num_voted_users", "plot_keywords", "movie_imdb_link")] <- NULL
+```
+
+Summary of the data:
+```{r}
+summary(imdbmovie)
+```
+
+Defining some variables:
+
+```{r}
+director <- imdbmovie$director_name
+leadactor <- imdbmovie$actor_1_name
+gross <- imdbmovie$gross
+budget <- imdbmovie$budget
+imdbscore <- imdbmovie$imdb_score
+numcreview <- imdbmovie$num_critic_for_reviews
+dirfblikes <- imdbmovie$director_facebook_likes
+```
+
+The facts:
+
+How many movies have produced more than 500bn (the major blockbusters) over the last 1000 years??
+
+```{r}
+topgrossers <- subset(imdbmovie, gross > 500000000)
+ggplot(data = topgrossers) + aes(x = movie_title, y = gross) + xlab("Movie") + ylab("Gross Profit") + geom_bar(stat = 'identity') + ggtitle("Top 6 Grossing Movies")
+```
+
+What are the 20 highest grossing movies?
+```{r}
+top20movies <- imdbmovie %>% arrange(desc(gross)) %>% top_n(20, gross)
+ggplot(data = top20movies) + aes(x = movie_title, y = gross) + xlab("Movie") + ylab("Gross Profit") + geom_bar(stat = 'identity') + ggtitle("50 Highest Grossing Movies") + theme(axis.text.x = element_text(angle = 90, size = 6))
+```
+
+Relationships:
+
+Does the Director's Facebook Popularity affect the value of gross profit generated?
+
+```{r}
+dir <- data.frame(x = dirfblikes, y = gross)
+ggplot(data = dir) + aes(x = dirfblikes, y = gross) + xlab("Director's Facebook Popularity") + ylab("Gross Profit") + geom_point() + ggtitle("Facebook influence")
+```
+
+Are the number of critic reviews correlated with the gross profit?
+
+```{r}
+dir <- data.frame(x = gross, y = numcreview)
+ggplot(data = dir) + aes(x = gross, y = numcreview) + xlab("Gross Profit") + ylab("Number of critic reviews") + geom_point() + ggtitle("Popularity vs Performance")
+```
+
+
+Splitting the movies by century... what are the major changes in trend? Can be explored further...
+
+```{r}
+ninecen <- subset(imdbmovie, imdbmovie$title_year < 2000)
+twencen <- subset(imdbmovie, imdbmovie$title_year >= 2000)
+```
+
+Are profits in line with budgets?
+```{r}
+dire <- data.frame(x = gross, y = budget)
+ggplot(data = dire) + aes(x = gross, y = budget) + xlab("Gross Profit") + ylab("Budget") + geom_point() + xlim(c(0,500000000)) + ylim(c(0,350000000))
+
+```
+
+Correlation
+
+# Between budget and gross profit
+cor(gross, budget)
+
+```
+
