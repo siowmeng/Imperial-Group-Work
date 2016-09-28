@@ -1,0 +1,83 @@
+---
+title: "Steven_movie_analysis"
+author: "Steven Locorotondo"
+date: "09/26/2016"
+output: html_document
+---
+
+```{r echo = FALSE}
+setwd('/Users/Steven/Desktop/')
+movie <- read.csv(file="movie_metadata.csv", head = TRUE, strip.white = TRUE)
+df_movie <- data.frame(movie)
+```
+
+Import libraries for cleaning and analyzing data
+
+```{r message = "hide"}
+library(ggplot2)
+
+```
+## Introduction
+
+Purpose of report
+
+## Data
+
+* explain what IMDB is
+
+The dataset used for this analysis was downloaded from Kaggle. The data was scraped from IMDB website using "Scrapy", a Python library. It contains `r dim(df_movie)[1]` movies with `r dim(df_movie)[2]` variables spanning 100 years and 66 countries. The dataset can be retrieved [here](https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset).
+
+The dataset includes the following columns:
+`r names(df_movie)`
+
+## Exploration and Cleaning of Raw Data
+
+```{r echo = FALSE}
+head(df_movie)
+```
+
+A first look at the raw data reveals unwanted characters in the movie_title column. The following code removes them.
+
+```{r}
+# convert column to matrix
+mat <- as.matrix(df_movie$movie_title)
+
+# remove unwanted characters from every entry
+for (i in 1:nrow(mat)) {
+  mat[i] <- gsub("\xe5\xca", "", mat[i])
+}
+
+# assign new values to original data frame
+df_movie$movie_title <- mat
+```
+
+## Preliminary Visualizations
+
+```{r}
+hist(df_movie$imdb_score)
+```
+
+The above graph shows the distribution of IMDB scores for the movies. It appears to follow a normal distribution with a mean of **`r mean(df_movie$imdb_score)`** and a standard deviation of **`r sd(df_movie$imdb_score)`**.
+
+```{r}
+plot(df_movie$imdb_score, df_movie$gross)
+```
+
+The above graph plots Y against IMBD scores. There appears to be some positive correlation between IMBD scores and the revenues produced by a movie. This follows the initial intuition that popular movies generate more revenue.
+
+```{r}
+temp <- df_movie[order(df_movie$imdb_score,decreasing=TRUE), ]
+temp <- temp[1:10,]
+barplot(temp$imdb_score, horiz = TRUE, names.arg = temp$movie_title)
+```
+
+## Data Cleaning
+
+Before analyzing
+
+## Notes
+
+* check if US makes more violent movies than other top countries (chi^2-test)
+* get rid of whitespace in movie_title
+* check if there are duplicates and remove them
+* compare IMDB scores of two years
