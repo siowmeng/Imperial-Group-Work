@@ -1,5 +1,5 @@
 ---
-title: "IMDB movie dataset analysis"
+title: "IMDB movie dataset analysis""
 output: html_document
 ---
 
@@ -40,7 +40,7 @@ imdbmovies <- unique(imdbmovies)
 gsub("[^[:alnum:]///' ]", "", imdbmovies)
 ```
 
-
+Some descriptive and influential plots/analysis:
 
 ## Top 20 countries producing movies:
 ```{r}
