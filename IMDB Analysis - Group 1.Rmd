@@ -1,0 +1,180 @@
+---
+title: "Analysis of IMDB Movie Dataset"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#Executive Summary
+*to be filled out after we have finished our analysis*
+
+#Introduction
+
+*Introduction to go here (person to fill out TBD)*
+*key purpose/concepts that we are trying to explore are what makes a movie popular (based on the gross revenue), and what makes a movie highly rated by the public (based on the imdb score)*
+
+#Data
+```{r}
+movies <- read.csv(file="movie_metadata.csv", header = TRUE, stringsAsFactors = F, strip.white = TRUE)
+```
+*Explanation of the data and how it was extracted from IMDB to go here - Steven L*
+
+* explain what IMDB is
+
+The dataset used for this analysis was downloaded from Kaggle. The data was scraped from IMDB website using "Scrapy", a Python library. It contains `r dim(movies)[1]` movies with `r dim(movies)[2]` variables spanning 100 years and 66 countries. The dataset can be retrieved [here](https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset).
+
+The dataset includes the following columns:
+`r names(movies)`
+
+*also to potentially include as discussed: explanation of each of the columns and what they mean (box office gross or total gross including dvd sales etc.? and budget as final budget or expected budget?*
+
+# Data Cleansing
+
+*As we agreed in the discussion - feel free to let me know if I made any mistakes - Louise to take the code from George/Stephen and add in the steps agreed below*
+
+First we look into the amount of NA variables found in each column our data:
+
+```{r echo = FALSE}
+## function to calculate list of NAs within a column
+colNA <- function(dfCol){ sum(is.na(dfCol)) }
+## To show table of sum of NAs by column
+apply(movies, 2, colNA)
+```
+
+The following cleansing process is then applied:
+
+* All rows where the title year is NA are removed - as there are a high number, and this variable is not expected to be key to the analysis.
+* All rows where gross is NA are removed - as there are a high number, and this variable is expected to be one of the output variables
+* All rows where the budget is NA are removed - as there are a high number, and this variable is expected to be key to the analysis.
+* The aspect ratio column is removed - as there are a high number of NAs, and this variable is not expected to be key to the analysis. (*Louise comment - should we justify this somewhere?*)
+* The IMDB link column is removed - as this variable is not expected to be key to the analysis
+
+After this point there are only a few NAs remaining.
+
+```{r echo=FALSE}
+## To remove rows where NAs are present for any of the applicable columns
+movies <- movies[complete.cases(movies[c("title_year","budget","gross")]),]
+## To remove aspect ratio and imdb link columns
+movies$aspect_ratio<- NULL
+movies$movie_imdb_link<- NULL
+## To show table of sum of NAs by column
+apply(movies, 2, colNA)
+```
+
+* For all other columns where there are NAs, the mean value will be used to replace all NAs within that column. Although this has some drawbacks in terms of accuracy, it allows us to maintain rows of data with other valid information, and is an unbiased approach to handling NAs.
+*Louise comment - I will find some literature on this and explain it better*
+```{r echo=FALSE}
+## for loop to replace NAs with means for particular columns
+for (i in c("actor_1_facebook_likes" , "actor_2_facebook_likes" , "actor_3_facebook_likes" , "num_critic_for_reviews" , "duration" , "facenumber_in_poster"))
+ {k <- which(colnames(movies)==i)
+ movies[k][is.na(movies[k]==TRUE)] <- round(mean(movies[[k]], na.rm=TRUE),0)}
+```
+
+* Unwanted strings "Â" and "^\\s+|\\s+$" are removed from the "title" column.
+
+```{r echo = FALSE}
+movies <- movies[!duplicated(movies$movie_title),]
+# Function to remove Â, leading and trailing whitespace from movies$movie_title
+movie_title_processing <- function(str){
+  str <- sub(pattern = "Â", replacement = "", str)
+  str <- sub(pattern = "^\\s+|\\s+$", replacement ="", str)
+}
+# Apply previous function
+movies$movie_title <- sapply(movies$movie_title, FUN = movie_title_processing)
+```
+
+Although some of these steps reduce the sample size for analysis, the rows removed would either cause later analysis to fail, cause the dataset to be inconsistent across various pieces of analysis, or produce misleading results.
+
+This cleansed dataset contains no NA values and is used for the remainder of the analysis.
+
+```{r echo = FALSE}
+apply(movies, 2, colNA)
+```
+*General note: I plan to tidy up the writing here later but just wanted to get down our discussion :)*
+
+10% of the dataset is then set aside to be the "test" dataset, leaving the remaining 90% of our dataset as the training dataset. The training dataset alone will be used for all descriptive, inferential and predictive analysis, including model building. The "test" dataset will be used at a later stage to check the accuracy of the predicted model.
+
+```{r echo=FALSE, message=FALSE}
+library(caret)
+set.seed(1)
+intrain<-createDataPartition(y=movies[[1]],p=0.9,list=FALSE)
+movies<-movies[intrain,]
+test<-movies[-intrain,]
+```
+
+# Descriptive Data Analysis
+
+*For now, each have a section with one (or more) descriptive plot, later we can discuss how this flows into a narrative - we should let everyone in the slack group know what we're doing so that we don't overlap unecessarily**
+
+*different options we discussed are:*
+
+* *Map diagram with bubbles showing movies by country*
+* *Time analysis - multiple boxplots for each decade (LF note: could also be under inference - if you then want to discuss whether decade is a good predictor of revenue - might get different results if you take decade as a number or a factor)*
+* *imdb score against gross coloured by: actor/director/country*
+* *frequency of movies with different genres/keywords - (George has already done this)*
+* *Ratings broken down by genre (boxplot)*
+* *Top actors in terms of facebook likes*
+* *Analysis of top movies (by score and gross)*
+* *Total number of facebook likes - histogram*
+
+###Siow Meng
+
+###Nikhita
+
+###Cecilia
+
+###George
+
+###Steven
+
+###Louise
+*Would potentially like to do some plots reg. directors*
+
+# Inferential Data Analysis
+
+*For now, each have a section with one comparison and test/set of tests (t.test, var.test, cor.test etc.), it is expected this section will also include plots, later we can discuss how this flows into a narrative - we should let everyone in the slack group know what we're doing so that we don't overlap unecessarily*
+
+*It is expected that these will be related to how inputs are correlated with the two outcome variables (gross and imdb_score)*
+
+###Siow Meng
+
+*Will likely do english vs non english movies analysis*
+
+###Nikhita
+
+###Cecilia
+
+###George
+
+###Steven
+
+###Louise
+*Would potentially like to do some inference regarding directors*
+
+# Predictive Data Analysis
+
+###Model Building and Justification
+*we will all make two predictive models, one for "gross" and one for "imdb_score", using whatever inputs we can get from our dataset, at a later stage we'll compare them and see whose has the lowest mean squared error (which we can also justify) - and include that into this section*
+
+*We discussed potentially including a new variable into the model, or to build a dual model that has different inputs for movies before 2010, and after 2010, which is the cutover point at which facebook likes for a movie became a meaningful indicator*
+
+###Model Performance
+*we will then test this model using the test dataset, make a plot of the predictions against the actual values, and calculate the MSE/other success statistics*
+
+#Conclusion
+*to be completed after our analysis*
+
+#To be removed- Notes and comments:
+
+At the end of the assignment we should go back to:
+* Check coding standards are consistent (and align with his recommendation - http://adv-r.had.co.nz/Style.html)
+* Check language is consistent (tense / case)
+* Convert ggplots into the same theme - colour scheme, fonts, etc.
+* All assumptions have been noted in the appropriate sections
+* We think we're roughly aiming for 20ish pages - tbd at a later stage
+* Make sure we don't use language that implies causation when we can only infer correlation
+* Double check each others' analyses for Simpson's paradox.
+* Maybe put all libraries at the top?

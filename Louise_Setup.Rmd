@@ -7,6 +7,7 @@ library(ggplot2)
 library(ggthemes)
 library(plyr)
 library(reshape2)
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=50),tidy=TRUE)
 ```
 
 
@@ -37,7 +38,7 @@ sorted <- arrange(removednas,desc(freq))
 head <- sorted[1:20,]
 head$director_name <- factor(head$director_name, levels = head$director_name[order(head$freq)])
 
-ggplot(head, aes(x=director_name, y=freq, fill=director_name)) + geom_bar(stat="identity") + coord_flip() + guides(fill=FALSE) + scale_y_continuous(expand = c(0, 0)) + ggtitle("Top 20 directors with multiple IMDB top 5000 movies") + labs(x = "", y="Frequency") +  scale_y_continuous(expand = c(0,0)) +  expand_limits(y = c(0,1.05 * max(head$freq)))
+ggplot(head, aes(x=director_name, y=freq, fill=director_name)) + geom_bar(stat="identity") + coord_flip() + guides(fill=FALSE) + scale_y_continuous(expand = c(0, 0)) + labs(x = "", y="Frequency") + ggtitle("Top 20 directors with multiple IMDB top 5000 movies") +  scale_y_continuous(expand = c(0,0)) +  expand_limits(y = c(0,1.05 * max(head$freq)))
 
 dirpercentage <- round(100*length(sorted$freq[sorted$freq==1])/length(sorted$freq),2)
 
@@ -142,6 +143,17 @@ movies$facenumber_in_posterclean[is.na(movies$facenumber_in_poster)==TRUE] <- ro
 
 movies$num_critic_for_reviewsclean <- movies$num_critic_for_reviews
 movies$num_critic_for_reviewsclean[is.na(movies$num_critic_for_reviews)==TRUE] <- round(mean(movies$num_critic_for_reviews, na.rm=TRUE),0)
+
+## doesn't work
+replaceNAwithmean <- function(columnname) {
+ k <- which(colnames(movies)==columnname)
+ print(k)
+ print(round(mean(movies[[k]], na.rm=TRUE),0))
+ print(movies[k][is.na(movies[k]==TRUE)])
+ movies[k][is.na(movies[k]==TRUE)] <- round(mean(movies[[k]], na.rm=TRUE),0)
+ print(movies[k][is.na(movies[k]==TRUE)])}
+replaceNAwithmean("duration")
+
 
 ```
 
