@@ -35,41 +35,47 @@ The dataset includes the following columns:
 
 *As we agreed in the discussion - feel free to let me know if I made any mistakes - Louise to take the code from George/Stephen and add in the steps agreed below*
 
-First we look into the amount of NA variables found in our data:
+First we look into the amount of NA variables found in each column our data:
 
 ```{r echo = FALSE}
-## Have a look at NAs
+## function to calculate list of NAs within a column
 colNA <- function(dfCol){ sum(is.na(dfCol)) }
+## To show table of sum of NAs by column
 apply(movies, 2, colNA)
 ```
 
-The following cleansing process is then applied
+The following cleansing process is then applied:
 
-* Remove all rows where the year is NA - as there are a high number, and this variable is not expected to be key to the analysis.
-* Remove all rows where gross is NA - as there are a high number, and this variable is expected to be one of the output variables
-* Remove all rows where the budget is NA - as there are a high number, this variable is expected to be key to the analysis.
-* Remove the aspect ratio column - as there are a high number of NAs, and this variable is not expected to be key to the analysis.
-
-```{r echo=FALSE}
-movies <- movies[complete.cases(movies[c("title_year","budget","gross")]),]
-movies$aspect_ratio<- NULL
-apply(movies, 2, colNA)
-```
+* All rows where the title year is NA are removed - as there are a high number, and this variable is not expected to be key to the analysis.
+* All rows where gross is NA are removed - as there are a high number, and this variable is expected to be one of the output variables
+* All rows where the budget is NA are removed - as there are a high number, and this variable is expected to be key to the analysis.
+* The aspect ratio column is removed - as there are a high number of NAs, and this variable is not expected to be key to the analysis. (*Louise comment - should we justify this somewhere?*)
+* The IMDB link column is removed - as this variable is not expected to be key to the analysis
 
 After this point there are only a few NAs remaining.
 
+```{r echo=FALSE}
+## To remove rows where NAs are present for any of the applicable columns
+movies <- movies[complete.cases(movies[c("title_year","budget","gross")]),]
+## To remove aspect ratio and imdb link columns
+movies$aspect_ratio<- NULL
+movies$movie_imdb_link<- NULL
+## To show table of sum of NAs by column
+apply(movies, 2, colNA)
+```
 
-*Louise comment - should we justify this somewhere?*
 * For all other columns where there are NAs, the mean value will be used to replace all NAs within that column. Although this has some drawbacks in terms of accuracy, it allows us to maintain rows of data with other valid information, and is an unbiased approach to handling NAs.
 *Louise comment - I will find some literature on this and explain it better*
-* Remove the IMDB link column - as this variable is not expected to be key to the analysis
-* Unexpected strings "Â" and "^\\s+|\\s+$" are removed from the "title" column.
-
-Although some of these steps reduce the sample size for analysis, the rows removed would either cause later analysis to fail, cause the dataset to be inconsistent across various pieces of analysis, or produce misleading results.
-
-This cleansed dataset contains no NA values and is be used for the remainder of the analysis.
-
 ```{r echo=FALSE}
+## for loop to replace NAs with means for particular columns
+for (i in c("actor_1_facebook_likes" , "actor_2_facebook_likes" , "actor_3_facebook_likes" , "num_critic_for_reviews" , "duration" , "facenumber_in_poster"))
+ {k <- which(colnames(movies)==i)
+ movies[k][is.na(movies[k]==TRUE)] <- round(mean(movies[[k]], na.rm=TRUE),0)}
+```
+
+* Unwanted strings "Â" and "^\\s+|\\s+$" are removed from the "title" column.
+
+```{r echo = FALSE}
 movies <- movies[!duplicated(movies$movie_title),]
 # Function to remove Â, leading and trailing whitespace from movies$movie_title
 movie_title_processing <- function(str){
@@ -78,13 +84,26 @@ movie_title_processing <- function(str){
 }
 # Apply previous function
 movies$movie_title <- sapply(movies$movie_title, FUN = movie_title_processing)
-
-##not complete
 ```
 
+Although some of these steps reduce the sample size for analysis, the rows removed would either cause later analysis to fail, cause the dataset to be inconsistent across various pieces of analysis, or produce misleading results.
+
+This cleansed dataset contains no NA values and is used for the remainder of the analysis.
+
+```{r echo = FALSE}
+apply(movies, 2, colNA)
+```
 *General note: I plan to tidy up the writing here later but just wanted to get down our discussion :)*
 
-10% of the dataset is then set aside to be the "test" dataset, leaving the remaining 90% of our dataset as the "train" dataset. This will be used at a later stage to check the accuracy of the predicted model.
+10% of the dataset is then set aside to be the "test" dataset, leaving the remaining 90% of our dataset as the training dataset. The training dataset alone will be used for all descriptive, inferential and predictive analysis, including model building. The "test" dataset will be used at a later stage to check the accuracy of the predicted model.
+
+```{r echo=FALSE, message=FALSE}
+library(caret)
+set.seed(1)
+intrain<-createDataPartition(y=movies[[1]],p=0.9,list=FALSE)
+movies<-movies[intrain,]
+test<-movies[-intrain,]
+```
 
 # Descriptive Data Analysis
 
@@ -158,3 +177,4 @@ At the end of the assignment we should go back to:
 * We think we're roughly aiming for 20ish pages - tbd at a later stage
 * Make sure we don't use language that implies causation when we can only infer correlation
 * Double check each others' analyses for Simpson's paradox.
+* Maybe put all libraries at the top?
