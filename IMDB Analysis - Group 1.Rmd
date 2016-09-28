@@ -29,6 +29,8 @@ The dataset used for this analysis was downloaded from Kaggle. The data was scra
 The dataset includes the following columns:
 `r names(movies)`
 
+*also to potentially include as discussed: explanation of each of the columns and what they mean (box office gross or total gross including dvd sales etc.? and budget as final budget or expected budget?*
+
 # Data Cleansing
 
 *As we agreed in the discussion - feel free to let me know if I made any mistakes - Louise to take the code from George/Stephen and add in the steps agreed below*
