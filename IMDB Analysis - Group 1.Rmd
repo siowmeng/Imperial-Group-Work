@@ -49,6 +49,16 @@ The following cleansing process is then applied
 * Remove all rows where gross is NA - as there are a high number, and this variable is expected to be one of the output variables
 * Remove all rows where the budget is NA - as there are a high number, this variable is expected to be key to the analysis.
 * Remove the aspect ratio column - as there are a high number of NAs, and this variable is not expected to be key to the analysis.
+
+```{r echo=FALSE}
+movies <- movies[complete.cases(movies[c("title_year","budget","gross")]),]
+movies$aspect_ratio<- NULL
+apply(movies, 2, colNA)
+```
+
+After this point there are only a few NAs remaining.
+
+
 *Louise comment - should we justify this somewhere?*
 * For all other columns where there are NAs, the mean value will be used to replace all NAs within that column. Although this has some drawbacks in terms of accuracy, it allows us to maintain rows of data with other valid information, and is an unbiased approach to handling NAs.
 *Louise comment - I will find some literature on this and explain it better*
