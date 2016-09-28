@@ -83,6 +83,11 @@ movies$movie_title <- sapply(movies$movie_title, FUN = movie_title_processing)
 * *Map diagram with bubbles showing movies by country*
 * *Time analysis - multiple boxplots for each decade (LF note: could also be under inference - if you then want to discuss whether decade is a good predictor of revenue - might get different results if you take decade as a number or a factor)*
 * *imdb score against gross coloured by: actor/director/country*
+* *frequency of movies with different genres/keywords - (George has already done this)*
+* *Ratings broken down by genre (boxplot)*
+* *Top actors in terms of facebook likes*
+* *Analysis of top movies (by score and gross)*
+* *Total number of facebook likes - histogram*
 
 ###Siow Meng
 
@@ -95,6 +100,7 @@ movies$movie_title <- sapply(movies$movie_title, FUN = movie_title_processing)
 ###Steven
 
 ###Louise
+*Would potentially like to do some plots reg. directors*
 
 # Inferential Data Analysis
 
@@ -115,6 +121,7 @@ movies$movie_title <- sapply(movies$movie_title, FUN = movie_title_processing)
 ###Steven
 
 ###Louise
+*Would potentially like to do some inference regarding directors*
 
 # Predictive Data Analysis
 
