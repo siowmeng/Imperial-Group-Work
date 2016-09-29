@@ -137,7 +137,7 @@ test<-movies[-intrain,]
 ```{r echo = FALSE, message = FALSE}
 library(plyr)
 ##create summary statistics for average imdb score & number of movies for each director
-directorssummary <- ddply(movies, ~ director_name,summarise,score_average=round(mean(imdb_score),2), number_of_movies=length(director_name))
+directorssummary <- ddply(movies, ~ director_name,summarise,score_average=round(mean(imdb_score),2), gross_average=round(mean(gross),2), number_of_movies=length(director_name))
 ##sort by # of movies then imdb average score
 sorteddirectorsummary <- arrange(directorssummary,desc(number_of_movies), desc(score_average))
 ##ensure that factors are in the order of number of movies, otherwise ggplot will default to alphabetical ordering in the graph
@@ -174,10 +174,21 @@ ggplot(sorteddirectorsummary, aes(x = number_of_movies, y = score_average)) +
   labs(x = "Number of movies in sample", y = "Average IMDb Score")
 ```
 
-```{r echo=FALSE}
+```{r echo=FALSE, message=FALSE}
 ##plot for imdb rating vs score
+## to do - sort out the axes
+ggplot(sorteddirectorsummary, aes(x = number_of_movies, y = gross_average)) + 
+  geom_jitter(alpha = 0.2, width = 0.05) + geom_smooth() +
+  labs(x = "Number of movies in sample", y = "Average Gross Revenue")
+```
+
+```{r echo=FALSE}
+##cor test for imdb rating vs # of movies
 cor.test(sorteddirectorsummary$score_average,sorteddirectorsummary$number_of_movies)
 ##does seem like very loosely positively correlated and is probably because of the correlation with budget- more analysis to come.
+##cor test for gross score vs # of movies
+cor.test(sorteddirectorsummary$gross_average,sorteddirectorsummary$number_of_movies)
+##does seem like somewhat positively correlated - although we can see from the graph that this doesn't seem linear.
 ```
 
 *Would potentially like to do some inference regarding directors*
