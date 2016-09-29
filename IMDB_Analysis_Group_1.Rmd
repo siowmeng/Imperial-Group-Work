@@ -218,6 +218,10 @@ ggplot(movies_and_genres, aes(genre, score, fill = genre)) +
 
 ### Louise
 *Would potentially like to do some plots reg. directors*
+=======
+###Louise
+*Would potentially like to do some plots reg. directors - testing pushing again*
+>>>>>>> 7988f828b18ff7db6e7dbbd56bc9e5f667b87bbf
 ```{r echo = FALSE, message = FALSE}
 library(plyr)
 ##create summary statistics for average imdb score & number of movies for each director
@@ -247,7 +251,13 @@ ggplot(sorteddirectorsummary[1:20,], aes(x=director_name, y=number_of_movies, fi
 
 ### George
 
+<<<<<<< HEAD
 ### Steven
+=======
+test
+
+###Steven
+>>>>>>> 7988f828b18ff7db6e7dbbd56bc9e5f667b87bbf
 
 ### Louise
 
