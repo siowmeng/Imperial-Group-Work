@@ -133,7 +133,7 @@ test<-movies[-intrain,]
 ###Steven
 
 ###Louise
-*Would potentially like to do some plots reg. directors*
+*Would potentially like to do some plots reg. directors - testing pushing again*
 ```{r echo = FALSE, message = FALSE}
 library(plyr)
 ##create summary statistics for average imdb score & number of movies for each director
