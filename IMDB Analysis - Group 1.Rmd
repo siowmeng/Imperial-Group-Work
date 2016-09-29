@@ -75,6 +75,7 @@ for (i in c("actor_1_facebook_likes" , "actor_2_facebook_likes" , "actor_3_faceb
 
 * Unwanted strings "Â" and "^\\s+|\\s+$" are removed from the "title" column.
 
+
 ```{r echo = FALSE}
 movies <- movies[!duplicated(movies$movie_title),]
 # Function to remove Â, leading and trailing whitespace from movies$movie_title
@@ -88,14 +89,12 @@ movies$movie_title <- sapply(movies$movie_title, FUN = movie_title_processing)
 
 Although some of these steps reduce the sample size for analysis, the rows removed would either cause later analysis to fail, cause the dataset to be inconsistent across various pieces of analysis, or produce misleading results.
 
-This cleansed dataset contains no NA values and is used for the remainder of the analysis.
+This cleansed dataset (of `r nrow(movies)` rows) contains no NA values and is used for the remainder of the analysis.
 
 ```{r echo = FALSE}
 apply(movies, 2, colNA)
 ```
 *General note: I plan to tidy up the writing here later but just wanted to get down our discussion :)*
-
-10% of the dataset is then set aside to be the "test" dataset, leaving the remaining 90% of our dataset as the training dataset. The training dataset alone will be used for all descriptive, inferential and predictive analysis, including model building. The "test" dataset will be used at a later stage to check the accuracy of the predicted model.
 
 ```{r echo=FALSE, message=FALSE}
 library(caret)
@@ -104,6 +103,9 @@ intrain<-createDataPartition(y=movies[[1]],p=0.9,list=FALSE)
 movies<-movies[intrain,]
 test<-movies[-intrain,]
 ```
+
+10% of the cleansed dataset (`r nrow(test)`) is then set aside to be the "test" dataset, leaving the remaining 90%  of our dataset (`r nrow(movies)`) as the training dataset. The training dataset alone will be used for all descriptive, inferential and predictive analysis, including model building. The "test" dataset will be used at a later stage to check the accuracy of the predicted model.
+
 
 # Descriptive Data Analysis
 
@@ -132,6 +134,16 @@ test<-movies[-intrain,]
 
 ###Louise
 *Would potentially like to do some plots reg. directors*
+```{r echo = FALSE, message = FALSE}
+library(plyr)
+directorcount <- count(movies, 'director_name')
+sorteddirectorcount <- arrange(directorcount,desc(freq))
+topdirectorcount <- sorteddirectorcount[1:20,]
+topdirectorcount$director_name <- factor(topdirectorcount$director_name, levels = topdirectorcount$director_name[order(topdirectorcount$freq)])
+
+ggplot(topdirectorcount, aes(x=director_name, y=freq, fill=director_name)) + geom_bar(stat="identity") + coord_flip() + guides(fill=FALSE) + scale_y_continuous(expand = c(0, 0)) + labs(x = "", y="Number of movies in sample") + ggtitle("Top 20 directors with multiple IMDB top 5000 movies") +  scale_y_continuous(expand = c(0,0)) +  expand_limits(y = c(0,1.05 * max(topdirectorcount$freq)))
+
+```
 
 # Inferential Data Analysis
 
@@ -170,6 +182,7 @@ test<-movies[-intrain,]
 #To be removed- Notes and comments:
 
 At the end of the assignment we should go back to:
+
 * Check coding standards are consistent (and align with his recommendation - http://adv-r.had.co.nz/Style.html)
 * Check language is consistent (tense / case)
 * Convert ggplots into the same theme - colour scheme, fonts, etc.
