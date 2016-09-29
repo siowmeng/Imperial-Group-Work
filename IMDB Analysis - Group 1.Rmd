@@ -136,13 +136,15 @@ test<-movies[-intrain,]
 *Would potentially like to do some plots reg. directors*
 ```{r echo = FALSE, message = FALSE}
 library(plyr)
-directorcount <- count(movies, 'director_name')
-sorteddirectorcount <- arrange(directorcount,desc(freq))
-topdirectorcount <- sorteddirectorcount[1:20,]
-topdirectorcount$director_name <- factor(topdirectorcount$director_name, levels = topdirectorcount$director_name[order(topdirectorcount$freq)])
+##create summary statistics for average imdb score & number of movies for each director
+directorssummary <- ddply(movies, ~ director_name,summarise,score_average=round(mean(imdb_score),2), number_of_movies=length(director_name))
+##sort by # of movies then imdb average score
+sorteddirectorsummary <- arrange(directorssummary,desc(number_of_movies), desc(score_average))
+##ensure that factors are in the order of number of movies, otherwise ggplot will default to alphabetical ordering in the graph
+sorteddirectorsummary$director_name <- factor(sorteddirectorsummary$director_name, levels = sorteddirectorsummary$director_name[order(sorteddirectorsummary$number_of_movies)])
 
-ggplot(topdirectorcount, aes(x=director_name, y=freq, fill=director_name)) + geom_bar(stat="identity") + coord_flip() + guides(fill=FALSE) + scale_y_continuous(expand = c(0, 0)) + labs(x = "", y="Number of movies in sample") + ggtitle("Top 20 directors with multiple IMDB top 5000 movies") +  scale_y_continuous(expand = c(0,0)) +  expand_limits(y = c(0,1.05 * max(topdirectorcount$freq)))
-
+##plot for top 20 directors
+ggplot(sorteddirectorsummary[1:20,], aes(x=director_name, y=number_of_movies, fill=director_name)) + geom_bar(stat="identity") + coord_flip() + guides(fill=FALSE) + scale_y_continuous(expand = c(0, 0)) + labs(x = "", y="Number of movies in sample") + ggtitle("Top 20 directors with multiple IMDB top 5000 movies") +  scale_y_continuous(expand = c(0,0)) +  expand_limits(y = c(0,1.05 * max(sorteddirectorsummary$number_of_movies)))
 ```
 
 # Inferential Data Analysis
@@ -164,6 +166,20 @@ ggplot(topdirectorcount, aes(x=director_name, y=freq, fill=director_name)) + geo
 ###Steven
 
 ###Louise
+
+```{r echo=FALSE, message=FALSE}
+##plot for imdb rating vs score
+ggplot(sorteddirectorsummary, aes(x = number_of_movies, y = score_average)) + 
+  geom_jitter(alpha = 0.2, width = 0.05) + geom_smooth() +
+  labs(x = "Number of movies in sample", y = "Average IMDb Score")
+```
+
+```{r echo=FALSE}
+##plot for imdb rating vs score
+cor.test(sorteddirectorsummary$score_average,sorteddirectorsummary$number_of_movies)
+##does seem like very loosely positively correlated and is probably because of the correlation with budget- more analysis to come.
+```
+
 *Would potentially like to do some inference regarding directors*
 
 # Predictive Data Analysis
