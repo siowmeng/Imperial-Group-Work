@@ -5,6 +5,11 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(ggthemes)
+library(ggrepel)
+library(reshape2)
+library(dplyr)
 ```
 
 
@@ -73,7 +78,7 @@ for (i in c("actor_1_facebook_likes" , "actor_2_facebook_likes" , "actor_3_faceb
  movies[k][is.na(movies[k]==TRUE)] <- round(mean(movies[[k]], na.rm=TRUE),0)}
 ```
 
-* Unwanted strings "Â" and "^\\s+|\\s+$" are removed from the "title" column.
+* Unwanted strings "Â" as well as leading and  are removed from the "title" column.
 
 
 ```{r echo = FALSE}
@@ -122,18 +127,101 @@ test<-movies[-intrain,]
 * *Analysis of top movies (by score and gross)*
 * *Total number of facebook likes - histogram*
 
-###Siow Meng
+### Siow Meng
 
-###Nikhita
+### Nikhita
 
-###Cecilia
+### Cecilia
 
-###George
+### George
 
-###Steven
+Descriptive analysis based on the movies genres and how do they correlate possibly with other variables of the dataset. Genres with less than 10 movies have been omitted. The first graph shows the number of movies in each genre while the second and the third plots present a boxplot for each genre associated with the profit of the movies and the IMDB score of the movies respectively.
 
+```{r, echo = FALSE}
+genres <- c()
+i <- 1
+for (ins in movies$genres){
+    g <- strsplit(ins, "[|]")
+    for (gnr in g[[1]]){
+        if (!(gnr %in% genres)){
+            genres[i] <- gnr
+            i = i + 1
+        }
+    }
+}
+# Create a dataframe with logical values which 
+# indiacte the categories of each movie
+movies$genres <- strsplit(movies$genres, "[|]")
+genres_idx <- movies[, c("movie_title", "genres")]
+i = 1
+mat <- matrix(rep(0, (dim(movies)[1] * length(genres))), nrow = dim(movies)[1])
+for (g in genres_idx$genres){
+    idx <- which(genres %in% g)
+    mat[i, idx] <- 1
+    i = i + 1
+}
+colnames(mat) <- genres
+movies_and_genres <- data.frame(mat)
+
+# Find how many movies belong in each genre
+sum <- rep(0, length(genres))
+for (i in 1:length(genres)){
+    sum[i] <- sum(movies_and_genres[, i])
+}
+genres_sum <- data.frame(genre = factor(genres), sum = sum)
+genres_sum <- genres_sum[order(sum, decreasing = FALSE),]
+genres_sum$genre <- factor(genres_sum$genre, levels = genres_sum$genre)
+genres_sum <- genres_sum[genres_sum$sum > 10, ]
+
+# Number of movies belonging to each genre
+ggplot(genres_sum, aes(x = genre, y = sum, fill = genre)) + 
+    geom_bar(stat = "identity", colour = "black") + 
+    coord_flip() +
+    labs(title = "Number of movies by genre", x = "", y = "") + 
+    geom_text(aes(label = sum), hjust = -0.2, vjust = 0.4) + 
+    theme_few() +
+    theme(legend.position = "None") +
+    theme(axis.text.x=element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank()) 
+
+######################### Create an appropriate dataframe with gross, imdb_score and genres for each movie
+movies_and_genres <- cbind(gross = movies$gross, score = movies$imdb_score, movies_and_genres, stringsAsFactors = FALSE)
+movies_and_genres <- melt(movies_and_genres, id = c("gross", "score"))
+movies_and_genres <- movies_and_genres[movies_and_genres$value == 1, ] 
+movies_and_genres$value <- NULL
+colnames(movies_and_genres) <- c("gross", "score", "genre")
+movies_and_genres$genre <- factor(movies_and_genres$genre, levels = genres_sum$genre)
+movies_and_genres <- movies_and_genres[complete.cases(movies_and_genres), ]
+
+# Boxplot of genres and profit
+ggplot(movies_and_genres, aes(genre, gross, fill = genre)) + 
+    geom_boxplot() + 
+    coord_flip() +
+    labs(title = "Gross revenue of movies by genre", x = "", y = "Gross revenue") + 
+    theme_few() +
+    theme(legend.position = "None") +
+    theme(axis.ticks.y = element_blank()) + 
+    scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                  labels = c("100", "10,000", "1 million", "100 millions", "1 billion"))
+
+# Boxplot of genres and imdb score
+ggplot(movies_and_genres, aes(genre, score, fill = genre)) + 
+    geom_boxplot() + 
+    coord_flip() +
+    labs(title = "IMDB score of movies by genre", x = "", y = "IMDB score") + 
+    theme_few() +
+    theme(legend.position = "None") +
+    theme(axis.ticks.y = element_blank()) +
+    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9))
+```
+
+### Steven
+
+### Louise
+*Would potentially like to do some plots reg. directors*
+=======
 ###Louise
 *Would potentially like to do some plots reg. directors - testing pushing again*
+>>>>>>> 7988f828b18ff7db6e7dbbd56bc9e5f667b87bbf
 ```{r echo = FALSE, message = FALSE}
 library(plyr)
 ##create summary statistics for average imdb score & number of movies for each director
@@ -153,21 +241,25 @@ ggplot(sorteddirectorsummary[1:20,], aes(x=director_name, y=number_of_movies, fi
 
 *It is expected that these will be related to how inputs are correlated with the two outcome variables (gross and imdb_score)*
 
-###Siow Meng
+### Siow Meng
 
 *Will likely do english vs non english movies analysis*
 
-###Nikhita
+### Nikhita
 
-###Cecilia
+### Cecilia
 
-###George
+### George
 
+<<<<<<< HEAD
+### Steven
+=======
 test
 
 ###Steven
+>>>>>>> 7988f828b18ff7db6e7dbbd56bc9e5f667b87bbf
 
-###Louise
+### Louise
 
 Adding something just so I can test version control with George's version.
 
