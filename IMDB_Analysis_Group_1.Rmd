@@ -169,6 +169,8 @@ test
 
 ###Louise
 
+Adding something just so I can test version control with George's version.
+
 ```{r echo=FALSE, message=FALSE}
 ##plot for imdb rating vs score
 ggplot(sorteddirectorsummary, aes(x = number_of_movies, y = score_average)) + 
