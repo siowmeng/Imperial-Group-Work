@@ -131,6 +131,8 @@ test<-movies[-intrain,]
 
 ### Nikhita
 
+Will do a country and actor analysis on gross and imdb score.
+
 ### Cecilia
 
 ### George
