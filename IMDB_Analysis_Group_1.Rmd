@@ -1,15 +1,17 @@
 ---
 title: "Analysis of IMDB Movie Dataset"
+date: "16 October 2016"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(ggthemes)
 library(ggrepel)
 library(reshape2)
 library(dplyr)
+library(caret)
 ```
 
 
@@ -22,9 +24,11 @@ library(dplyr)
 *key purpose/concepts that we are trying to explore are what makes a movie popular (based on the gross revenue), and what makes a movie highly rated by the public (based on the imdb score)*
 
 #Data
-```{r}
-movies <- read.csv(file="movie_metadata.csv", header = TRUE, stringsAsFactors = F, strip.white = TRUE)
+
+```{r, echo = FALSE}
+movies <- read.csv(file = "movie_metadata.csv", header = TRUE, stringsAsFactors = FALSE, strip.white = TRUE)
 ```
+
 *Explanation of the data and how it was extracted from IMDB to go here - Steven L*
 
 * explain what IMDB is
@@ -42,7 +46,7 @@ The dataset includes the following columns:
 
 First we look into the amount of NA variables found in each column our data:
 
-```{r echo = FALSE}
+```{r, echo = FALSE}
 ## function to calculate list of NAs within a column
 colNA <- function(dfCol){ sum(is.na(dfCol)) }
 ## To show table of sum of NAs by column
@@ -59,7 +63,7 @@ The following cleansing process is then applied:
 
 After this point there are only a few NAs remaining.
 
-```{r echo=FALSE}
+```{r, echo = FALSE}
 ## To remove rows where NAs are present for any of the applicable columns
 movies <- movies[complete.cases(movies[c("title_year","budget","gross")]),]
 ## To remove aspect ratio and imdb link columns
@@ -71,7 +75,7 @@ apply(movies, 2, colNA)
 
 * For all other columns where there are NAs, the mean value will be used to replace all NAs within that column. Although this has some drawbacks in terms of accuracy, it allows us to maintain rows of data with other valid information, and is an unbiased approach to handling NAs.
 *Louise comment - I will find some literature on this and explain it better*
-```{r echo=FALSE}
+```{r, echo = FALSE}
 ## for loop to replace NAs with means for particular columns
 for (i in c("actor_1_facebook_likes" , "actor_2_facebook_likes" , "actor_3_facebook_likes" , "num_critic_for_reviews" , "duration" , "facenumber_in_poster"))
  {k <- which(colnames(movies)==i)
@@ -80,8 +84,7 @@ for (i in c("actor_1_facebook_likes" , "actor_2_facebook_likes" , "actor_3_faceb
 
 * Unwanted strings "Â" as well as leading and  are removed from the "title" column.
 
-
-```{r echo = FALSE}
+```{r, echo = FALSE}
 movies <- movies[!duplicated(movies$movie_title),]
 # Function to remove Â, leading and trailing whitespace from movies$movie_title
 movie_title_processing <- function(str){
@@ -96,17 +99,16 @@ Although some of these steps reduce the sample size for analysis, the rows remov
 
 This cleansed dataset (of `r nrow(movies)` rows) contains no NA values and is used for the remainder of the analysis.
 
-```{r echo = FALSE}
+```{r, echo = FALSE}
 apply(movies, 2, colNA)
 ```
 *General note: I plan to tidy up the writing here later but just wanted to get down our discussion :)*
 
-```{r echo=FALSE, message=FALSE}
-library(caret)
+```{r, echo = FALSE, message = FALSE}
 set.seed(1)
-intrain<-createDataPartition(y=movies[[1]],p=0.9,list=FALSE)
-movies<-movies[intrain,]
-test<-movies[-intrain,]
+intrain <- createDataPartition(y = movies[[1]], p = 0.9, list = FALSE)
+movies <- movies[intrain, ]
+test <- movies[-intrain, ]
 ```
 
 10% of the cleansed dataset (`r nrow(test)`) is then set aside to be the "test" dataset, leaving the remaining 90%  of our dataset (`r nrow(movies)`) as the training dataset. The training dataset alone will be used for all descriptive, inferential and predictive analysis, including model building. The "test" dataset will be used at a later stage to check the accuracy of the predicted model.
@@ -137,9 +139,13 @@ Will do a country/actor analysis on gross and imdb score.
 
 ### George
 
+Will do an analysis on *Gross revenue* and *IMDB score* based on *Genres* and *Plot Keywords*. :)
+
+# Genres
+
 Descriptive analysis based on the movies genres and how do they correlate possibly with other variables of the dataset. Genres with less than 10 movies have been omitted. The first graph shows the number of movies in each genre while the second and the third plots present a boxplot for each genre associated with the profit of the movies and the IMDB score of the movies respectively.
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 genres <- c()
 i <- 1
 for (ins in movies$genres){
@@ -214,6 +220,110 @@ ggplot(movies_and_genres, aes(genre, score, fill = genre)) +
     theme(legend.position = "None") +
     theme(axis.ticks.y = element_blank()) +
     scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9))
+
+# Scatter plots of genres based on gross and imdb score
+ggplot(movies_and_genres, aes(x = gross, y = score, colour = genre)) + 
+  geom_jitter(alpha = 0.1) +
+  scale_x_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                labels = c("100", "10,000", "1 million", "100 millions", "1 billion")) +
+  labs(title = "Gross Revenue and IMDB score for different genres", x = "Gross Revenue", y = "IMDB Score") +
+  facet_wrap(~ genre) +
+  theme_few() + 
+  theme(legend.position = "None")
+```
+
+# Plot Keywords
+
+We display the keywords that appear in at least 40 movies.
+
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+movies0 <- movies[movies$plot_keywords != "", ]
+keywords <- c()
+i <- 1
+for (ins in movies0$plot_keywords){
+    kw <- strsplit(ins, "[|]")
+    if (length(kw) != 0){
+        for (word in kw[[1]]){
+            if (!(word %in% keywords)){
+                keywords[i] <- word
+                i = i + 1
+            }
+        }
+    }
+}
+# Create a dataframe with logical values which 
+# indiacte the keywords of each movie
+movies0$plot_keywords <- strsplit(movies0$plot_keywords, "[|]")
+keywords_idx <- movies0[, c("movie_title", "plot_keywords")]
+i = 1
+mat <- matrix(rep(0, (dim(movies0)[1] * length(keywords))), nrow = dim(movies0)[1])
+for (word in keywords_idx$plot_keywords){
+    idx <- which(keywords %in% word)
+    mat[i, idx] <- 1
+    i = i + 1
+}
+colnames(mat) <- keywords
+movies_and_keywords <- data.frame(mat)
+
+# Find how many movies belong in each keyword
+sum <- rep(0, length(keywords))
+for (i in 1:length(keywords)){
+    sum[i] <- sum(movies_and_keywords[, i])
+}
+keywords_sum <- data.frame(keywords = factor(keywords), sum = sum)
+keywords_sum <- keywords_sum[order(sum, decreasing = FALSE),]
+keywords_sum$keywords <- factor(keywords_sum$keywords, levels = keywords_sum$keywords)
+keywords_sum <- keywords_sum[keywords_sum$sum > 39, ]
+
+# Number of most popular keywords
+ggplot(keywords_sum, aes(x = keywords, y = sum, fill = keywords)) + 
+    geom_bar(stat = "identity", colour = "black") + 
+    coord_flip() +
+    labs(title = "Number of movies by keyword", x = "", y = "") + 
+    geom_text(aes(label = sum), hjust = -0.2, vjust = 0.4) + 
+    theme_few() +
+    theme(legend.position = "None") +
+    theme(axis.text.x=element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank()) 
+
+######################### Create an appropriate dataframe with gross, imdb_score and keywords    for each movie
+movies_and_keywords <- cbind(gross = movies0$gross, score = movies0$imdb_score, movies_and_keywords, stringsAsFactors = FALSE)
+movies_and_keywords <- melt(movies_and_keywords, id = c("gross", "score"))
+movies_and_keywords <- movies_and_keywords[movies_and_keywords$value == 1, ] 
+movies_and_keywords$value <- NULL
+colnames(movies_and_keywords) <- c("gross", "score", "keywords")
+movies_and_keywords$keywords <- factor(movies_and_keywords$keywords, levels = keywords_sum$keywords)
+movies_and_keywords <- movies_and_keywords[complete.cases(movies_and_keywords), ]
+
+# Boxplot of genres and profit
+ggplot(movies_and_keywords, aes(keywords, gross, fill = keywords)) + 
+    geom_boxplot() + 
+    coord_flip() +
+    labs(title = "Gross revenue of movies by keyword", x = "", y = "Gross revenue") + 
+    theme_few() +
+    theme(legend.position = "None") +
+    theme(axis.ticks.y = element_blank()) + 
+    scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                  labels = c("100", "10,000", "1 million", "100 millions", "1 billion"))
+
+# Boxplot of genres and imdb score
+ggplot(movies_and_keywords, aes(keywords, score, fill = keywords)) + 
+    geom_boxplot() + 
+    coord_flip() +
+    labs(title = "IMDB score of movies by keyword", x = "", y = "IMDB score") + 
+    theme_few() +
+    theme(legend.position = "None") +
+    theme(axis.ticks.y = element_blank()) +
+    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9))
+
+# Scatter plots of keywords based on gross and imdb score
+ggplot(movies_and_keywords, aes(x = gross, y = score, colour = keywords)) + 
+  geom_jitter(alpha = 0.1) +
+  scale_x_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                labels = c("100", "10,000", "1 million", "100 millions", "1 billion")) +
+  labs(title = "Gross Revenue and IMDB score for different genres", x = "Gross Revenue", y = "IMDB Score") +
+  facet_wrap(~ keywords) +
+  theme_few() + 
+  theme(legend.position = "None")
 ```
 
 ### Steven
@@ -249,14 +359,9 @@ ggplot(sorteddirectorsummary[1:20,], aes(x=director_name, y=number_of_movies, fi
 
 ### George
 
-<<<<<<< HEAD
 ### Steven
-=======
-test
-
 
 ### Louise
-
 
 ```{r echo=FALSE, message=FALSE}
 ##plot for imdb rating vs score
