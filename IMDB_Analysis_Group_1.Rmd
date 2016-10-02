@@ -175,6 +175,8 @@ ggplot(Ind, aes(x = gross, y = imdb_score)) + geom_point()
 
 ### Cecilia
 
+Will do a plot for budget vs gross and budget vs imdb score *test*
+
 ### George
 
 Will do an analysis on *Gross revenue* and *IMDB score* based on *Genres* and *Plot Keywords*. :)
