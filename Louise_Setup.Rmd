@@ -144,5 +144,16 @@ movies$facenumber_in_posterclean[is.na(movies$facenumber_in_poster)==TRUE] <- ro
 movies$num_critic_for_reviewsclean <- movies$num_critic_for_reviews
 movies$num_critic_for_reviewsclean[is.na(movies$num_critic_for_reviews)==TRUE] <- round(mean(movies$num_critic_for_reviews, na.rm=TRUE),0)
 
+## doesn't work
+replaceNAwithmean <- function(columnname) {
+ k <- which(colnames(movies)==columnname)
+ print(k)
+ print(round(mean(movies[[k]], na.rm=TRUE),0))
+ print(movies[k][is.na(movies[k]==TRUE)])
+ movies[k][is.na(movies[k]==TRUE)] <- round(mean(movies[[k]], na.rm=TRUE),0)
+ print(movies[k][is.na(movies[k]==TRUE)])}
+replaceNAwithmean("duration")
+
+
 ```
 

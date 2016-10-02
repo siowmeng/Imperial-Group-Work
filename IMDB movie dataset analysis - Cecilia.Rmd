@@ -1,0 +1,125 @@
+---
+title: "IMDB movie dataset analysis""
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Install packages:
+
+```{r }
+
+library (ggplot2)
+library (dplyr)
+library (plyr)
+
+```
+
+## Import data:
+
+```{r}
+
+imdbmovies <- read.csv("IMDB_movie_metadata.csv", header = T, stringsAsFactors = F)
+str(imdbmovies)
+
+```
+
+## Cleaning the data:
+- remove NA variables (remaining -> 3756)
+- remove repeats (remaining -> 3723)
+- get rid of A
+
+```{r}
+imdbmovies[imdbmovies==""] <-NA
+imdbmovies <- na.omit(imdbmovies)
+
+imdbmovies <- unique(imdbmovies)
+
+gsub("[^[:alnum:]///' ]", "", imdbmovies)
+```
+
+Some descriptive and influential plots/analysis:
+
+## Top 20 countries producing movies:
+```{r}
+
+subsetcountry <- count(imdbmovies, vars = "country") 
+subsetcountry <- subsetcountry[order(subsetcountry[,2], decreasing = TRUE),] 
+subsetcountry <- subsetcountry[subsetcountry[,2] >= 15,]
+ggplot(data = subsetcountry) + geom_bar(aes(x = country, y = freq), stat="identity")
+
+```
+
+
+## Rating vs Revenue
+
+```{r}
+ggplot(data = imdbmovies) + geom_point(aes(x = imdb_score, y = gross))
+cor(imdbmovies$imdb_score, imdbmovies$gross, use = "complete.obs")
+```
+
+## Score vs Budget
+
+```{r}
+
+ggplot(data = imdbmovies) + geom_point(aes(x = imdb_score, y = budget)) + scale_y_continuous(limits = c(0, 500000000))
+cor(imdbmovies$imdb_score, imdbmovies$budget, use = "complete.obs") 
+cov(imdbmovies$imdb_score, imdbmovies$budget, use = "complete.obs") 
+
+```
+
+## Budget vs Revenue
+
+```{r}
+ggplot(data = imdbmovies) + geom_point(aes(x = budget, y = gross)) + scale_x_continuous(limits = c(0,250000000))
+
+
+```
+
+## Top 20 directors with movies
+
+```{r}
+director <- count(imdbmovies, vars = "director_name") 
+director <- director[order(-director$freq),]
+subsetdirector <- director[1:20,]
+ggplot(data = subsetdirector) + geom_bar(stat = "identity", aes(x = director_name, y = freq)) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+## Budget vs Profit
+
+```{r}
+imdbmovies$profit <- imdbmovies$gross - imdbmovies$budget #create profit column
+
+ggplot(data = imdbmovies) + geom_point(aes(x = budget, y = profit)) + scale_x_continuous(limits = c(0,250000000)) + scale_y_continuous(limits = c(0, 100000000))
+cor(imdbmovies$budget, imdbmovies$profit, use = "complete.obs") 
+cov(imdbmovies$budget, imdbmovies$profit, use = "complete.obs") 
+
+
+```
+
+## Number of movies being produced over the years
+- dip at 2016 as 2016 isn't over yet 
+```{r}
+
+totalcountmovies <- count(imdbmovies, vars = "title_year")
+ggplot(data = totalcountmovies) + geom_line(aes(x = title_year, y = freq), stat="identity", na.rm = TRUE)
+
+```
+
+## Best and worst directors? Best and worst movies?
+- based on gross and imdb rating
+
+```{r}
+
+moviesdf <- data.frame(imdbmovies[,12], imdbmovies[,9], imdbmovies[,26], stringsAsFactors = FALSE)
+moviesdf <- moviesdf[order(moviesdf[,3], moviesdf[,2], decreasing = TRUE),]
+# doesn't work
+moviesdf <- rename(moviesdf, c("imdbmovies...12." = "movie_title", "imdbmovies...9." = "gross", "imdbmovies...26." = "imdb_score"))
+
+top20moviesdf <- top_n(moviesdf, 20)
+ggplot(data = top20moviesdf) + geom_point(aes(x = imdb_score, y = gross)) + geom_text(aes(x = imdb_score, y = gross, label= movie_title), size=3, hjust=0, vjust=1) + xlab("imdb_score") + ylab("gross") + ggtitle("Top 20 movies based on imdb score and gross")
+
+```

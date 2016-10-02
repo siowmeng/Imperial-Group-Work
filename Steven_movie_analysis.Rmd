@@ -7,15 +7,17 @@ output: html_document
 
 ```{r echo = FALSE}
 setwd('/Users/Steven/Desktop/')
-movie <- read.csv(file="movie_metadata.csv", head = TRUE, strip.white = TRUE)
-df_movie <- data.frame(movie)
+movies <- read.csv(file="movie_metadata.csv", head = TRUE, strip.white = TRUE)
 ```
 
 Import libraries for cleaning and analyzing data
 
 ```{r message = "hide"}
 library(ggplot2)
-
+library(ggthemes)
+library(knitr)  # for table
+library(countrycode)
+library(dplyr)
 ```
 ## Introduction
 
@@ -25,22 +27,36 @@ Purpose of report
 
 * explain what IMDB is
 
-The dataset used for this analysis was downloaded from Kaggle. The data was scraped from IMDB website using "Scrapy", a Python library. It contains `r dim(df_movie)[1]` movies with `r dim(df_movie)[2]` variables spanning 100 years and 66 countries. The dataset can be retrieved [here](https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset).
+The dataset used in this report was downloaded from Kaggle, a website for data analysis competitions. The data was scraped from IMDB using "Scrapy", a Python library. IMDB is a popular resource for movie and TV-show ratings, and celebrity content. The IMDB website is only offered in English, which makes the data biased towards an English-speaking audience. (Limitations of data?) The dataset contains `r dim(movies)[1]` movies with `r dim(movies)[2]` variables spanning 100 years and 66 countries. It can be retrieved [here](https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset).
 
-The dataset includes the following columns:
-`r names(df_movie)`
+The dataset includes the following variables:
+```{r echo = FALSE}
+# make table with column names and explanations
+
+# create new df with column names ar rows
+movie_variables <- data.frame(colnames(movies))
+
+# rename fisrt column
+colnames(movie_variables) <- ("Variable Name")
+
+# initiate new column for explanations
+movie_variables$Explanation <- NA
+
+# create table
+kable(movie_variables, format = "markdown")
+```
 
 ## Exploration and Cleaning of Raw Data
 
 ```{r echo = FALSE}
-head(df_movie)
+head(movies)
 ```
 
 A first look at the raw data reveals unwanted characters in the movie_title column. The following code removes them.
 
 ```{r}
 # convert column to matrix
-mat <- as.matrix(df_movie$movie_title)
+mat <- as.matrix(movies$movie_title)
 
 # remove unwanted characters from every entry
 for (i in 1:nrow(mat)) {
@@ -48,29 +64,252 @@ for (i in 1:nrow(mat)) {
 }
 
 # assign new values to original data frame
-df_movie$movie_title <- mat
+movies$movie_title <- mat
+```
+
+Strip white trailing and leading white space
+```{r}
+# function for removing trailing and leading white space
+trim <- function (x) gsub("^\\s+|\\s+$", "", x)
+
+# apply function to every column of data frame
+for (i in 1:ncol(movies)) {
+  if (is.character(movies[,i])) {
+    movies[,i] <- trim(movies[,i])
+  }
+}
+```
+The anyDuplicated function call reveils that there are duplicates in our data. We remove them by calling the unique function.
+```{r}
+any(anyDuplicated(movies))
+
+# remove duplicates
+movies <- unique(movies)
+
+# find row number of "Dekalog" as unique function doesn't delete this
+which(movies$movie_title == "Dekalog")
+
+# remove "Dekalog" entry as it is represented twice but with a different amount of facebook likes. Row number 2802
+movies <- movies[-2802, ]
 ```
 
 ## Preliminary Visualizations
 
+Univariate distributions
+
+Histograms for IMDB scores and gross revenue
 ```{r}
-hist(df_movie$imdb_score)
+ggplot(movies, aes(x = imdb_score)) + geom_histogram(binwidth = 0.05)
+
+ggplot(movies, aes(x = gross)) + geom_histogram() + stat_bin(bins = 30)
 ```
 
-The above graph shows the distribution of IMDB scores for the movies. It appears to follow a normal distribution with a mean of **`r mean(df_movie$imdb_score)`** and a standard deviation of **`r sd(df_movie$imdb_score)`**.
+The above graph shows the distribution of IMDB scores for the movies. It appears to follow a normal distribution with a mean of **`r mean(movies$imdb_score)`** and a standard deviation of **`r sd(movies$imdb_score)`**.
+
+Univartiate graph for IMDB scores and gross revenue
+```{r}
+# first add group column to use as y axis
+movies$group <- 0
+
+# IMDB scores
+ggplot(movies, aes(x = imdb_score, y= group)) + geom_jitter() + scale_y_continuous(limits=c(-2, 2))
+
+# Gross revenue
+ggplot(movies, aes(x = gross, y= group)) + geom_jitter() + scale_y_continuous(limits=c(-2, 2))
+```
+
+Add continents columns
+```{r}
+# add continent column
+movies$continent <- countrycode(as.character(movies$country), "country.name", "continent")
+
+# divide "Americas" into "North Americas" and "South America"
+south_America = c("Brazil", "Argentina", "Chile", "Colombia", "Peru")
+
+for (i in 1:nrow(movies)) {
+  if (is.na(movies$continent[i])) {
+    next
+  } else if ((movies$continent[i] == "Americas") & (movies$country[i] %in% south_America)) {
+    movies$continent[i] <- "South America"
+  } else if ((movies$continent[i] == "Americas") & (!(movies$country[i] %in% south_America))) {
+    movies$continent[i] <- "North America"
+  } 
+}
+```
+
+Europe IMDB score boxplot
+```{r}
+temp <- movies[movies$continent == "Europe", ]
+
+ggplot(temp, aes(x = country, y = imdb_score)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5)) +
+  labs(title = "IMDB scores against European countries", x = "", y = "IMDB Score")
+```
+
+Americas IMDB boxplot
+```{r}
+# Americas
+temp <- movies[movies$continent == c("North America", "South America"),]
+
+ggplot(temp, aes(x = country, y = imdb_score)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5)) +
+  labs(title = "IMDB scores against Americas", x = "", y = "IMDB Score")
+
+# North America
+temp <- movies[movies$continent == "North America",]
+
+ggplot(temp, aes(x = country, y = imdb_score)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5)) +
+  labs(title = "IMDB scores against North America", x = "", y = "IMDB Score")
+
+# South America
+temp <- movies[movies$continent == "South America",]
+
+ggplot(temp, aes(x = country, y = imdb_score)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5)) +
+  labs(title = "IMDB scores against South America", x = "", y = "IMDB Score")
+```
+
+Boxplot IMDB scores against content rating
+```{r}
+# need to remove rows where content rating is ""
+ggplot(movies[!movies$content_rating == "", ], aes(x = content_rating, y = imdb_score)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5)) +
+  labs(title = "IMDB scores against content rating", x = "", y = "IMDB Score")
+```
+
+Boxplot IMDB scores against countries and countries with at least ten movies
+```{r}
+# need to remove rows where country is ""
+ggplot(movies[!movies$country == "", ], aes(x = country, y = imdb_score)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5)) +
+  labs(title = "IMDB scores against country", x = "", y = "IMDB Score")
+```
+
+Boxplot IMDB scores against year, decade
+```{r}
+# for all countries and all years
+# remove NA from title_year column first 
+temp <- movies[!is.na(movies$title_year),]
+ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against year", x = "", y = "IMDB Score")
+
+# make decade column
+for (i in 1:nrow(movies)){
+  low <- movies$title_year[i] - (movies$title_year[i] %% 10)
+  high <- movies$title_year[i] - (movies$title_year[i] %% 10) + 9
+  movies$decade[i] <- paste(as.character(low), as.character(high), sep = "-")
+}
+
+# for all countries by decade
+# remove entries with NA-NA
+temp <- movies[!movies$decade == "NA-NA", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, all countries", x = "", y = "IMDB Score")
+
+# for Europe
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$continent == "Europe", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, Europe", x = "", y = "IMDB Score")
+
+# for North America
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$continent == "North America", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, North America", x = "", y = "IMDB Score")
+
+# for France
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "France", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5),legend.position = "None") +
+  labs(title = "IMDB scores against decade, France", x = "", y = "IMDB Score")
+
+# for Germany
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "Germany", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, Germany", x = "", y = "IMDB Score")
+
+# for USA
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "USA", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, USA", x = "", y = "IMDB Score")
+
+# for UK
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "UK", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, UK", x = "", y = "IMDB Score")
+
+# for India
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "India", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, India", x = "", y = "IMDB Score")
+
+# for China
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "China", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, China", x = "", y = "IMDB Score")
+```
 
 ```{r}
-plot(df_movie$imdb_score, df_movie$gross)
+ggplot(movies, aes(x = imdb_score, y = gross)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
 ```
 
 The above graph plots Y against IMBD scores. There appears to be some positive correlation between IMBD scores and the revenues produced by a movie. This follows the initial intuition that popular movies generate more revenue.
 
 ```{r}
-temp <- df_movie[order(df_movie$imdb_score,decreasing=TRUE), ]
+temp <- movies[order(movies$imdb_score,decreasing=TRUE), ]
 temp <- temp[1:10,]
-barplot(temp$imdb_score, horiz = TRUE, names.arg = temp$movie_title)
+ggplot(temp, aes(x = temp$movie_title, y = temp$imdb_score)) + geom_bar(stat = "identity") + coord_flip()
 ```
 
+
+## Inferential Analysis
+Test whether, on average, European movies get higher IMDB scores than North American ones.
+H0 -> Europe and North America get equal scores
+```{r}
+# make dataframes for North America and Europe
+North_America <- movies[movies$continent == "North America",]
+Europe <- movies[movies$continent == "Europe",]
+
+# separate IMDB scores 
+North_America <- North_America$imdb_score
+Europe <- Europe$imdb_score
+
+t.test(Europe, North_America)
+
+```
 ## Data Cleaning
 
 Before analyzing
@@ -81,3 +320,4 @@ Before analyzing
 * get rid of whitespace in movie_title
 * check if there are duplicates and remove them
 * compare IMDB scores of two years
+* movies per capita
