@@ -11,6 +11,7 @@ library(ggthemes)
 library(ggrepel)
 library(reshape2)
 library(dplyr)
+library(plyr)
 library(caret)
 ```
 
@@ -104,6 +105,8 @@ apply(movies, 2, colNA)
 ```
 *General note: I plan to tidy up the writing here later but just wanted to get down our discussion :)*
 
+*Siow Meng comment: I think there's bug in below code, the dataframe movies has already been subsetted once before test set is assigned*
+
 ```{r, echo = FALSE, message = FALSE}
 set.seed(1)
 intrain <- createDataPartition(y = movies[[1]], p = 0.9, list = FALSE)
@@ -130,6 +133,37 @@ test <- movies[-intrain, ]
 * *Total number of facebook likes - histogram*
 
 ### Siow Meng
+
+```{r, echo = FALSE}
+
+revYear <- ddply(movies, ~ title_year, summarise, meanRev = mean(gross, na.rm = TRUE))
+
+ggplot(data = revYear, aes(x = title_year, y = meanRev)) + geom_line() + labs(title = "Average Gross Revenue from Year 1920 to 2016", x = "Year", y = "Average Revenue") + xlim(1920, 2016)
+
+revLanguage <- ddply(movies, ~ title_year + language, summarise, meanRev = mean(gross, na.rm = TRUE))
+
+ggplot(data = revLanguage[revLanguage$language == "English", ], aes(x = title_year, y = meanRev)) + geom_line() + labs(title = "Average Gross Revenue of English Movies from Year 1920 to 2016", x = "Year", y = "Average Revenue") + xlim(1920, 2016)
+
+ggplot(data = revLanguage[revLanguage$language != "English", ], aes(x = title_year, y = meanRev)) + geom_line() + labs(title = "Average Gross Revenue of Non-English Movies from Year 1920 to 2016", x = "Year", y = "Average Revenue") + xlim(1920, 2016)
+
+# Correlation plot from Louise
+moviesnumeric<- movies[c("duration", "title_year", "budget", "imdb_score", "movie_facebook_likes", "actor_1_facebook_likes", "actor_2_facebook_likes", "actor_3_facebook_likes", "cast_total_facebook_likes", "director_facebook_likes", "num_user_for_reviews", "num_critic_for_reviews", "facenumber_in_poster", "gross")]
+##used pairwise complete obs to handle NAs for fields with a high number of nas
+corrmatrix <- round(cor(moviesnumeric, use="pairwise.complete.obs"), 2)
+meltedmovies<- melt(corrmatrix)
+ggplot(data = meltedmovies, aes(x=Var1, y=Var2, fill=value)) + geom_tile() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(x="", y="") + ggtitle("Correlation Matrix")
+
+# Added correlation plot for movies after 2005
+corrmatrix2005 <- round(cor(moviesnumeric[moviesnumeric$title_year >= 2005, ], use="pairwise.complete.obs"), 2)
+meltedmovies2005 <- melt(corrmatrix2005)
+ggplot(data = meltedmovies2005, aes(x=Var1, y=Var2, fill=value)) + geom_tile() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(x="", y="") + ggtitle("Correlation Matrix")
+
+# Added correlation plot for movies after 2010
+corrmatrix2010 <- round(cor(moviesnumeric[moviesnumeric$title_year >= 2010, ], use="pairwise.complete.obs"), 2)
+meltedmovies2010 <- melt(corrmatrix2010)
+ggplot(data = meltedmovies2010, aes(x=Var1, y=Var2, fill=value)) + geom_tile() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(x="", y="") + ggtitle("Correlation Matrix")
+
+```
 
 ### Nikhita
 
@@ -367,6 +401,7 @@ ggplot(movies_and_keywords, aes(x = gross, y = score, colour = keywords)) +
 ### Steven
 
 ###Louise
+*Siow Meng comment: plyr library has been added at the first section of the document. Shall we all load the libraries in the first section?*
 *Would potentially like to do some plots reg. directors - testing pushing again*
 ```{r echo = FALSE, message = FALSE}
 library(plyr)
