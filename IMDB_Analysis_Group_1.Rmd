@@ -147,7 +147,9 @@ ggplot(data = revLanguage[revLanguage$language == "English", ], aes(x = title_ye
 ggplot(data = revLanguage[revLanguage$language != "English", ], aes(x = title_year, y = meanRev)) + geom_line() + labs(title = "Average Gross Revenue of Non-English Movies from Year 1920 to 2016", x = "Year", y = "Average Revenue") + xlim(1920, 2016)
 
 # Correlation plot from Louise
+
 moviesnumeric<- movies[c("duration", "title_year", "budget", "imdb_score", "movie_facebook_likes", "actor_1_facebook_likes", "actor_2_facebook_likes", "actor_3_facebook_likes", "cast_total_facebook_likes", "director_facebook_likes", "num_user_for_reviews", "num_critic_for_reviews", "facenumber_in_poster", "gross")]
+
 ##used pairwise complete obs to handle NAs for fields with a high number of nas
 corrmatrix <- round(cor(moviesnumeric, use="pairwise.complete.obs"), 2)
 meltedmovies<- melt(corrmatrix)
@@ -169,40 +171,44 @@ ggplot(data = meltedmovies2010, aes(x=Var1, y=Var2, fill=value)) + geom_tile() +
 
 Will do a country/actor analysis on gross and imdb score.
 
+*Siow Meng comment: I commented Nikhita's code for now as it is giving error while knitting the file. To investigate further.*
+*Siow Meng comment: Might want to avoid keyword: head*
+
 ```{r}
+
 country <- movies$country
 scores <- movies$imdb_score
 
-# Sorting the movies by country and picking out the top 10
-counted <- count(movies, country)
-sorted <- arrange(counted, desc(n))
-head <- sorted[1:10,]
-head$country <- factor(head$country, levels = head$country[order(head$n)])
-
-ggplot(head, aes(x = country, y = n, fill = country, label = n)) + geom_bar(stat="identity") + coord_flip()
-
-USA <- subset(movies, country == "USA")
-UK <- subset(movies, country == "UK")
-Fra <- subset(movies, country == "France")
-Ger <- subset(movies, country == "Germany")
-Can <- subset(movies, country == "Canada")
-Aus <- subset(movies, country == "Australia")
-Spa <- subset(movies, country == "Spain")
-Jap <- subset(movies, country == "Japan")
-Chi <- subset(movies, country == "China")
-Ind <- subset(movies, country == "India")
-
-# Plotting graph for gross vs imdb score (Need to figure out a one-step way of doing this)
-ggplot(USA, aes(x = gross, y = imdb_score)) + geom_point(colour = "red")
-ggplot(UK, aes(x = gross, y = imdb_score)) + geom_point(colour = "blue")
-ggplot(Fra, aes(x = gross, y = imdb_score)) + geom_point(colour = "green")
-ggplot(Ger, aes(x = gross, y = imdb_score)) + geom_point(colour = "pink")
-ggplot(Can, aes(x = gross, y = imdb_score)) + geom_point()
-ggplot(Aus, aes(x = gross, y = imdb_score)) + geom_point()
-ggplot(Spa, aes(x = gross, y = imdb_score)) + geom_point()
-ggplot(Jap, aes(x = gross, y = imdb_score)) + geom_point()
-ggplot(Chi, aes(x = gross, y = imdb_score)) + geom_point()
-ggplot(Ind, aes(x = gross, y = imdb_score)) + geom_point()
+# # Sorting the movies by country and picking out the top 10
+# counted <- count(movies, country)
+# sorted <- arrange(counted, desc(n))
+# head <- sorted[1:10,]
+# head$country <- factor(head$country, levels = head$country[order(head$n)])
+# 
+# ggplot(head, aes(x = country, y = n, fill = country, label = n)) + geom_bar(stat="identity") + coord_flip()
+# 
+# USA <- subset(movies, country == "USA")
+# UK <- subset(movies, country == "UK")
+# Fra <- subset(movies, country == "France")
+# Ger <- subset(movies, country == "Germany")
+# Can <- subset(movies, country == "Canada")
+# Aus <- subset(movies, country == "Australia")
+# Spa <- subset(movies, country == "Spain")
+# Jap <- subset(movies, country == "Japan")
+# Chi <- subset(movies, country == "China")
+# Ind <- subset(movies, country == "India")
+# 
+# # Plotting graph for gross vs imdb score (Need to figure out a one-step way of doing this)
+# ggplot(USA, aes(x = gross, y = imdb_score)) + geom_point(colour = "red")
+# ggplot(UK, aes(x = gross, y = imdb_score)) + geom_point(colour = "blue")
+# ggplot(Fra, aes(x = gross, y = imdb_score)) + geom_point(colour = "green")
+# ggplot(Ger, aes(x = gross, y = imdb_score)) + geom_point(colour = "pink")
+# ggplot(Can, aes(x = gross, y = imdb_score)) + geom_point()
+# ggplot(Aus, aes(x = gross, y = imdb_score)) + geom_point()
+# ggplot(Spa, aes(x = gross, y = imdb_score)) + geom_point()
+# ggplot(Jap, aes(x = gross, y = imdb_score)) + geom_point()
+# ggplot(Chi, aes(x = gross, y = imdb_score)) + geom_point()
+# ggplot(Ind, aes(x = gross, y = imdb_score)) + geom_point()
 
 ```
 
@@ -404,6 +410,7 @@ ggplot(movies_and_keywords, aes(x = gross, y = score, colour = keywords)) +
 
 ###Louise
 *Siow Meng comment: plyr library has been added at the first section of the document. Shall we all load the libraries in the first section?*
+*Siow Meng comment: Encountered the following warning while knitting: Scale for 'y' is already present. Adding another scale for 'y', which will replace the existing scale.*
 *Would potentially like to do some plots reg. directors - testing pushing again*
 ```{r echo = FALSE, message = FALSE}
 library(plyr)
@@ -426,7 +433,25 @@ ggplot(sorteddirectorsummary[1:20,], aes(x=director_name, y=number_of_movies, fi
 
 ### Siow Meng
 
-*Will likely do english vs non english movies analysis*
+```{r echo=FALSE}
+# boxplot of English & Non-English movies
+temp <- movies
+
+temp$english <- factor(temp$language == "English", levels = c(TRUE, FALSE), labels = c("English", "Non-English"))
+
+ggplot(data = temp, aes(x = english, y = gross)) + geom_boxplot() + labs(title = "Gross Revenue of English and non-English Movies", x = "English or Non-English Movies", y = "Gross Revenue") + coord_cartesian(ylim = c(0, 1e8))
+
+t.test(movies$gross[movies$language == "English"], movies$gross[movies$language != "English"], alternative = "greater")
+
+var.test(movies$gross[movies$language == "English"], movies$gross[movies$language != "English"], alternative = "greater")
+
+```
+
+From the above box-and-whisker plots, we can observe a great difference between the revenues achieved by English and non-English movies. More than 75% of the non-English movies achieved gross revenue of US$10 million or lower. In contrast, more than half of the English movies have more than US$25 million revenues.
+
+In addition, the gross revenues of English movies vary greatly (compared to non-English movies).
+
+We are confident to say that the English movies in this dataset are generally more popular than non-English movies.
 
 ### Nikhita
 
