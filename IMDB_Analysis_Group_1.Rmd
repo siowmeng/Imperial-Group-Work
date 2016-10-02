@@ -12,8 +12,6 @@ library(ggrepel)
 library(reshape2)
 library(dplyr)
 library(caret)
-library(knitr)
-library(countrycode)
 ```
 
 
@@ -139,27 +137,38 @@ Will do a country/actor analysis on gross and imdb score.
 
 ```{r}
 country <- movies$country
+scores <- movies$imdb_score
 
-# Getting the frequency of the countries
-countries <- data.frame(table(country))
+# Sorting the movies by country and picking out the top 10
+counted <- count(movies, country)
+sorted <- arrange(counted, desc(n))
+head <- sorted[1:10,]
+head$country <- factor(head$country, levels = head$country[order(head$n)])
 
-# Looking at countries with more than 10 movies
-for (i in length(countries)){
-    topcountries <- subset(movies, countries[,i] > 10)
-}
+ggplot(head, aes(x = country, y = n, fill = country, label = n)) + geom_bar(stat="identity") + coord_flip()
 
-# Defining gross revenue and imdb score
-gross <- topcountries$gross
-score <- topcountries$imdb_score
+USA <- subset(movies, country == "USA")
+UK <- subset(movies, country == "UK")
+Fra <- subset(movies, country == "France")
+Ger <- subset(movies, country == "Germany")
+Can <- subset(movies, country == "Canada")
+Aus <- subset(movies, country == "Australia")
+Spa <- subset(movies, country == "Spain")
+Jap <- subset(movies, country == "Japan")
+Chi <- subset(movies, country == "China")
+Ind <- subset(movies, country == "India")
 
-# Plotting a graph for gross vs imdb score
-ggplot(topcountries, aes(x = gross, y = score)) + 
-  geom_jitter(alpha = 0.1) +
-  scale_x_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                labels = c("100", "10,000", "1 million", "100 millions", "1 billion")) +
-  labs(title = "Gross Revenue and IMDB score for different countries", x = "Gross Revenue", y = "IMDB Score") 
-
-# (Still need to group them by country so I can get 10 plots)
+# Plotting graph for gross vs imdb score (Need to figure out a one-step way of doing this)
+ggplot(USA, aes(x = gross, y = imdb_score)) + geom_point(colour = "red")
+ggplot(UK, aes(x = gross, y = imdb_score)) + geom_point(colour = "blue")
+ggplot(Fra, aes(x = gross, y = imdb_score)) + geom_point(colour = "green")
+ggplot(Ger, aes(x = gross, y = imdb_score)) + geom_point(colour = "pink")
+ggplot(Can, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Aus, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Spa, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Jap, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Chi, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Ind, aes(x = gross, y = imdb_score)) + geom_point()
 
 ```
 
@@ -356,110 +365,6 @@ ggplot(movies_and_keywords, aes(x = gross, y = score, colour = keywords)) +
 ```
 
 ### Steven
-Exploratory analysis of how IMDB scores evoloved globally and in specific regions and countries
-```{r echo = FALSE, message = FALSE}
-# for all countries and all years
-# remove NA from title_year column first 
-temp <- movies[!is.na(movies$title_year),]
-ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
-  geom_boxplot() +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against year", x = "", y = "IMDB Score")
-
-# make decade column
-for (i in 1:nrow(movies)){
-  low <- movies$title_year[i] - (movies$title_year[i] %% 10)
-  high <- movies$title_year[i] - (movies$title_year[i] %% 10) + 9
-  movies$decade[i] <- paste(as.character(low), as.character(high), sep = "-")
-}
-
-# for all countries by decade
-# remove entries with NA-NA
-temp <- movies[!movies$decade == "NA-NA", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot() +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, all countries", x = "", y = "IMDB Score")
-
-movies$continent <- countrycode(as.character(movies$country), "country.name", "continent")
-
-# divide "Americas" into "North Americas" and "South America"
-south_America = c("Brazil", "Argentina", "Chile", "Colombia", "Peru")
-
-for (i in 1:nrow(movies)) {
-  if (is.na(movies$continent[i])) {
-    next
-  } else if ((movies$continent[i] == "Americas") & (movies$country[i] %in% south_America)) {
-    movies$continent[i] <- "South America"
-  } else if ((movies$continent[i] == "Americas") & (!(movies$country[i] %in% south_America))) {
-    movies$continent[i] <- "North America"
-  } 
-}
-
-# for Europe
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$continent == "Europe", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot() +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, Europe", x = "", y = "IMDB Score")
-
-# for North America
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$continent == "North America", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot() +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, North America", x = "", y = "IMDB Score")
-
-# for France
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "France", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot() +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5),legend.position = "None") +
-  labs(title = "IMDB scores against decade, France", x = "", y = "IMDB Score")
-
-# for Germany
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "Germany", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot() +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, Germany", x = "", y = "IMDB Score")
-
-# for USA
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "USA", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot() +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, USA", x = "", y = "IMDB Score")
-
-# for UK
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "UK", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot() +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, UK", x = "", y = "IMDB Score")
-
-# for India
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "India", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot() +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, India", x = "", y = "IMDB Score")
-
-# for China
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "China", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot() +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, China", x = "", y = "IMDB Score")
-```
 
 ###Louise
 *Would potentially like to do some plots reg. directors - testing pushing again*
@@ -493,20 +398,7 @@ ggplot(sorteddirectorsummary[1:20,], aes(x=director_name, y=number_of_movies, fi
 ### George
 
 ### Steven
-Test whether, on average, European movies get higher IMDB scores than North American ones.
-H0 -> Europe and North America get equal scores
-```{r}
-# make dataframes for North America and Europe
-North_America <- movies[movies$continent == "North America",]
-Europe <- movies[movies$continent == "Europe",]
 
-# separate IMDB scores 
-North_America <- North_America$imdb_score
-Europe <- Europe$imdb_score
-
-t.test(Europe, North_America)
-
-```
 ### Louise
 
 ```{r echo=FALSE, message=FALSE}
