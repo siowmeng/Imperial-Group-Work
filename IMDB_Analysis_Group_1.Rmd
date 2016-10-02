@@ -493,7 +493,20 @@ ggplot(sorteddirectorsummary[1:20,], aes(x=director_name, y=number_of_movies, fi
 ### George
 
 ### Steven
+Test whether, on average, European movies get higher IMDB scores than North American ones.
+H0 -> Europe and North America get equal scores
+```{r}
+# make dataframes for North America and Europe
+North_America <- movies[movies$continent == "North America",]
+Europe <- movies[movies$continent == "Europe",]
 
+# separate IMDB scores 
+North_America <- North_America$imdb_score
+Europe <- Europe$imdb_score
+
+t.test(Europe, North_America)
+
+```
 ### Louise
 
 ```{r echo=FALSE, message=FALSE}
