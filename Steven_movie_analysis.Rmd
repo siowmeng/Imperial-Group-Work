@@ -304,12 +304,21 @@ North_America <- movies[movies$continent == "North America",]
 Europe <- movies[movies$continent == "Europe",]
 
 # separate IMDB scores 
-North_America <- North_America$imdb_score
-Europe <- Europe$imdb_score
+North_America <- North_America[, c("imdb_score", "continent")]
+Europe <- Europe[, c("imdb_score", "continent")]
 
-t.test(Europe, North_America)
+t.test(Europe$imdb_score, North_America$imdb_score)
 
+# combine two data frames
+comb <- rbind(Europe, North_America)
+
+# plot densities
+ggplot(comb, aes(x = comb$imdb_score)) +
+  geom_density() +
+  geom_density(aes(x = comb$imdb_score, fill = continent, alpha = 0.3)) +
+  xlab("IMDB score")
 ```
+
 ## Data Cleaning
 
 Before analyzing
