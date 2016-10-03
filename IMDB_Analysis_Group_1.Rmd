@@ -222,7 +222,7 @@ Will do a plot for budget vs gross and budget vs imdb score *test*
 
 Will do an analysis on *Gross revenue* and *IMDB score* based on *Genres* and *Plot Keywords*. :)
 
-# Genres
+##### Genres
 
 Descriptive analysis based on the movies genres and how do they correlate possibly with other variables of the dataset. Genres with less than 10 movies have been omitted. The first graph shows the number of movies in each genre while the second and the third plots present a boxplot for each genre associated with the profit of the movies and the IMDB score of the movies respectively.
 
@@ -275,6 +275,7 @@ ggplot(genres_sum, aes(x = genre, y = sum, fill = genre)) +
 ######################### Create an appropriate dataframe with gross, imdb_score and genres for each movie
 movies_and_genres <- cbind(gross = movies$gross, score = movies$imdb_score, movies_and_genres, stringsAsFactors = FALSE)
 movies_and_genres <- melt(movies_and_genres, id = c("gross", "score"))
+movies_and_genres$variable <- gsub("[.]", " ", movies_and_genres$variable)
 movies_and_genres <- movies_and_genres[movies_and_genres$value == 1, ] 
 movies_and_genres$value <- NULL
 colnames(movies_and_genres) <- c("gross", "score", "genre")
@@ -313,9 +314,10 @@ ggplot(movies_and_genres, aes(x = gross, y = score, colour = genre)) +
   theme(legend.position = "None")
 ```
 
-# Plot Keywords
 
-We display the keywords that appear in at least 40 movies.
+#### Plot Keywords
+
+We display the 20 most popular keywords.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 movies0 <- movies[movies$plot_keywords != "", ]
@@ -354,7 +356,8 @@ for (i in 1:length(keywords)){
 keywords_sum <- data.frame(keywords = factor(keywords), sum = sum)
 keywords_sum <- keywords_sum[order(sum, decreasing = FALSE),]
 keywords_sum$keywords <- factor(keywords_sum$keywords, levels = keywords_sum$keywords)
-keywords_sum <- keywords_sum[keywords_sum$sum > 39, ]
+#keywords_sum <- keywords_sum[keywords_sum$sum > 39, ]
+keywords_sum <- keywords_sum[(dim(keywords_sum)[1]-19):dim(keywords_sum)[1] ,]
 
 # Number of most popular keywords
 ggplot(keywords_sum, aes(x = keywords, y = sum, fill = keywords)) + 
@@ -369,6 +372,7 @@ ggplot(keywords_sum, aes(x = keywords, y = sum, fill = keywords)) +
 ######################### Create an appropriate dataframe with gross, imdb_score and keywords    for each movie
 movies_and_keywords <- cbind(gross = movies0$gross, score = movies0$imdb_score, movies_and_keywords, stringsAsFactors = FALSE)
 movies_and_keywords <- melt(movies_and_keywords, id = c("gross", "score"))
+movies_and_keywords$variable <- gsub("[.]", " ", movies_and_keywords$variable)
 movies_and_keywords <- movies_and_keywords[movies_and_keywords$value == 1, ] 
 movies_and_keywords$value <- NULL
 colnames(movies_and_keywords) <- c("gross", "score", "keywords")
@@ -398,11 +402,11 @@ ggplot(movies_and_keywords, aes(keywords, score, fill = keywords)) +
 
 # Scatter plots of keywords based on gross and imdb score
 ggplot(movies_and_keywords, aes(x = gross, y = score, colour = keywords)) + 
-  geom_jitter(alpha = 0.1) +
+  geom_jitter(alpha = 0.2) +
   scale_x_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
                 labels = c("100", "10,000", "1 million", "100 millions", "1 billion")) +
-  labs(title = "Gross Revenue and IMDB score for different genres", x = "Gross Revenue", y = "IMDB Score") +
-  facet_wrap(~ keywords) +
+  labs(title = "Gross Revenue and IMDB score for different keywords", x = "Gross Revenue", y = "IMDB Score") +
+  facet_wrap(~ keywords, nrow = 4) +
   theme_few() + 
   theme(legend.position = "None")
 ```
@@ -523,6 +527,7 @@ ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
 *Yes, this is because I like my graphs to start at actual 0 rather than the ggplot default where they start at -0.5 and so have some padding - happy to discuss aesthetics when we consolidate plot themes*.
 
 *Would potentially like to do some plots reg. directors - testing pushing again*
+
 ```{r echo = FALSE, message = FALSE}
 ##create summary statistics for average imdb score & number of movies for each director
 directorssummary <- ddply(movies, ~ director_name,summarise,score_average=round(mean(imdb_score),2), gross_average=round(mean(gross),2), number_of_movies=length(director_name))
@@ -574,6 +579,152 @@ We are confident to say that the English movies in this dataset are generally mo
 
 ### George
 
+In case of nominal variables it doesn't make sense to talk about what happens if these variables increase/decrease, because they don't have a numerical value that can go up/down. So we can correlate neither "Genres" nor "Keywords" with "Gross Revenue" or "IMDB Score". However, there are measures of strength of association we can use that are somewhat analogous. 
+
+*Genres analysis*
+
+For gross revenue prediction.
+
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+genres_model_gross <- lm(gross ~ genre, data = movies_and_genres)
+summary(genres_model_gross)
+intercept1 <- lm(movies_and_genres$gross ~ genres_model_gross$fitted)$coefficients[[1]]
+
+movies_and_genres_full <- data.frame(movies_and_genres, predicted_gross = genres_model_gross$fitted)
+avg_gross <- movies_and_genres_full[, 3:4]
+avg_gross <- avg_gross[!duplicated(avg_gross$genre), ]
+avg_gross <- avg_gross[order(avg_gross$predicted_gross), ]
+rownames(avg_gross) <- 1:dim(avg_gross)[1]
+
+ggplot() + 
+    geom_point(aes(x = movies_and_genres_full$predicted_gross, y = movies_and_genres_full$gross, colour = movies_and_genres_full$genre), alpha = 0.1) + 
+    geom_abline(intercept = intercept1) + 
+    geom_point(aes(x = avg_gross$predicted_gross, y = avg_gross$predicted_gross, colour = avg_gross$genre), 
+               size = 2, shape = 21, stroke = 2) + 
+    geom_text(aes(x = avg_gross[seq(1, dim(avg_gross)[1], 2), ]$predicted_gross, 
+                   y = avg_gross[seq(1, dim(avg_gross)[1], 2), ]$predicted_gross, 
+                   label = avg_gross[seq(1, dim(avg_gross)[1], 2), ]$genre), 
+               check_overlap = F, nudge_y = -0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
+    geom_text(aes(x = avg_gross[seq(2, dim(avg_gross)[1], 2), ]$predicted_gross, 
+                   y = avg_gross[seq(2, dim(avg_gross)[1], 2), ]$predicted_gross, 
+                   label = avg_gross[seq(2, dim(avg_gross)[1], 2), ]$genre), 
+               check_overlap = F, nudge_y = 0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
+    scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                labels = c("100", "10,000", "1 million", "100 millions", "1 billion")) +
+    scale_x_log10(breaks = c(0.15e+08, 0.5e+08, 1e+08), 
+                labels = c("15 millions", "50 millions", "100 millions")) +
+    labs(title = "Gross Revenue for different genres", x = "Predicted Gross Revenue", y = "Observed Gross Revenue") +
+    theme_few() + 
+    theme(legend.position = "None")
+```
+
+For IMDB score prediction.
+
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+genres_model_score <- lm(score ~ genre, data = movies_and_genres)
+summary(genres_model_score)
+intercept2 <- lm(movies_and_genres$score ~ genres_model_score$fitted)$coefficients[[1]]
+
+movies_and_genres_full <- data.frame(movies_and_genres, predicted_score = genres_model_score$fitted)
+avg_score <- movies_and_genres_full[, 3:4]
+avg_score <- avg_score[!duplicated(avg_score$genre), ]
+avg_score <- avg_score[order(avg_score$predicted_score), ]
+rownames(avg_score) <- 1:dim(avg_score)[1]
+
+ggplot() + 
+    geom_jitter(aes(x = movies_and_genres_full$predicted_score, y = movies_and_genres_full$score, colour = movies_and_genres_full$genre), alpha = 0.1) + 
+    geom_abline(intercept = intercept2) + 
+    geom_point(aes(x = avg_score$predicted_score, y = avg_score$predicted_score, colour = avg_score$genre), 
+               size = 2, shape = 21, stroke = 2) + 
+    geom_text(aes(x = avg_score[seq(1, dim(avg_score)[1], 2), ]$predicted_score, 
+                   y = avg_score[seq(1, dim(avg_score)[1], 2), ]$predicted_score, 
+                   label = avg_score[seq(1, dim(avg_score)[1], 2), ]$genre), 
+               check_overlap = F, nudge_y = -0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
+    geom_text(aes(x = avg_score[seq(2, dim(avg_score)[1], 2), ]$predicted_score, 
+                   y = avg_score[seq(2, dim(avg_score)[1], 2), ]$predicted_score, 
+                   label = avg_score[seq(2, dim(avg_score)[1], 2), ]$genre), 
+               check_overlap = F, nudge_y = 0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
+    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9)) +
+    scale_x_continuous(breaks = c(6, 6.5, 7)) +
+    labs(title = "IMDB Score for different genres", x = "Predicted IMDB Score", y = "Observed IMDB Score") +
+    theme_few() + 
+    theme(legend.position = "None")
+```
+
+*Keywords analysis*
+
+For gross revenue prediction.
+
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+keywords_model_gross <- lm(gross ~ keywords, data = movies_and_keywords)
+summary(keywords_model_gross)
+intercept3 <- lm(movies_and_keywords$gross ~ keywords_model_gross$fitted)$coefficients[[1]]
+
+movies_and_keywords_full <- data.frame(movies_and_keywords, predicted_gross = keywords_model_gross$fitted)
+avg_gross <- movies_and_keywords_full[, 3:4]
+avg_gross <- avg_gross[!duplicated(avg_gross$keywords), ]
+avg_gross <- avg_gross[order(avg_gross$predicted_gross), ]
+rownames(avg_gross) <- 1:dim(avg_gross)[1]
+
+ggplot() + 
+    geom_point(aes(x = movies_and_keywords_full$predicted_gross, y = movies_and_keywords_full$gross, 
+                   colour = movies_and_keywords_full$keywords), alpha = 0.1) + 
+    geom_abline(intercept = intercept3) + 
+    geom_point(aes(x = avg_gross$predicted_gross, y = avg_gross$predicted_gross, colour = avg_gross$keywords), 
+               size = 2, shape = 21, stroke = 2) + 
+    geom_text(aes(x = avg_gross[seq(1, dim(avg_gross)[1], 2), ]$predicted_gross, 
+                   y = avg_gross[seq(1, dim(avg_gross)[1], 2), ]$predicted_gross, 
+                   label = avg_gross[seq(1, dim(avg_gross)[1], 2), ]$keywords), 
+               check_overlap = F, nudge_y = -0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
+    geom_text(aes(x = avg_gross[seq(2, dim(avg_gross)[1], 2), ]$predicted_gross, 
+                   y = avg_gross[seq(2, dim(avg_gross)[1], 2), ]$predicted_gross, 
+                   label = avg_gross[seq(2, dim(avg_gross)[1], 2), ]$keywords), 
+               check_overlap = F, nudge_y = 0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
+    scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                labels = c("100", "10,000", "1 million", "100 millions", "1 billion")) +
+    scale_x_log10(breaks = c(0.3e+08, 0.5e+08, 0.7e+08), 
+                labels = c("30 millions", "50 millions", "70 millions")) +
+    labs(title = "Gross Revenue for different keywords", x = "Predicted Gross Revenue", y = "Observed Gross Revenue") +
+    theme_few() + 
+    theme(legend.position = "None")
+```
+
+For IMDB score prediction.
+
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+keywords_model_score <- lm(score ~ keywords, data = movies_and_keywords)
+summary(keywords_model_score)
+intercept4 <- lm(movies_and_keywords$score ~ keywords_model_score$fitted)$coefficients[[1]]
+
+movies_and_keywords_full <- data.frame(movies_and_keywords, predicted_score = keywords_model_score$fitted)
+avg_score <- movies_and_keywords_full[, 3:4]
+avg_score <- avg_score[!duplicated(avg_score$keywords), ]
+avg_score <- avg_score[order(avg_score$predicted_score), ]
+rownames(avg_score) <- 1:dim(avg_score)[1]
+
+ggplot() + 
+    geom_jitter(aes(x = movies_and_keywords_full$predicted_score, y = movies_and_keywords_full$score, 
+                    colour = movies_and_keywords_full$keywords), alpha = 0.1) + 
+    geom_abline(intercept = intercept4) + 
+    geom_point(aes(x = avg_score$predicted_score, y = avg_score$predicted_score, colour = avg_score$keywords), 
+               size = 2, shape = 21, stroke = 2) + 
+    geom_text(aes(x = avg_score[seq(1, dim(avg_score)[1], 2), ]$predicted_score, 
+                   y = avg_score[seq(1, dim(avg_score)[1], 2), ]$predicted_score, 
+                   label = avg_score[seq(1, dim(avg_score)[1], 2), ]$keywords), 
+               check_overlap = F, nudge_y = -0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
+    geom_text(aes(x = avg_score[seq(2, dim(avg_score)[1], 2), ]$predicted_score, 
+                   y = avg_score[seq(2, dim(avg_score)[1], 2), ]$predicted_score, 
+                   label = avg_score[seq(2, dim(avg_score)[1], 2), ]$keywords), 
+               check_overlap = F, nudge_y = 0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
+    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9)) +
+    scale_x_continuous(breaks = c(6.1, 6.3, 6.5, 6.7)) +
+    labs(title = "IMDB Score for different keywords", x = "Predicted IMDB Score", y = "Observed IMDB Score") +
+    theme_few() + 
+    theme(legend.position = "None")
+```
+
+When we actually make predictions based on a linear model for categorical data, the predicted value is equal to the mean of all observations for each categorical value. So, for each genre or keyword, the predicted value of the gross revenue is equal to the mean value of gross revenues of all the movies of that genre or of that keyword, e.g. the predicted gross revenue for a "Drama" movie is equal to the mean of gross revenues of all the observed "Drama" movies.
+
 ### Steven
 
 Test whether, on average, European movies get higher IMDB scores than North American ones.
@@ -598,6 +749,7 @@ ggplot(comb, aes(x = comb$imdb_score)) +
   geom_density(aes(x = comb$imdb_score, fill = continent, alpha = 0.3)) +
   xlab("IMDB score")
 ```
+
 ### Louise
 
 *Would potentially like to do some inference regarding directors*
