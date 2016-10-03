@@ -412,6 +412,23 @@ ggplot(movies_and_keywords, aes(x = gross, y = score, colour = keywords)) +
 ### Steven
 Boxplot IMDB scores against year, decade
 ```{r}
+
+# create continent column
+movies$continent <- countrycode(as.character(movies$country), "country.name", "continent")
+
+# divide "Americas" into "North Americas" and "South America"
+south_America = c("Brazil", "Argentina", "Chile", "Colombia", "Peru")
+
+for (i in 1:nrow(movies)) {
+  if (is.na(movies$continent[i])) {
+    next
+  } else if ((movies$continent[i] == "Americas") & (movies$country[i] %in% south_America)) {
+    movies$continent[i] <- "South America"
+  } else if ((movies$continent[i] == "Americas") & (!(movies$country[i] %in% south_America))) {
+    movies$continent[i] <- "North America"
+  } 
+}
+
 # for all countries and all years
 # remove NA from title_year column first 
 temp <- movies[!is.na(movies$title_year),]
