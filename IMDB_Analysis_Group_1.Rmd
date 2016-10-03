@@ -180,42 +180,6 @@ Will do a country/actor analysis on gross and imdb score.
 *Siow Meng comment: Might want to avoid keyword: head* I have changed head but it is still not knitting for me either, so I will see what's wrong - Nikhita
 
 
-```{r}
-countries <- movies$country
-scores <- movies$imdb_score
-
-# Sorting the movies by country and picking out the top 10
-counted <- count(movies, countries)
-sorted <- arrange(counted, desc(n))
-topcountries <- sorted[1:10,]
-topcountries$country <- factor(topcountries$country, levels = topcountries$country[order(topcountries$n)]
- 
-USA <- subset(movies, country == "USA")
-UK <- subset(movies, country == "UK")
-Fra <- subset(movies, country == "France")
-Ger <- subset(movies, country == "Germany")
-Can <- subset(movies, country == "Canada")
-Aus <- subset(movies, country == "Australia")
-Spa <- subset(movies, country == "Spain")
-Jap <- subset(movies, country == "Japan")
-Chi <- subset(movies, country == "China")
-Ind <- subset(movies, country == "India")
-
-# Plotting graph for gross vs imdb score (Need to figure out a one-step way of doing this)
-ggplot(USA, aes(x = gross, y = imdb_score)) + geom_point()
-ggplot(UK, aes(x = gross, y = imdb_score)) + geom_point()
-ggplot(Fra, aes(x = gross, y = imdb_score)) + geom_point()
-ggplot(Ger, aes(x = gross, y = imdb_score)) + geom_point()
-ggplot(Can, aes(x = gross, y = imdb_score)) + geom_point()
-ggplot(Aus, aes(x = gross, y = imdb_score)) + geom_point()
-ggplot(Spa, aes(x = gross, y = imdb_score)) + geom_point()
-ggplot(Jap, aes(x = gross, y = imdb_score)) + geom_point()
-ggplot(Chi, aes(x = gross, y = imdb_score)) + geom_point()
-ggplot(Ind, aes(x = gross, y = imdb_score)) + geom_point()
-=======
-*Siow Meng comment: Might want to avoid keyword: head* 
-*I have changed head but it is still not knitting for me either, so I will see what's wrong - Nikhita*
-
 
 ```{r}
 country <- movies$country
@@ -249,7 +213,6 @@ scores <- movies$imdb_score
 # ggplot(Jap, aes(x = gross, y = imdb_score)) + geom_point()
 # ggplot(Chi, aes(x = gross, y = imdb_score)) + geom_point()
 # ggplot(Ind, aes(x = gross, y = imdb_score)) + geom_point()
->>>>>>> 7081d8198783a25e75d18472dd5e20800384e0e8
 
 ```
 
