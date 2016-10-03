@@ -112,8 +112,9 @@ apply(movies, 2, colNA)
 ```{r, echo = FALSE, message = FALSE}
 set.seed(1)
 intrain <- createDataPartition(y = movies[[1]], p = 0.9, list = FALSE)
-movies <- movies[intrain, ]
-test <- movies[-intrain, ]
+movies2 <-movies
+movies <- movies2[intrain, ]
+test <- movies2[-intrain, ]
 ```
 
 10% of the cleansed dataset (`r nrow(test)`) is then set aside to be the "test" dataset, leaving the remaining 90%  of our dataset (`r nrow(movies)`) as the training dataset. The training dataset alone will be used for all descriptive, inferential and predictive analysis, including model building. The "test" dataset will be used at a later stage to check the accuracy of the predicted model.1111111111111111111111111111111111111111111111111111111111111111
