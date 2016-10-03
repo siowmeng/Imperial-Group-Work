@@ -610,8 +610,6 @@ contentrating <- topratedmovies$content_rating
 contentscore <- topratedmovies$imdb_score
 contentgross <- topratedmovies$gross
 
-cor.test(data = topratedmovies, topratedmovies$imdb_score, topratedmovies$gross)
-
 ggplot(topratedmovies, aes(contentrating, contentscore, fill = contentrating)) + 
     geom_boxplot() + 
     labs(title = "IMDB Score of movies by rating", x = "Content Rating", y = "IMDB Score") + 
