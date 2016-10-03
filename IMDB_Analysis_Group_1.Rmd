@@ -83,7 +83,7 @@ for (i in c("actor_1_facebook_likes" , "actor_2_facebook_likes" , "actor_3_faceb
  movies[k][is.na(movies[k]==TRUE)] <- round(mean(movies[[k]], na.rm=TRUE),0)}
 ```
 
-* Unwanted strings "Â" as well as leading and  are removed from the "title" column.
+* Unwanted strings "Â" as well as leading and trailing white spaces are removed from the "title" column.
 
 ```{r, echo = FALSE}
 movies <- movies[!duplicated(movies$movie_title),]
@@ -106,7 +106,7 @@ apply(movies, 2, colNA)
 *General note: I plan to tidy up the writing here later but just wanted to get down our discussion :)*
 
 *Siow Meng comment: I think there's bug in below code, the dataframe movies has already been subsetted once before test set is assigned*  
-
+*Louise - I'm not sure I understand what bug you're describing - let's talk about it*
 
 ```{r, echo = FALSE, message = FALSE}
 set.seed(1)
@@ -412,13 +412,14 @@ ggplot(movies_and_keywords, aes(x = gross, y = score, colour = keywords)) +
 ### Steven
 
 ###Louise
-*Siow Meng comment: plyr library has been added at the first section of the document. Shall we all load the libraries in the first section?*  
+*Siow Meng comment: plyr library has been added at the first section of the document. Shall we all load the libraries in the first section?*
+*Louise comment - yes I think that makes sense :) removed from here*
 
-*Siow Meng comment: Encountered the following warning while knitting: Scale for 'y' is already present. Adding another scale for 'y', which will replace the existing scale.*  
+*Siow Meng comment: Encountered the following warning while knitting: Scale for 'y' is already present. Adding another scale for 'y', which will replace the existing scale.* 
+*Yes, this is because I like my graphs to start at actual 0 rather than the ggplot default where they start at -0.5 and so have some padding - happy to discuss aesthetics when we consolidate plot themes*.
 
 *Would potentially like to do some plots reg. directors - testing pushing again*
 ```{r echo = FALSE, message = FALSE}
-library(plyr)
 ##create summary statistics for average imdb score & number of movies for each director
 directorssummary <- ddply(movies, ~ director_name,summarise,score_average=round(mean(imdb_score),2), gross_average=round(mean(gross),2), number_of_movies=length(director_name))
 ##sort by # of movies then imdb average score
