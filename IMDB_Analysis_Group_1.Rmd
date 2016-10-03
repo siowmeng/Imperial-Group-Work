@@ -106,15 +106,11 @@ apply(movies, 2, colNA)
 ```
 *General note: I plan to tidy up the writing here later but just wanted to get down our discussion :)*
 
-*Siow Meng comment: I think there's bug in below code, the dataframe movies has already been subsetted once before test set is assigned*  
-*Louise - I'm not sure I understand what bug you're describing - let's talk about it*
-
 ```{r, echo = FALSE, message = FALSE}
 set.seed(1)
 intrain <- createDataPartition(y = movies[[1]], p = 0.9, list = FALSE)
-movies2 <-movies
-movies <- movies2[intrain, ]
-test <- movies2[-intrain, ]
+train <- movies[intrain, ]
+test <- movies[-intrain, ]
 ```
 
 10% of the cleansed dataset (`r nrow(test)`) is then set aside to be the "test" dataset, leaving the remaining 90%  of our dataset (`r nrow(movies)`) as the training dataset. The training dataset alone will be used for all descriptive, inferential and predictive analysis, including model building. The "test" dataset will be used at a later stage to check the accuracy of the predicted model.1111111111111111111111111111111111111111111111111111111111111111
