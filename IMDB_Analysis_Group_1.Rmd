@@ -14,6 +14,8 @@ library(dplyr)
 library(plyr)
 library(caret)
 library(scales)
+library(countrycode)
+library(GGally)
 ```
 
 
@@ -106,13 +108,10 @@ apply(movies, 2, colNA)
 ```
 *General note: I plan to tidy up the writing here later but just wanted to get down our discussion :)*
 
-*Siow Meng comment: I think there's bug in below code, the dataframe movies has already been subsetted once before test set is assigned*  
-*Louise - I'm not sure I understand what bug you're describing - let's talk about it*
-
 ```{r, echo = FALSE, message = FALSE}
 set.seed(1)
 intrain <- createDataPartition(y = movies[[1]], p = 0.9, list = FALSE)
-movies <- movies[intrain, ]
+train <- movies[intrain, ]
 test <- movies[-intrain, ]
 ```
 
@@ -409,6 +408,112 @@ ggplot(movies_and_keywords, aes(x = gross, y = score, colour = keywords)) +
 ```
 
 ### Steven
+Boxplot IMDB scores against year, decade
+```{r}
+
+# create continent column
+movies$continent <- countrycode(as.character(movies$country), "country.name", "continent")
+
+# divide "Americas" into "North Americas" and "South America"
+south_America = c("Brazil", "Argentina", "Chile", "Colombia", "Peru")
+
+for (i in 1:nrow(movies)) {
+  if (is.na(movies$continent[i])) {
+    next
+  } else if ((movies$continent[i] == "Americas") & (movies$country[i] %in% south_America)) {
+    movies$continent[i] <- "South America"
+  } else if ((movies$continent[i] == "Americas") & (!(movies$country[i] %in% south_America))) {
+    movies$continent[i] <- "North America"
+  } 
+}
+
+# for all countries and all years
+# remove NA from title_year column first 
+temp <- movies[!is.na(movies$title_year),]
+ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against year", x = "", y = "IMDB Score")
+
+# make decade column
+for (i in 1:nrow(movies)){
+  low <- movies$title_year[i] - (movies$title_year[i] %% 10)
+  high <- movies$title_year[i] - (movies$title_year[i] %% 10) + 9
+  movies$decade[i] <- paste(as.character(low), as.character(high), sep = "-")
+}
+
+# for all countries by decade
+# remove entries with NA-NA
+temp <- movies[!movies$decade == "NA-NA", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, all countries", x = "", y = "IMDB Score")
+
+# for Europe
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$continent == "Europe", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, Europe", x = "", y = "IMDB Score")
+
+# for North America
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$continent == "North America", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, North America", x = "", y = "IMDB Score")
+
+# for France
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "France", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5),legend.position = "None") +
+  labs(title = "IMDB scores against decade, France", x = "", y = "IMDB Score")
+
+# for Germany
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "Germany", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, Germany", x = "", y = "IMDB Score")
+
+# for USA
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "USA", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, USA", x = "", y = "IMDB Score")
+
+# for UK
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "UK", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, UK", x = "", y = "IMDB Score")
+
+# for India
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "India", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, India", x = "", y = "IMDB Score")
+
+# for China
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "China", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, China", x = "", y = "IMDB Score")
+```
 
 ###Louise
 *Siow Meng comment: plyr library has been added at the first section of the document. Shall we all load the libraries in the first section?*
@@ -471,6 +576,28 @@ We are confident to say that the English movies in this dataset are generally mo
 
 ### Steven
 
+Test whether, on average, European movies get higher IMDB scores than North American ones.
+H0 -> Europe and North America get equal scores
+```{r}
+# make dataframes for North America and Europe
+North_America <- movies[movies$continent == "North America",]
+Europe <- movies[movies$continent == "Europe",]
+
+# separate IMDB scores 
+North_America <- North_America[, c("imdb_score", "continent")]
+Europe <- Europe[, c("imdb_score", "continent")]
+
+t.test(Europe$imdb_score, North_America$imdb_score)
+
+# combine two data frames
+comb <- rbind(Europe, North_America)
+
+# plot densities
+ggplot(comb, aes(x = comb$imdb_score)) +
+  geom_density() +
+  geom_density(aes(x = comb$imdb_score, fill = continent, alpha = 0.3)) +
+  xlab("IMDB score")
+```
 ### Louise
 
 *Would potentially like to do some inference regarding directors*
