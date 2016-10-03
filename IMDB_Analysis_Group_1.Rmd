@@ -11,7 +11,11 @@ library(ggthemes)
 library(ggrepel)
 library(reshape2)
 library(dplyr)
+library(plyr)
 library(caret)
+library(scales)
+library(countrycode)
+library(GGally)
 ```
 
 
@@ -82,7 +86,7 @@ for (i in c("actor_1_facebook_likes" , "actor_2_facebook_likes" , "actor_3_faceb
  movies[k][is.na(movies[k]==TRUE)] <- round(mean(movies[[k]], na.rm=TRUE),0)}
 ```
 
-* Unwanted strings "Â" as well as leading and  are removed from the "title" column.
+* Unwanted strings "Â" as well as leading and trailing white spaces are removed from the "title" column.
 
 ```{r, echo = FALSE}
 movies <- movies[!duplicated(movies$movie_title),]
@@ -107,11 +111,12 @@ apply(movies, 2, colNA)
 ```{r, echo = FALSE, message = FALSE}
 set.seed(1)
 intrain <- createDataPartition(y = movies[[1]], p = 0.9, list = FALSE)
-movies <- movies[intrain, ]
+train <- movies[intrain, ]
 test <- movies[-intrain, ]
 ```
 
-10% of the cleansed dataset (`r nrow(test)`) is then set aside to be the "test" dataset, leaving the remaining 90%  of our dataset (`r nrow(movies)`) as the training dataset. The training dataset alone will be used for all descriptive, inferential and predictive analysis, including model building. The "test" dataset will be used at a later stage to check the accuracy of the predicted model.
+10% of the cleansed dataset (`r nrow(test)`) is then set aside to be the "test" dataset, leaving the remaining 90%  of our dataset (`r nrow(movies)`) as the training dataset. The training dataset alone will be used for all descriptive, inferential and predictive analysis, including model building. The "test" dataset will be used at a later stage to check the accuracy of the predicted model.1111111111111111111111111111111111111111111111111111111111111111
+///.....
 
 
 # Descriptive Data Analysis
@@ -131,11 +136,87 @@ test <- movies[-intrain, ]
 
 ### Siow Meng
 
+```{r, echo = FALSE}
+
+revYear <- ddply(movies, ~ title_year, summarise, meanRev = mean(gross, na.rm = TRUE))
+
+ggplot(data = revYear, aes(x = title_year, y = meanRev)) + geom_line() + labs(title = "Average Gross Revenue from Year 1920 to 2016", x = "Year", y = "Average Revenue") + coord_cartesian(xlim = c(1920, 2016))
+
+revLanguage <- ddply(movies, ~ title_year + language, summarise, meanRev = mean(gross, na.rm = TRUE))
+
+ggplot(data = revLanguage[revLanguage$language == "English", ], aes(x = title_year, y = meanRev)) + geom_line() + labs(title = "Average Gross Revenue of English Movies from Year 1920 to 2016", x = "Year", y = "Average Revenue") + coord_cartesian(xlim = c(1920, 2016))
+
+ggplot(data = revLanguage[revLanguage$language != "English", ], aes(x = title_year, y = meanRev)) + geom_line() + labs(title = "Average Gross Revenue of Non-English Movies from Year 1920 to 2016", x = "Year", y = "Average Revenue") + coord_cartesian(xlim = c(1920, 2016))
+
+# Correlation plot from Louise
+
+moviesnumeric<- movies[c("duration", "title_year", "budget", "imdb_score", "movie_facebook_likes", "actor_1_facebook_likes", "actor_2_facebook_likes", "actor_3_facebook_likes", "cast_total_facebook_likes", "director_facebook_likes", "num_user_for_reviews", "num_critic_for_reviews", "facenumber_in_poster", "gross")]
+
+##used pairwise complete obs to handle NAs for fields with a high number of nas
+corrmatrix <- round(cor(moviesnumeric, use="pairwise.complete.obs"), 2)
+meltedmovies<- melt(corrmatrix)
+ggplot(data = meltedmovies, aes(x=Var1, y=Var2, fill=value)) + geom_tile() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(x="", y="") + ggtitle("Correlation Matrix")
+
+# Added correlation plot for movies after 2005
+corrmatrix2005 <- round(cor(moviesnumeric[moviesnumeric$title_year >= 2005, ], use="pairwise.complete.obs"), 2)
+meltedmovies2005 <- melt(corrmatrix2005)
+ggplot(data = meltedmovies2005, aes(x=Var1, y=Var2, fill=value)) + geom_tile() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(x="", y="") + ggtitle("Correlation Matrix")
+
+# Added correlation plot for movies after 2010
+corrmatrix2010 <- round(cor(moviesnumeric[moviesnumeric$title_year >= 2010, ], use="pairwise.complete.obs"), 2)
+meltedmovies2010 <- melt(corrmatrix2010)
+ggplot(data = meltedmovies2010, aes(x=Var1, y=Var2, fill=value)) + geom_tile() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(x="", y="") + ggtitle("Correlation Matrix")
+
+```
+
 ### Nikhita
 
 Will do a country/actor analysis on gross and imdb score.
 
+*Siow Meng comment: I commented Nikhita's code for now as it is giving error while knitting the file. To investigate further.*  
+
+<<<<<<< HEAD
+*Siow Meng comment: Might want to avoid keyword: head* I have changed head but it is still not knitting for me either, so I will see what's wrong - Nikhita
+
+
+
+```{r}
+# Sorting the movies by country and picking out the top 10
+counted <- count(movies, 'country')
+removednas <- counted[complete.cases(counted),]
+sorted <- arrange(removednas, desc(freq))
+topcountries <- sorted[1:10,]
+topcountries$country <- factor(topcountries$country, levels = topcountries$country[order(topcountries$freq)])
+                                                                                   
+USA <- subset(movies, country == "USA")
+UK <- subset(movies, country == "UK")
+Fra <- subset(movies, country == "France")
+Ger <- subset(movies, country == "Germany")
+Can <- subset(movies, country == "Canada")
+Aus <- subset(movies, country == "Australia")
+Spa <- subset(movies, country == "Spain")
+Jap <- subset(movies, country == "Japan")
+Chi <- subset(movies, country == "China")
+Ind <- subset(movies, country == "India")
+
+# Plotting graph for gross vs imdb score (Need to figure out a one-step way of doing this)
+ggplot(USA, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(UK, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Fra, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Ger, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Can, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Aus, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Spa, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Jap, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Chi, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Ind, aes(x = gross, y = imdb_score)) + geom_point()
+
+```
+
+
 ### Cecilia
+
+Will do a plot for budget vs gross and budget vs imdb score *test*
 
 ### George
 
@@ -327,17 +408,131 @@ ggplot(movies_and_keywords, aes(x = gross, y = score, colour = keywords)) +
 ```
 
 ### Steven
+Boxplot IMDB scores against year, decade
+```{r}
+
+# create continent column
+movies$continent <- countrycode(as.character(movies$country), "country.name", "continent")
+
+# divide "Americas" into "North Americas" and "South America"
+south_America = c("Brazil", "Argentina", "Chile", "Colombia", "Peru")
+
+for (i in 1:nrow(movies)) {
+  if (is.na(movies$continent[i])) {
+    next
+  } else if ((movies$continent[i] == "Americas") & (movies$country[i] %in% south_America)) {
+    movies$continent[i] <- "South America"
+  } else if ((movies$continent[i] == "Americas") & (!(movies$country[i] %in% south_America))) {
+    movies$continent[i] <- "North America"
+  } 
+}
+
+# for all countries and all years
+# remove NA from title_year column first 
+temp <- movies[!is.na(movies$title_year),]
+ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against year", x = "", y = "IMDB Score")
+
+# make decade column
+for (i in 1:nrow(movies)){
+  low <- movies$title_year[i] - (movies$title_year[i] %% 10)
+  high <- movies$title_year[i] - (movies$title_year[i] %% 10) + 9
+  movies$decade[i] <- paste(as.character(low), as.character(high), sep = "-")
+}
+
+# for all countries by decade
+# remove entries with NA-NA
+temp <- movies[!movies$decade == "NA-NA", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, all countries", x = "", y = "IMDB Score")
+
+# for Europe
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$continent == "Europe", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, Europe", x = "", y = "IMDB Score")
+
+# for North America
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$continent == "North America", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, North America", x = "", y = "IMDB Score")
+
+# for France
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "France", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5),legend.position = "None") +
+  labs(title = "IMDB scores against decade, France", x = "", y = "IMDB Score")
+
+# for Germany
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "Germany", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, Germany", x = "", y = "IMDB Score")
+
+# for USA
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "USA", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, USA", x = "", y = "IMDB Score")
+
+# for UK
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "UK", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, UK", x = "", y = "IMDB Score")
+
+# for India
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "India", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, India", x = "", y = "IMDB Score")
+
+# for China
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "China", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, China", x = "", y = "IMDB Score")
+```
 
 ###Louise
+*Siow Meng comment: plyr library has been added at the first section of the document. Shall we all load the libraries in the first section?*
+*Louise comment - yes I think that makes sense :) removed from here*
+
+*Siow Meng comment: Encountered the following warning while knitting: Scale for 'y' is already present. Adding another scale for 'y', which will replace the existing scale.* 
+*Yes, this is because I like my graphs to start at actual 0 rather than the ggplot default where they start at -0.5 and so have some padding - happy to discuss aesthetics when we consolidate plot themes*.
+
 *Would potentially like to do some plots reg. directors - testing pushing again*
 ```{r echo = FALSE, message = FALSE}
-library(plyr)
 ##create summary statistics for average imdb score & number of movies for each director
 directorssummary <- ddply(movies, ~ director_name,summarise,score_average=round(mean(imdb_score),2), gross_average=round(mean(gross),2), number_of_movies=length(director_name))
 ##sort by # of movies then imdb average score
 sorteddirectorsummary <- arrange(directorssummary,desc(number_of_movies), desc(score_average))
 ##ensure that factors are in the order of number of movies, otherwise ggplot will default to alphabetical ordering in the graph
 sorteddirectorsummary$director_name <- factor(sorteddirectorsummary$director_name, levels = sorteddirectorsummary$director_name[order(sorteddirectorsummary$number_of_movies)])
+##add a categorical variable for one movie or more
+sorteddirectorsummary$more_than_one_movie <- rep.int(0, nrow(sorteddirectorsummary))
+sorteddirectorsummary$more_than_one_movie[sorteddirectorsummary$number_of_movies>1] <- 1
 
 ##plot for top 20 directors
 ggplot(sorteddirectorsummary[1:20,], aes(x=director_name, y=number_of_movies, fill=director_name)) + geom_bar(stat="identity") + coord_flip() + guides(fill=FALSE) + scale_y_continuous(expand = c(0, 0)) + labs(x = "", y="Number of movies in sample") + ggtitle("Top 20 directors with multiple IMDB top 5000 movies") +  scale_y_continuous(expand = c(0,0)) +  expand_limits(y = c(0,1.05 * max(sorteddirectorsummary$number_of_movies)))
@@ -351,17 +546,61 @@ ggplot(sorteddirectorsummary[1:20,], aes(x=director_name, y=number_of_movies, fi
 
 ### Siow Meng
 
-*Will likely do english vs non english movies analysis*
+```{r echo=FALSE}
+# boxplot of English & Non-English movies
+temp <- movies
+
+temp$english <- factor(temp$language == "English", levels = c(TRUE, FALSE), labels = c("English", "Non-English"))
+
+ggplot(data = temp, aes(x = english, y = gross)) + geom_boxplot() + labs(title = "Gross Revenue of English and non-English Movies", x = "English or Non-English Movies", y = "Gross Revenue") + coord_cartesian(ylim = c(0, 1e8))
+
+t.test(movies$gross[movies$language == "English"], movies$gross[movies$language != "English"], alternative = "greater")
+
+var.test(movies$gross[movies$language == "English"], movies$gross[movies$language != "English"], alternative = "greater")
+
+```
+
+From the above box-and-whisker plots, we can observe a great difference between the revenues achieved by English and non-English movies. More than 75% of the non-English movies achieved gross revenue of US$10 million or lower. In contrast, more than half of the English movies have more than US$25 million revenues.
+
+In addition, the gross revenues of English movies vary greatly (compared to non-English movies).
+
+We are confident to say that the English movies in this dataset are generally more popular than non-English movies.
 
 ### Nikhita
 
 ### Cecilia
 
+*Will do analysis on budget vs imdb score and gross*
+
 ### George
 
 ### Steven
 
+Test whether, on average, European movies get higher IMDB scores than North American ones.
+H0 -> Europe and North America get equal scores
+```{r}
+# make dataframes for North America and Europe
+North_America <- movies[movies$continent == "North America",]
+Europe <- movies[movies$continent == "Europe",]
+
+# separate IMDB scores 
+North_America <- North_America[, c("imdb_score", "continent")]
+Europe <- Europe[, c("imdb_score", "continent")]
+
+t.test(Europe$imdb_score, North_America$imdb_score)
+
+# combine two data frames
+comb <- rbind(Europe, North_America)
+
+# plot densities
+ggplot(comb, aes(x = comb$imdb_score)) +
+  geom_density() +
+  geom_density(aes(x = comb$imdb_score, fill = continent, alpha = 0.3)) +
+  xlab("IMDB score")
+```
 ### Louise
+
+*Would potentially like to do some inference regarding directors*
 
 ```{r echo=FALSE, message=FALSE}
 ##plot for imdb rating vs score
@@ -370,24 +609,100 @@ ggplot(sorteddirectorsummary, aes(x = number_of_movies, y = score_average)) +
   labs(x = "Number of movies in sample", y = "Average IMDb Score")
 ```
 
+
+```{r echo=FALSE}
+dirpercentage <- round(100*length(sorteddirectorsummary$number_of_movies[sorteddirectorsummary$number_of_movies==1])/length(sorteddirectorsummary$number_of_movies),2)
+
+```
+
+There are `r nrow(sorteddirectorsummary)` distinct directors in the training sample. Approximately  `r dirpercentage` of those directors have only 1 movie in the top 5000, leaving `r 100-dirpercentage` that have more than 1.
+
+```{r echo=FALSE}
+##add # of movies per director to the main dataset.
+movieswithdirectordata <- merge(movies, sorteddirectorsummary, by="director_name")
+
+movieswithdirectordata <- rename(movieswithdirectordata, c('number_of_movies'='dir_number_of_movies'))
+```
+
+
 ```{r echo=FALSE, message=FALSE}
 ##plot for imdb rating vs score
 ## to do - sort out the axes
-ggplot(sorteddirectorsummary, aes(x = number_of_movies, y = gross_average)) + 
+ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = imdb_score)) + 
   geom_jitter(alpha = 0.2, width = 0.05) + geom_smooth() +
-  labs(x = "Number of movies in sample", y = "Average Gross Revenue")
+  labs(x = "Number of movies in sample", y = "IMDB Score")
 ```
+
+
+```{r echo=FALSE, message=FALSE}
+##plot for gross revenue vs score
+## to do - sort out the axes
+ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross)) + 
+  geom_jitter(alpha = 0.2, width = 0.05) + geom_smooth() +
+  labs(x = "Number of movies by director in sample", y = "Average Gross Revenue")
+```
+
 
 ```{r echo=FALSE}
 ##cor test for imdb rating vs # of movies
-cor.test(sorteddirectorsummary$score_average,sorteddirectorsummary$number_of_movies)
+cor.test(movieswithdirectordata$imdb_score,movieswithdirectordata$dir_number_of_movies)
 ##does seem like very loosely positively correlated and is probably because of the correlation with budget- more analysis to come.
 ##cor test for gross score vs # of movies
-cor.test(sorteddirectorsummary$gross_average,sorteddirectorsummary$number_of_movies)
+cor.test(movieswithdirectordata$gross,movieswithdirectordata$dir_number_of_movies)
 ##does seem like somewhat positively correlated - although we can see from the graph that this doesn't seem linear.
 ```
 
-*Would potentially like to do some inference regarding directors*
+These correlation tests do infer that there is a slight positive correlation between the two outcome variables (gross and imdb score) and the # of movies the director has in the sample. However, the impact on gross revenue does not look to be linear, and neither of the correlations seem to be particularly strong. Whether or not a director is prolific does not seem to have a strong impact on the quality (as proxied by imdb score) or popularity (as proxied by gross revenue) of a movie.
+
+```{r echo=FALSE} 
+options(scipen=1000000000)
+
+movieswithdirectordata$more_than_one_movie <- as.factor(movieswithdirectordata$more_than_one_movie)
+ggplot(movieswithdirectordata, aes(x=movieswithdirectordata$more_than_one_movie, y=gross)) + geom_boxplot() 
+
+t.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_one_movie==0], movieswithdirectordata$gross[movieswithdirectordata$more_than_one_movie==1])
+```
+
+```{r echo=FALSE}
+
+##code taken from publically available github to give human readable axis labels. (https://github.com/fdryan/R/blob/master/ggplot2_formatter.r)
+human_numbers <- function(x = NULL, smbl =""){
+  humanity <- function(y){             
+    
+    if (!is.na(y)){
+      
+       b <- round_any(abs(y) / 1e9, 0.1)
+       m <- round_any(abs(y) / 1e6, 0.1)
+       k <- round_any(abs(y) / 1e3, 0.1)
+      
+      if ( y >= 0 ){ 
+        y_is_positive <- ""
+      } else {
+        y_is_positive <- "-"
+      }
+      
+      if ( k < 1 ) {
+        paste0(y_is_positive, smbl, y )
+        } else if ( m < 1){
+        paste0 (y_is_positive, smbl,  k , "k")
+      } else if (b < 1){
+        paste0 (y_is_positive, smbl, m ,"m")
+      } else {
+        paste0 (y_is_positive, smbl,  comma(b), "b")     
+      }
+    }
+  }
+  
+  sapply(x,humanity)
+}
+
+human_num   <- function(x){human_numbers(x, smbl = "")} 
+
+
+ggplot(movieswithdirectordata, aes(x = gross, fill = more_than_one_movie)) + geom_density(alpha = 0.5) + scale_y_continuous(label=comma) + scale_x_continuous(label=human_num)
+##these look unpleasant, need to make them prettier before uncommenting.
+##+ geom_vline(xintercept = mean(movieswithdirectordata$gross[movieswithdirectordata$more_than_one_movie==0])) + ##geom_vline(xintercept = mean(movieswithdirectordata$gross[movieswithdirectordata$more_than_one_movie==1]))
+```
 
 # Predictive Data Analysis
 
@@ -395,6 +710,27 @@ cor.test(sorteddirectorsummary$gross_average,sorteddirectorsummary$number_of_mov
 *we will all make two predictive models, one for "gross" and one for "imdb_score", using whatever inputs we can get from our dataset, at a later stage we'll compare them and see whose has the lowest mean squared error (which we can also justify) - and include that into this section*
 
 *We discussed potentially including a new variable into the model, or to build a dual model that has different inputs for movies before 2010, and after 2010, which is the cutover point at which facebook likes for a movie became a meaningful indicator*
+
+```{r echo=FALSE}
+
+sort(names(movies))
+
+model1 <- lm(gross ~ budget, data = movies)
+summary(model1)
+ggplot(data = movies, aes(x = budget, y = gross)) + geom_point() + geom_smooth(method = "lm") + coord_cartesian(xlim = c(0, 3e8))
+
+model2 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score + country, data = movies)
+summary(model2)
+
+model3 <- lm(gross ~ budget, data = movies[movies$title_year >= 2010, ])
+summary(model3)
+ggplot(data = movies[movies$title_year >= 2010, ], aes(x = budget, y = gross)) + geom_point() + geom_smooth(method = "lm") + coord_cartesian(xlim = c(0, 3e8))
+
+model4 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score + country, data = movies[movies$title_year >= 2010, ])
+summary(model4)
+
+```
+
 
 ###Model Performance
 *we will then test this model using the test dataset, make a plot of the predictions against the actual values, and calculate the MSE/other success statistics*
