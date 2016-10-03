@@ -13,6 +13,7 @@ library(reshape2)
 library(dplyr)
 library(plyr)
 library(caret)
+library(scales)
 ```
 
 
@@ -83,7 +84,7 @@ for (i in c("actor_1_facebook_likes" , "actor_2_facebook_likes" , "actor_3_faceb
  movies[k][is.na(movies[k]==TRUE)] <- round(mean(movies[[k]], na.rm=TRUE),0)}
 ```
 
-* Unwanted strings "Â" as well as leading and  are removed from the "title" column.
+* Unwanted strings "Â" as well as leading and trailing white spaces are removed from the "title" column.
 
 ```{r, echo = FALSE}
 movies <- movies[!duplicated(movies$movie_title),]
@@ -106,7 +107,7 @@ apply(movies, 2, colNA)
 *General note: I plan to tidy up the writing here later but just wanted to get down our discussion :)*
 
 *Siow Meng comment: I think there's bug in below code, the dataframe movies has already been subsetted once before test set is assigned*  
-
+*Louise - I'm not sure I understand what bug you're describing - let's talk about it*
 
 ```{r, echo = FALSE, message = FALSE}
 set.seed(1)
@@ -175,6 +176,7 @@ Will do a country/actor analysis on gross and imdb score.
 
 *Siow Meng comment: I commented Nikhita's code for now as it is giving error while knitting the file. To investigate further.*  
 
+<<<<<<< HEAD
 *Siow Meng comment: Might want to avoid keyword: head* I have changed head but it is still not knitting for me either, so I will see what's wrong - Nikhita
 
 
@@ -210,6 +212,44 @@ ggplot(Spa, aes(x = gross, y = imdb_score)) + geom_point()
 ggplot(Jap, aes(x = gross, y = imdb_score)) + geom_point()
 ggplot(Chi, aes(x = gross, y = imdb_score)) + geom_point()
 ggplot(Ind, aes(x = gross, y = imdb_score)) + geom_point()
+=======
+*Siow Meng comment: Might want to avoid keyword: head* 
+*I have changed head but it is still not knitting for me either, so I will see what's wrong - Nikhita*
+
+
+```{r}
+country <- movies$country
+scores <- movies$imdb_score
+
+# Sorting the movies by country and picking out the top 10
+# counted <- count(movies, country)
+# sorted <- arrange(counted, desc(n))
+# topcountries <- sorted[1:10,]
+# topcountries$country <- factor(topcountries$country, levels = topcountries$country[order(topcountries$n)]
+#  
+# USA <- subset(movies, country == "USA")
+# UK <- subset(movies, country == "UK")
+# Fra <- subset(movies, country == "France")
+# Ger <- subset(movies, country == "Germany")
+# Can <- subset(movies, country == "Canada")
+# Aus <- subset(movies, country == "Australia")
+# Spa <- subset(movies, country == "Spain")
+# Jap <- subset(movies, country == "Japan")
+# Chi <- subset(movies, country == "China")
+# Ind <- subset(movies, country == "India")
+# 
+# # Plotting graph for gross vs imdb score (Need to figure out a one-step way of doing this)
+# ggplot(USA, aes(x = gross, y = imdb_score)) + geom_point()
+# ggplot(UK, aes(x = gross, y = imdb_score)) + geom_point()
+# ggplot(Fra, aes(x = gross, y = imdb_score)) + geom_point()
+# ggplot(Ger, aes(x = gross, y = imdb_score)) + geom_point()
+# ggplot(Can, aes(x = gross, y = imdb_score)) + geom_point()
+# ggplot(Aus, aes(x = gross, y = imdb_score)) + geom_point()
+# ggplot(Spa, aes(x = gross, y = imdb_score)) + geom_point()
+# ggplot(Jap, aes(x = gross, y = imdb_score)) + geom_point()
+# ggplot(Chi, aes(x = gross, y = imdb_score)) + geom_point()
+# ggplot(Ind, aes(x = gross, y = imdb_score)) + geom_point()
+>>>>>>> 7081d8198783a25e75d18472dd5e20800384e0e8
 
 ```
 
@@ -410,19 +450,23 @@ ggplot(movies_and_keywords, aes(x = gross, y = score, colour = keywords)) +
 ### Steven
 
 ###Louise
-*Siow Meng comment: plyr library has been added at the first section of the document. Shall we all load the libraries in the first section?*  
+*Siow Meng comment: plyr library has been added at the first section of the document. Shall we all load the libraries in the first section?*
+*Louise comment - yes I think that makes sense :) removed from here*
 
-*Siow Meng comment: Encountered the following warning while knitting: Scale for 'y' is already present. Adding another scale for 'y', which will replace the existing scale.*  
+*Siow Meng comment: Encountered the following warning while knitting: Scale for 'y' is already present. Adding another scale for 'y', which will replace the existing scale.* 
+*Yes, this is because I like my graphs to start at actual 0 rather than the ggplot default where they start at -0.5 and so have some padding - happy to discuss aesthetics when we consolidate plot themes*.
 
 *Would potentially like to do some plots reg. directors - testing pushing again*
 ```{r echo = FALSE, message = FALSE}
-library(plyr)
 ##create summary statistics for average imdb score & number of movies for each director
 directorssummary <- ddply(movies, ~ director_name,summarise,score_average=round(mean(imdb_score),2), gross_average=round(mean(gross),2), number_of_movies=length(director_name))
 ##sort by # of movies then imdb average score
 sorteddirectorsummary <- arrange(directorssummary,desc(number_of_movies), desc(score_average))
 ##ensure that factors are in the order of number of movies, otherwise ggplot will default to alphabetical ordering in the graph
 sorteddirectorsummary$director_name <- factor(sorteddirectorsummary$director_name, levels = sorteddirectorsummary$director_name[order(sorteddirectorsummary$number_of_movies)])
+##add a categorical variable for one movie or more
+sorteddirectorsummary$more_than_one_movie <- rep.int(0, nrow(sorteddirectorsummary))
+sorteddirectorsummary$more_than_one_movie[sorteddirectorsummary$number_of_movies>1] <- 1
 
 ##plot for top 20 directors
 ggplot(sorteddirectorsummary[1:20,], aes(x=director_name, y=number_of_movies, fill=director_name)) + geom_bar(stat="identity") + coord_flip() + guides(fill=FALSE) + scale_y_continuous(expand = c(0, 0)) + labs(x = "", y="Number of movies in sample") + ggtitle("Top 20 directors with multiple IMDB top 5000 movies") +  scale_y_continuous(expand = c(0,0)) +  expand_limits(y = c(0,1.05 * max(sorteddirectorsummary$number_of_movies)))
@@ -468,6 +512,8 @@ We are confident to say that the English movies in this dataset are generally mo
 
 ### Louise
 
+*Would potentially like to do some inference regarding directors*
+
 ```{r echo=FALSE, message=FALSE}
 ##plot for imdb rating vs score
 ggplot(sorteddirectorsummary, aes(x = number_of_movies, y = score_average)) + 
@@ -475,24 +521,100 @@ ggplot(sorteddirectorsummary, aes(x = number_of_movies, y = score_average)) +
   labs(x = "Number of movies in sample", y = "Average IMDb Score")
 ```
 
+
+```{r echo=FALSE}
+dirpercentage <- round(100*length(sorteddirectorsummary$number_of_movies[sorteddirectorsummary$number_of_movies==1])/length(sorteddirectorsummary$number_of_movies),2)
+
+```
+
+There are `r nrow(sorteddirectorsummary)` distinct directors in the training sample. Approximately  `r dirpercentage` of those directors have only 1 movie in the top 5000, leaving `r 100-dirpercentage` that have more than 1.
+
+```{r echo=FALSE}
+##add # of movies per director to the main dataset.
+movieswithdirectordata <- merge(movies, sorteddirectorsummary, by="director_name")
+
+movieswithdirectordata <- rename(movieswithdirectordata, c('number_of_movies'='dir_number_of_movies'))
+```
+
+
 ```{r echo=FALSE, message=FALSE}
 ##plot for imdb rating vs score
 ## to do - sort out the axes
-ggplot(sorteddirectorsummary, aes(x = number_of_movies, y = gross_average)) + 
+ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = imdb_score)) + 
   geom_jitter(alpha = 0.2, width = 0.05) + geom_smooth() +
-  labs(x = "Number of movies in sample", y = "Average Gross Revenue")
+  labs(x = "Number of movies in sample", y = "IMDB Score")
 ```
+
+
+```{r echo=FALSE, message=FALSE}
+##plot for gross revenue vs score
+## to do - sort out the axes
+ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross)) + 
+  geom_jitter(alpha = 0.2, width = 0.05) + geom_smooth() +
+  labs(x = "Number of movies by director in sample", y = "Average Gross Revenue")
+```
+
 
 ```{r echo=FALSE}
 ##cor test for imdb rating vs # of movies
-cor.test(sorteddirectorsummary$score_average,sorteddirectorsummary$number_of_movies)
+cor.test(movieswithdirectordata$imdb_score,movieswithdirectordata$dir_number_of_movies)
 ##does seem like very loosely positively correlated and is probably because of the correlation with budget- more analysis to come.
 ##cor test for gross score vs # of movies
-cor.test(sorteddirectorsummary$gross_average,sorteddirectorsummary$number_of_movies)
+cor.test(movieswithdirectordata$gross,movieswithdirectordata$dir_number_of_movies)
 ##does seem like somewhat positively correlated - although we can see from the graph that this doesn't seem linear.
 ```
 
-*Would potentially like to do some inference regarding directors*
+These correlation tests do infer that there is a slight positive correlation between the two outcome variables (gross and imdb score) and the # of movies the director has in the sample. However, the impact on gross revenue does not look to be linear, and neither of the correlations seem to be particularly strong. Whether or not a director is prolific does not seem to have a strong impact on the quality (as proxied by imdb score) or popularity (as proxied by gross revenue) of a movie.
+
+```{r echo=FALSE} 
+options(scipen=1000000000)
+
+movieswithdirectordata$more_than_one_movie <- as.factor(movieswithdirectordata$more_than_one_movie)
+ggplot(movieswithdirectordata, aes(x=movieswithdirectordata$more_than_one_movie, y=gross)) + geom_boxplot() 
+
+t.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_one_movie==0], movieswithdirectordata$gross[movieswithdirectordata$more_than_one_movie==1])
+```
+
+```{r echo=FALSE}
+
+##code taken from publically available github to give human readable axis labels. (https://github.com/fdryan/R/blob/master/ggplot2_formatter.r)
+human_numbers <- function(x = NULL, smbl =""){
+  humanity <- function(y){             
+    
+    if (!is.na(y)){
+      
+       b <- round_any(abs(y) / 1e9, 0.1)
+       m <- round_any(abs(y) / 1e6, 0.1)
+       k <- round_any(abs(y) / 1e3, 0.1)
+      
+      if ( y >= 0 ){ 
+        y_is_positive <- ""
+      } else {
+        y_is_positive <- "-"
+      }
+      
+      if ( k < 1 ) {
+        paste0(y_is_positive, smbl, y )
+        } else if ( m < 1){
+        paste0 (y_is_positive, smbl,  k , "k")
+      } else if (b < 1){
+        paste0 (y_is_positive, smbl, m ,"m")
+      } else {
+        paste0 (y_is_positive, smbl,  comma(b), "b")     
+      }
+    }
+  }
+  
+  sapply(x,humanity)
+}
+
+human_num   <- function(x){human_numbers(x, smbl = "")} 
+
+
+ggplot(movieswithdirectordata, aes(x = gross, fill = more_than_one_movie)) + geom_density(alpha = 0.5) + scale_y_continuous(label=comma) + scale_x_continuous(label=human_num)
+##these look unpleasant, need to make them prettier before uncommenting.
+##+ geom_vline(xintercept = mean(movieswithdirectordata$gross[movieswithdirectordata$more_than_one_movie==0])) + ##geom_vline(xintercept = mean(movieswithdirectordata$gross[movieswithdirectordata$more_than_one_movie==1]))
+```
 
 # Predictive Data Analysis
 
