@@ -183,6 +183,7 @@ topcountries$country <- factor(topcountries$country, levels = topcountries$count
 countries <- subset(movies, country %in% c("Australia", "Canada", "China", "France", "Germany", "India", "Japan", "Spain", "UK", "USA"))
 
 score <- countries$imdb_score
+gross <- countries$gross
 
 # Plot of gross revenue for the above countries
 ggplot(countries, aes(country, gross, fill = country)) + 
@@ -204,6 +205,11 @@ ggplot(countries, aes(country, score, fill = country)) +
     scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
                   labels = c("100", "10,000", "1 million", "100 millions", "1 billion"))
 
+ggplot(countries, aes(x = score, y = gross, colour = country)) + 
+  geom_jitter() + scale_x_log10()+ labs(title = "Budget and Gross Revenue for different countries", x = "IMDB Score", y = "Gross Revenue") +
+  facet_wrap(~ country) +
+  theme_few() + 
+  theme(legend.position = "None")
 ```
 
 
@@ -332,6 +338,8 @@ ggplot(movies_and_genres, aes(x = gross, y = score, colour = genre)) +
   facet_wrap(~ genre) +
   theme_few() + 
   theme(legend.position = "None")
+
+
 ```
 
 # Plot Keywords
@@ -622,10 +630,12 @@ ggplot(topratedmovies, aes(contentrating, contentgross, fill = contentrating)) +
     scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
                   labels = c("100", "10,000", "1 million", "100 millions", "1 billion"))
 
-# Is the IMDB Score for movies with rating PG-13 different from those that are rated G?
-t.test(movies$imdb_score[movies$content_rating == "PG-13"], movies$imdb_score[movies$content_rating == "G"], alternative = "greater")
+# Does the overall IMDB Score vary with different ratings?
+t.test(movies$imdb_score[movies$content_rating == "R"], movies$imdb_score[movies$content_rating == "PG-13"])
 
-t.test(movies$gross[movies$content_rating == "PG-13"], movies$gross[movies$content_rating == "G"], alternative = "greater")
+t.test(movies$imdb_score[movies$content_rating == "PG-13"], movies$imdb_score[movies$content_rating == "G"])
+
+t.test(movies$imdb_score[movies$content_rating == "R"], movies$imdb_score[movies$content_rating == "G"])
 ```
 
 ### Cecilia
