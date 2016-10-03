@@ -651,11 +651,19 @@ cor.test(movies$budget, movies$imdb_score)
 
 The covariance value of 5306036 suggests that there is an upward trend, as budget increases, imdb score increases. The Pearson's correlation test between budget and IMDB score gives us a p-value of 0.047, which suggests that there isn't a high correlation between budget of the movie and rating on IMDB. 
 
-If we dig deeper to look at the effect of budget on IMDB score for movies from different countries, it appears to be that there is not much of a trend, as most of the movies from the database are predominantly from USA.
+Even if we dig deeper to look at the effect of budget on IMDB score for movies from different countries, it appears to be that there is not much of a trend.
+
 
 ```{r}
 
 ggplot(data = budgetcountry) + geom_jitter(aes(x = budget, y = imdb_score, color=country, alpha = 0.1)) + labs(x = "Budget", y = "IMDB Score") + scale_x_log10() 
+
+
+ggplot(budgetcountry, aes(x = budget, y = imdb_score, colour = country)) + 
+  geom_jitter() + scale_x_log10()+ labs(title = "Budget and IMDB score for different genres", x = "Budget", y = "IMDB Score") +
+  facet_wrap(~ country) +
+  theme_few() + 
+  theme(legend.position = "None")
 
 ```
 
@@ -666,7 +674,7 @@ Budget vs Gross
 
 #scatter plot for budget vs gross
 
-ggplot(data = movies) + geom_point(aes(x = budget, y = gross, colour="#FF9999")) + labs(x = "Budget", y = "Gross") + scale_x_log10(breaks = c(1e+03, 1e+05, 1e+07, 1e+09), labels = c("1000", "100,000", "10 million", "1000 million")) + theme(legend.position="none")
+ggplot(data = movies) + geom_point(aes(x = budget, y = gross, colour="#FF9999")) + labs(x = "Budget", y = "Gross Revenue in USD") + scale_x_log10(breaks = c(1e+03, 1e+05, 1e+07, 1e+09), labels = c("1000", "100,000", "10 million", "1000 million")) + theme(legend.position="none")
 
 #covariance test
 
@@ -678,20 +686,39 @@ cor.test(movies$budget, movies$gross)
 
 ```
 
-The covariance value of 1.6 x 10^15 suggests that there is an upward trend, as budget increases, revenue from the movie increases. The Pearson's correlation test between budget and gross gives us a p-value of 0.22, which suggests that there isn't a high correlation between budget of the movie and gross, but slightly higher than the correlation between movie and imdb score.
+The covariance value of 1.6 x 10^15 suggests that there is an upward trend, as budget increases, revenue from the movie increases. The Pearson's correlation test between budget and gross gives us a value of 0.22, which suggests that there isn't a high correlation between budget of the movie and gross, but slightly higher than the correlation between movie and imdb score.
 
-As both variables are indicators of a movie's popularity, we can conclude from the above analysis that budget does not have a huge effect on how 'popular' a movie is.
+If we subset the data by different countries, we still do not see a huge correlation between budget versus gross revenue.
+
+```{r}
+
+ggplot(data = budgetcountry) + geom_jitter(aes(x = budget, y = gross, color=country, alpha = 0.1)) + labs(x = "Budget", y = "Gross Revenue") + scale_x_log10() 
+
+
+ggplot(budgetcountry, aes(x = budget, y = gross, colour = country)) + 
+  geom_jitter() + scale_x_log10()+ labs(title = "Budget and Gross Revenue for different countries", x = "Budget", y = "Gross Revenue") +
+  facet_wrap(~ country) +
+  theme_few() + 
+  theme(legend.position = "None")
+
+```
+
+
+As both variables are indicators of a movie's popularity, we can conclude from the above analysis that budget does not have a huge influence on how 'popular' a movie is.
+
+
 
 Budget vs Gross Profit Margin
 
 ```{r}
 
-#create profit column
+#create grossprofit column
 movieswprofit <- data.frame(movies)
-movieswprofit$grossprofitmargin <- (movieswprofit$gross - movieswprofit$budget)/movieswprofit$gross
+movieswprofit$grossprofitmargin <- (movieswprofit$gross - movieswprofit$budget)/movieswprofit$gross * 100
 
-#scatter plot for budget vs profit (not sure how to plot)
-ggplot(data = movieswprofit) + geom_point(aes(x = budget, y = grossprofitmargin, colour = "#FF9999")) + scale_x_log10(breaks = c(1e+03, 1e+05, 1e+07, 1e+09), labels = c("1000", "100,000", "10 million", "1000 million")) + theme(legend.position="none")
+#scatter plot for budget vs gross profit margin 
+ggplot(data = movieswprofit) + geom_point(aes(x = budget, y = grossprofitmargin, colour = "#FF9999")) + scale_x_log10(breaks = c(1e+03, 1e+05, 1e+07, 1e+09), labels = c("1000", "100,000", "10 million", "1000 million")) + theme(legend.position="none") + scale_y_continuous(limits = c(-1000, 100)) + theme(legend.position="none") + labs(x = "Budget in USD", y = "Gross Profit Margin as %")
+
 
 #covariance test
 
@@ -703,8 +730,7 @@ cor.test(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.
 
 ```
 
-Finally, we would also like to look at the effect of gross vs on gross profit margin, whether the an increase in budget would make a better movie, and hence a higher gross profit margin. Gross profit margin can be used as an indictor of profitability of movie. Based on the data, it appears that there is a negative correlation, albeit not very strong, between budget and profit, a value of -0.31, which suggests that an increase in budget does not necessarily bring about a higher gross profit margin.
-
+Finally, we would also like to look at the effect of gross vs on gross profit margin, whether the an increase in budget would make a better movie, and hence a higher gross profit margin. Gross profit margin can be used as an indictor of profitability of movie. Based on the data, it appears that there is a negative correlation (-0.31) between budget and profit. Although it is not very strong, it still suggests that an increase in budget has a slight negative impact on gross profit margin.
 
 
 ### George
