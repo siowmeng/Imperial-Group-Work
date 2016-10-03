@@ -116,7 +116,8 @@ movies <- movies[intrain, ]
 test <- movies[-intrain, ]
 ```
 
-10% of the cleansed dataset (`r nrow(test)`) is then set aside to be the "test" dataset, leaving the remaining 90%  of our dataset (`r nrow(movies)`) as the training dataset. The training dataset alone will be used for all descriptive, inferential and predictive analysis, including model building. The "test" dataset will be used at a later stage to check the accuracy of the predicted model.
+10% of the cleansed dataset (`r nrow(test)`) is then set aside to be the "test" dataset, leaving the remaining 90%  of our dataset (`r nrow(movies)`) as the training dataset. The training dataset alone will be used for all descriptive, inferential and predictive analysis, including model building. The "test" dataset will be used at a later stage to check the accuracy of the predicted model.1111111111111111111111111111111111111111111111111111111111111111
+///.....
 
 
 # Descriptive Data Analysis
@@ -175,44 +176,41 @@ Will do a country/actor analysis on gross and imdb score.
 
 *Siow Meng comment: I commented Nikhita's code for now as it is giving error while knitting the file. To investigate further.*  
 
-*Siow Meng comment: Might want to avoid keyword: head*  
+*Siow Meng comment: Might want to avoid keyword: head* I have changed head but it is still not knitting for me either, so I will see what's wrong - Nikhita
 
 
 ```{r}
-
 country <- movies$country
 scores <- movies$imdb_score
 
-# # Sorting the movies by country and picking out the top 10
-# counted <- count(movies, country)
-# sorted <- arrange(counted, desc(n))
-# head <- sorted[1:10,]
-# head$country <- factor(head$country, levels = head$country[order(head$n)])
-# 
-# ggplot(head, aes(x = country, y = n, fill = country, label = n)) + geom_bar(stat="identity") + coord_flip()
-# 
-# USA <- subset(movies, country == "USA")
-# UK <- subset(movies, country == "UK")
-# Fra <- subset(movies, country == "France")
-# Ger <- subset(movies, country == "Germany")
-# Can <- subset(movies, country == "Canada")
-# Aus <- subset(movies, country == "Australia")
-# Spa <- subset(movies, country == "Spain")
-# Jap <- subset(movies, country == "Japan")
-# Chi <- subset(movies, country == "China")
-# Ind <- subset(movies, country == "India")
-# 
-# # Plotting graph for gross vs imdb score (Need to figure out a one-step way of doing this)
-# ggplot(USA, aes(x = gross, y = imdb_score)) + geom_point(colour = "red")
-# ggplot(UK, aes(x = gross, y = imdb_score)) + geom_point(colour = "blue")
-# ggplot(Fra, aes(x = gross, y = imdb_score)) + geom_point(colour = "green")
-# ggplot(Ger, aes(x = gross, y = imdb_score)) + geom_point(colour = "pink")
-# ggplot(Can, aes(x = gross, y = imdb_score)) + geom_point()
-# ggplot(Aus, aes(x = gross, y = imdb_score)) + geom_point()
-# ggplot(Spa, aes(x = gross, y = imdb_score)) + geom_point()
-# ggplot(Jap, aes(x = gross, y = imdb_score)) + geom_point()
-# ggplot(Chi, aes(x = gross, y = imdb_score)) + geom_point()
-# ggplot(Ind, aes(x = gross, y = imdb_score)) + geom_point()
+# Sorting the movies by country and picking out the top 10
+counted <- count(movies, country)
+sorted <- arrange(counted, desc(n))
+topcountries <- sorted[1:10,]
+topcountries$country <- factor(topcountries$country, levels = topcountries$country[order(topcountries$n)]
+ 
+USA <- subset(movies, country == "USA")
+UK <- subset(movies, country == "UK")
+Fra <- subset(movies, country == "France")
+Ger <- subset(movies, country == "Germany")
+Can <- subset(movies, country == "Canada")
+Aus <- subset(movies, country == "Australia")
+Spa <- subset(movies, country == "Spain")
+Jap <- subset(movies, country == "Japan")
+Chi <- subset(movies, country == "China")
+Ind <- subset(movies, country == "India")
+
+# Plotting graph for gross vs imdb score (Need to figure out a one-step way of doing this)
+ggplot(USA, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(UK, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Fra, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Ger, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Can, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Aus, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Spa, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Jap, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Chi, aes(x = gross, y = imdb_score)) + geom_point()
+ggplot(Ind, aes(x = gross, y = imdb_score)) + geom_point()
 
 ```
 
