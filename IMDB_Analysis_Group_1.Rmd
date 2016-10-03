@@ -1,7 +1,7 @@
 ---
 title: "Analysis of IMDB Movie Dataset"
-date: "16 October 2016"
 output: html_document
+date: "16 October 2016"
 ---
 
 ```{r setup, include = FALSE}
