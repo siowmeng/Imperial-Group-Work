@@ -178,8 +178,14 @@ removednas <- counted[complete.cases(counted),]
 sorted <- arrange(removednas, desc(freq))
 topcountries <- sorted[1:10,]
 topcountries$country <- factor(topcountries$country, levels = topcountries$country[order(topcountries$freq)])
-                                        
-ggplot(movies, aes(country, gross, fill = country)) + 
+
+# Taking the countries with more than 10 movies
+countries <- subset(movies, country %in% c("Australia", "Canada", "China", "France", "Germany", "India", "Japan", "Spain", "UK", "USA"))
+
+score <- countries$imdb_score
+
+# Plot of gross revenue for the above countries
+ggplot(countries, aes(country, gross, fill = country)) + 
     geom_boxplot() + 
     labs(title = "Gross revenue of movies by country", x = "", y = "Gross revenue") + 
     theme_few() +
@@ -188,37 +194,15 @@ ggplot(movies, aes(country, gross, fill = country)) +
     scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
                   labels = c("100", "10,000", "1 million", "100 millions", "1 billion"))
 
-USA <- subset(movies, country == "USA")
-UK <- subset(movies, country == "UK")
-Fra <- subset(movies, country == "France")
-Ger <- subset(movies, country == "Germany")
-Can <- subset(movies, country == "Canada")
-Aus <- subset(movies, country == "Australia")
-Spa <- subset(movies, country == "Spain")
-Jap <- subset(movies, country == "Japan")
-Chi <- subset(movies, country == "China")
-Ind <- subset(movies, country == "India")
-
-# Plotting graph for gross vs imdb score (Need to figure out a one-step way of doing this)
-ggplot(USA, aes(x = gross, y = imdb_score, colour = "#009E73")) + geom_point() + ggtitle("Gross Revenue against IMDB Score for USA") + labs(x = "Gross", y = "IMDB Score")
-
-ggplot(UK, aes(x = gross, y = imdb_score, colour = "0072B2")) + geom_point() + ggtitle("Gross Revenue against IMDB Score for UK") + labs(x = "Gross", y = "IMDB Score")
-
-ggplot(Fra, aes(x = gross, y = imdb_score, colour = "D55E00")) + geom_point() + ggtitle("Gross Revenue against IMDB Score for France") + labs(x = "Gross", y = "IMDB Score")
-
-ggplot(Ger, aes(x = gross, y = imdb_score)) + geom_point() + ggtitle("Gross Revenue against IMDB Score for Germany") + labs(x = "Gross", y = "IMDB Score")
-
-ggplot(Can, aes(x = gross, y = imdb_score)) + geom_point() + ggtitle("Gross Revenue against IMDB Score for Canada") + labs(x = "Gross", y = "IMDB Score")
-
-ggplot(Aus, aes(x = gross, y = imdb_score)) + geom_point() + ggtitle("Gross Revenue against IMDB Score for Australia") + labs(x = "Gross", y = "IMDB Score")
-
-ggplot(Spa, aes(x = gross, y = imdb_score)) + geom_point() + ggtitle("Gross Revenue against IMDB Score for Spain") + labs(x = "Gross", y = "IMDB Score")
-
-ggplot(Jap, aes(x = gross, y = imdb_score)) + geom_point() + ggtitle("Gross Revenue against IMDB Score for Japan") + labs(x = "Gross", y = "IMDB Score")
-
-ggplot(Chi, aes(x = gross, y = imdb_score)) + geom_point() + ggtitle("Gross Revenue against IMDB Score for China") + labs(x = "Gross", y = "IMDB Score")
-
-ggplot(Ind, aes(x = gross, y = imdb_score)) + geom_point() + ggtitle("Gross Revenue against IMDB Score for India") + labs(x = "Gross", y = "IMDB Score")
+# Plot of imdb score for the above movies
+ggplot(countries, aes(country, score, fill = country)) + 
+    geom_boxplot() + 
+    labs(title = "IMDB SCore of movies by country", x = "", y = "Gross revenue") + 
+    theme_few() +
+    theme(legend.position = "None") +
+    theme(axis.ticks.y = element_blank()) + 
+    scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                  labels = c("100", "10,000", "1 million", "100 millions", "1 billion"))
 
 ```
 
@@ -604,6 +588,45 @@ In addition, the gross revenues of English movies vary greatly (compared to non-
 We are confident to say that the English movies in this dataset are generally more popular than non-English movies.
 
 ### Nikhita
+
+Looking at the content rating for the movies
+
+```{r}
+
+ratingcounts <- count(movies, 'content_rating')
+ratingsort <- arrange(ratingcounts, desc(freq))
+topratings <- ratingsort[1:5,]
+
+topratedmovies <- subset(movies, content_rating %in% c("PG-13", "R", "PG"))
+contentrating <- topratedmovies$content_rating
+contentscore <- topratedmovies$imdb_score
+contentgross <- topratedmovies$gross
+
+cor.test(data = topratedmovies, topratedmovies$imdb_score, topratedmovies$gross)
+
+ggplot(topratedmovies, aes(contentrating, contentscore, fill = contentrating)) + 
+    geom_boxplot() + 
+    labs(title = "IMDB Score of movies by rating", x = "Content Rating", y = "IMDB Score") + 
+    theme_few() +
+    theme(legend.position = "None") +
+    theme(axis.ticks.y = element_blank()) + 
+    scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                  labels = c("100", "10,000", "1 million", "100 millions", "1 billion"))
+
+ggplot(topratedmovies, aes(contentrating, contentgross, fill = contentrating)) + 
+    geom_boxplot() + 
+    labs(title = "Gross Revenue of movies by rating", x = "Content Rating", y = "Gross Revenue") +
+    theme_few() +
+    theme(legend.position = "None") +
+    theme(axis.ticks.y = element_blank()) + 
+    scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                  labels = c("100", "10,000", "1 million", "100 millions", "1 billion"))
+
+# Is the IMDB Score for movies with rating PG-13 different from those that are rated G?
+t.test(movies$imdb_score[movies$content_rating == "PG-13"], movies$imdb_score[movies$content_rating == "G"], alternative = "greater")
+
+t.test(movies$gross[movies$content_rating == "PG-13"], movies$gross[movies$content_rating == "G"], alternative = "greater")
+```
 
 ### Cecilia
 
