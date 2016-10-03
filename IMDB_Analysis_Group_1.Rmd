@@ -707,7 +707,7 @@ cor.test(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.
 
 ```
 
-Finally, we would also like to look at the effect of gross vs on gross profit margin, whether the an increase in budget would make a better movie, and hence a higher gross profit margin. Gross profit margin can be used as an indictor of profitability of movie. Based on the data, it appears that there is a negative correlation (-.031) between budget and profit. Although it is not very strong, it still suggests that an increase in budget does not necessarily bring about a higher gross profit margin.
+Finally, we would also like to look at the effect of gross vs on gross profit margin, whether the an increase in budget would make a better movie, and hence a higher gross profit margin. Gross profit margin can be used as an indictor of profitability of movie. Based on the data, it appears that there is a negative correlation (-0.31) between budget and profit. Although it is not very strong, it still suggests that an increase in budget has a slight negative impact on gross profit margin.
 
 
 ### George
