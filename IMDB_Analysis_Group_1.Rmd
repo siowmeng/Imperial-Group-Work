@@ -173,8 +173,9 @@ Will do a country/actor analysis on gross and imdb score.
 
 *Siow Meng comment: I commented Nikhita's code for now as it is giving error while knitting the file. To investigate further.*  
 
-*Siow Meng comment: Might want to avoid keyword: head* 
-*I have changed head but it is still not knitting for me either, so I will see what's wrong - Nikhita*
+<<<<<<< HEAD
+*Siow Meng comment: Might want to avoid keyword: head* I have changed head but it is still not knitting for me either, so I will see what's wrong - Nikhita
+
 
 
 ```{r}
