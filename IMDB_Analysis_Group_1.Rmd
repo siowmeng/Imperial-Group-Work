@@ -115,8 +115,7 @@ train <- movies[intrain, ]
 test <- movies[-intrain, ]
 ```
 
-10% of the cleansed dataset (`r nrow(test)`) is then set aside to be the "test" dataset, leaving the remaining 90%  of our dataset (`r nrow(movies)`) as the training dataset. The training dataset alone will be used for all descriptive, inferential and predictive analysis, including model building. The "test" dataset will be used at a later stage to check the accuracy of the predicted model.1111111111111111111111111111111111111111111111111111111111111111
-///.....
+10% of the cleansed dataset (`r nrow(test)`) is then set aside to be the "test" dataset, leaving the remaining 90%  of our dataset (`r nrow(movies)`) as the training dataset. The training dataset alone will be used for all descriptive, inferential and predictive analysis, including model building. The "test" dataset will be used at a later stage to check the accuracy of the predicted model.
 
 
 # Descriptive Data Analysis
@@ -549,13 +548,6 @@ ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
 ```
 
 ###Louise
-*Siow Meng comment: plyr library has been added at the first section of the document. Shall we all load the libraries in the first section?*
-*Louise comment - yes I think that makes sense :) removed from here*
-
-*Siow Meng comment: Encountered the following warning while knitting: Scale for 'y' is already present. Adding another scale for 'y', which will replace the existing scale.* 
-*Yes, this is because I like my graphs to start at actual 0 rather than the ggplot default where they start at -0.5 and so have some padding - happy to discuss aesthetics when we consolidate plot themes*.
-
-*Would potentially like to do some plots reg. directors - testing pushing again*
 
 ```{r echo = FALSE, message = FALSE}
 ##create summary statistics for average imdb score & number of movies for each director
@@ -564,13 +556,138 @@ directorssummary <- ddply(movies, ~ director_name,summarise,score_average=round(
 sorteddirectorsummary <- arrange(directorssummary,desc(number_of_movies), desc(score_average))
 ##ensure that factors are in the order of number of movies, otherwise ggplot will default to alphabetical ordering in the graph
 sorteddirectorsummary$director_name <- factor(sorteddirectorsummary$director_name, levels = sorteddirectorsummary$director_name[order(sorteddirectorsummary$number_of_movies)])
-##add a categorical variable for one movie or more
-sorteddirectorsummary$more_than_one_movie <- rep.int(0, nrow(sorteddirectorsummary))
-sorteddirectorsummary$more_than_one_movie[sorteddirectorsummary$number_of_movies>1] <- 1
+```
 
+There are `r nrow(sorteddirectorsummary)` distinct directors in the data sample. The top 20 directors with the highest number of movies in our sample are as below:
+
+```{r echo=FALSE}
 ##plot for top 20 directors
 ggplot(sorteddirectorsummary[1:20,], aes(x=director_name, y=number_of_movies, fill=director_name)) + geom_bar(stat="identity") + coord_flip() + guides(fill=FALSE) + scale_y_continuous(expand = c(0, 0)) + labs(x = "", y="Number of movies in sample") + ggtitle("Top 20 directors with multiple IMDB top 5000 movies") +  scale_y_continuous(expand = c(0,0)) +  expand_limits(y = c(0,1.05 * max(sorteddirectorsummary$number_of_movies)))
 ```
+
+The density of movies per director is as below:
+
+```{r echo=FALSE}
+##Histogram for number of moveies per director
+ggplot(sorteddirectorsummary, aes(x=number_of_movies)) + geom_histogram(binwidth=1, fill="darkblue") + labs(x = "Number of movies in sample") + ggtitle("Density of number of movies per director")
+```
+
+```{r echo=FALSE}
+##add a categorical variable for one movie or more
+sorteddirectorsummary$more_than_one_movie <- rep.int(0, nrow(sorteddirectorsummary))
+sorteddirectorsummary$more_than_one_movie[sorteddirectorsummary$number_of_movies>1] <- 1
+##calculate the percentage of directors with exactly one movie
+dirpercentage <- round(100*length(sorteddirectorsummary$number_of_movies[sorteddirectorsummary$number_of_movies==1])/length(sorteddirectorsummary$number_of_movies),2)
+```
+
+This is clearly positively skewed, with many directors having only 1 movie in the dataset, and only a few having significantly more. In fact, approximately  `r dirpercentage` of those directors have only 1 movie in the top 5000, leaving `r 100-dirpercentage` that have more than 1.
+
+An initial look at the relationship between # of movies that the director has in the dataset, and gross revenue does not show a clearly defined correlation:
+
+```{r echo=FALSE}
+##add # of movies per director to the main dataset.
+movieswithdirectordata <- merge(movies, sorteddirectorsummary, by="director_name")
+movieswithdirectordata <- rename(movieswithdirectordata, c('number_of_movies'='dir_number_of_movies'))
+```
+
+```{r echo=FALSE}
+##function to create human readable axis labels.
+##code taken from publically available github to give human readable axis labels. (https://github.com/fdryan/R/blob/master/ggplot2_formatter.r)
+human_numbers <- function(x = NULL, smbl =""){
+  humanity <- function(y){             
+    
+    if (!is.na(y)){
+      
+       b <- round_any(abs(y) / 1e9, 0.1)
+       m <- round_any(abs(y) / 1e6, 0.1)
+       k <- round_any(abs(y) / 1e3, 0.1)
+      
+      if ( y >= 0 ){ 
+        y_is_positive <- ""
+      } else {
+        y_is_positive <- "-"
+      }
+      
+      if ( k < 1 ) {
+        paste0(y_is_positive, smbl, y )
+        } else if ( m < 1){
+        paste0 (y_is_positive, smbl,  k , "k")
+      } else if (b < 1){
+        paste0 (y_is_positive, smbl, m ,"m")
+      } else {
+        paste0 (y_is_positive, smbl,  comma(b), "b")     
+      }
+    }
+  }
+  
+  sapply(x,humanity)
+}
+
+human_num   <- function(x){human_numbers(x, smbl = "")} 
+human_usd   <- function(x){human_numbers(x, smbl = "$")}
+```
+
+```{r echo=FALSE, message=FALSE}
+##plot for gross revenue vs score
+## to do - sort out the axes
+ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross)) + 
+  geom_jitter(alpha = 0.2, width = 0.05) +
+  labs(x = "Number of movies by director in sample", y = "Average Gross Revenue") + scale_y_continuous(label=human_usd)
+```
+
+If we then split this out by decades, we can see the below:
+```{r}
+##add the decades in as per Steven's code (note: potentially change into a function?)
+for (i in 1:nrow(movies)){
+  low <- movieswithdirectordata$title_year[i] - (movieswithdirectordata$title_year[i] %% 10)
+  high <- movieswithdirectordata$title_year[i] - (movieswithdirectordata$title_year[i] %% 10) + 9
+  movieswithdirectordata$decade[i] <- paste(as.character(low), as.character(high), sep = "-")}
+
+
+```
+
+```{r echo=FALSE}
+ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross, colour = decade)) + 
+  geom_jitter(alpha = 0.1) + scale_y_continuous(label=human_usd) + labs(title = "Gross Revenue and # of director movies for different decades", x = "# of Movies by Director", y = "Gross Revenue") + facet_wrap(~ decade, ncol = 5) + theme(legend.position = "None")
+```
+
+And by genres, then we see the below:
+
+```{r eval=FALSE, echo=FALSE}
+##this doesn't work at the moment when knitting, but does when running only George's chunks, so need to see what's going on here.
+##data prep to get genre + director data together
+##note: would be good if we could just use the same data frame
+movies$genres <- strsplit(movies$genres, "[|]")
+genres_idx <- movies[, c("movie_title", "genres")]
+i = 1
+mat <- matrix(rep(0, (dim(movies)[1] * length(genres))), nrow = dim(movies)[1])
+for (g in genres_idx$genres){
+    idx <- which(genres %in% g)
+    mat[i, idx] <- 1
+    i = i + 1
+}
+colnames(mat) <- genres
+movies_and_genres <- data.frame(mat)
+movies_and_genres <- cbind(gross = movies$gross, score = movies$imdb_score, director_name = movies$director_name, movies_and_genres, stringsAsFactors = FALSE)
+movies_and_genres <- melt(movies_and_genres, id = c("gross", "score", "director_name"))
+movies_and_genres$variable <- gsub("[.]", " ", movies_and_genres$variable)
+movies_and_genres <- movies_and_genres[movies_and_genres$value == 1, ] 
+movies_and_genres$value <- NULL
+colnames(movies_and_genres) <- c("gross", "score", "director_name","genre")
+movies_and_genres$genre <- factor(movies_and_genres$genre, levels = genres_sum$genre)
+movies_and_genres <- movies_and_genres[complete.cases(movies_and_genres), ]
+
+movies_and_genres_withdirectordata <- merge(movies_and_genres, sorteddirectorsummary, by="director_name")
+```
+
+```{r eval=FALSE, echo=FALSE}
+##requires the above
+ggplot(movies_and_genres_withdirectordata, aes(x = number_of_movies, y = gross, colour = genre)) + 
+  geom_jitter(alpha = 0.1) + scale_y_continuous(label=human_usd) + labs(title = "Gross Revenue and # of director movies for different genres", x = "# of Movies by Director", y = "Gross Revenue") + facet_wrap(~ genre) + theme(legend.position = "None")
+```
+
+Next steps:
+- look at the graph without the outliers (top 20) - I think there will be an upwards trend here
 
 # Inferential Data Analysis
 
@@ -925,44 +1042,11 @@ ggplot(comb, aes(x = comb$imdb_score)) +
 
 ```{r echo=FALSE, message=FALSE}
 ##plot for imdb rating vs score
-ggplot(sorteddirectorsummary, aes(x = number_of_movies, y = score_average)) + 
-  geom_jitter(alpha = 0.2, width = 0.05) + geom_smooth() +
-  labs(x = "Number of movies in sample", y = "Average IMDb Score")
-```
-
-
-```{r echo=FALSE}
-dirpercentage <- round(100*length(sorteddirectorsummary$number_of_movies[sorteddirectorsummary$number_of_movies==1])/length(sorteddirectorsummary$number_of_movies),2)
-
-```
-
-There are `r nrow(sorteddirectorsummary)` distinct directors in the training sample. Approximately  `r dirpercentage` of those directors have only 1 movie in the top 5000, leaving `r 100-dirpercentage` that have more than 1.
-
-```{r echo=FALSE}
-##add # of movies per director to the main dataset.
-movieswithdirectordata <- merge(movies, sorteddirectorsummary, by="director_name")
-
-movieswithdirectordata <- rename(movieswithdirectordata, c('number_of_movies'='dir_number_of_movies'))
-```
-
-
-```{r echo=FALSE, message=FALSE}
-##plot for imdb rating vs score
 ## to do - sort out the axes
 ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = imdb_score)) + 
   geom_jitter(alpha = 0.2, width = 0.05) + geom_smooth() +
   labs(x = "Number of movies in sample", y = "IMDB Score")
 ```
-
-
-```{r echo=FALSE, message=FALSE}
-##plot for gross revenue vs score
-## to do - sort out the axes
-ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross)) + 
-  geom_jitter(alpha = 0.2, width = 0.05) + geom_smooth() +
-  labs(x = "Number of movies by director in sample", y = "Average Gross Revenue")
-```
-
 
 ```{r echo=FALSE}
 ##cor test for imdb rating vs # of movies
@@ -984,42 +1068,7 @@ ggplot(movieswithdirectordata, aes(x=movieswithdirectordata$more_than_one_movie,
 t.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_one_movie==0], movieswithdirectordata$gross[movieswithdirectordata$more_than_one_movie==1])
 ```
 
-```{r echo=FALSE}
-
-##code taken from publically available github to give human readable axis labels. (https://github.com/fdryan/R/blob/master/ggplot2_formatter.r)
-human_numbers <- function(x = NULL, smbl =""){
-  humanity <- function(y){             
-    
-    if (!is.na(y)){
-      
-       b <- round_any(abs(y) / 1e9, 0.1)
-       m <- round_any(abs(y) / 1e6, 0.1)
-       k <- round_any(abs(y) / 1e3, 0.1)
-      
-      if ( y >= 0 ){ 
-        y_is_positive <- ""
-      } else {
-        y_is_positive <- "-"
-      }
-      
-      if ( k < 1 ) {
-        paste0(y_is_positive, smbl, y )
-        } else if ( m < 1){
-        paste0 (y_is_positive, smbl,  k , "k")
-      } else if (b < 1){
-        paste0 (y_is_positive, smbl, m ,"m")
-      } else {
-        paste0 (y_is_positive, smbl,  comma(b), "b")     
-      }
-    }
-  }
-  
-  sapply(x,humanity)
-}
-
-human_num   <- function(x){human_numbers(x, smbl = "")} 
-
-
+```{r}
 ggplot(movieswithdirectordata, aes(x = gross, fill = more_than_one_movie)) + geom_density(alpha = 0.5) + scale_y_continuous(label=comma) + scale_x_continuous(label=human_num)
 ##these look unpleasant, need to make them prettier before uncommenting.
 ##+ geom_vline(xintercept = mean(movieswithdirectordata$gross[movieswithdirectordata$more_than_one_movie==0])) + ##geom_vline(xintercept = mean(movieswithdirectordata$gross[movieswithdirectordata$more_than_one_movie==1]))
