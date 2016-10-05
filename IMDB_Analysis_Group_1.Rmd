@@ -748,7 +748,11 @@ t.test(movies$imdb_score[movies$content_rating == "PG-13"], movies$imdb_score[mo
 t.test(movies$imdb_score[movies$content_rating == "R"], movies$imdb_score[movies$content_rating == "PG"])
 ```
 
+<<<<<<< HEAD
 PG, PG-13 and R are the most ppular ratings observed in our datatset. Looking the boxplots, there is no major difference in gross revenues or IMDB scores for the three categories. However, R movies tend to on average have higher IMDB scores and lower revenues than G or PG-13 rated movies. 
+=======
+PG, PG-13 and R are the most common ratings observed in our datatset. Looking the boxplots, there is no major difference in gross revenues or IMDB scores for the three categories. However, R movies tend to on average have higher IMDB scores and lower revenues than G or PG-13 rated movies. 
+>>>>>>> 95373eedeb1c1777a8fe43c572f7b850ce02ba20
 
 This is consistent with the t-test results. There is no difference in the mean scores for PG and PG-13 movies whereas p-values lower than 5% support the alternative hypothesis that the difference in mean scores for R and P/PG-13 movies is not equal to 0.
 
