@@ -299,12 +299,12 @@ ggplot(genres_sum, aes(x = genre, y = sum, fill = genre)) +
     theme(axis.text.x=element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank()) 
 
 ######################### Create an appropriate dataframe with gross, imdb_score and genres for each movie
-movies_and_genres <- cbind(gross = movies$gross, score = movies$imdb_score, movies_and_genres, stringsAsFactors = FALSE)
-movies_and_genres <- melt(movies_and_genres, id = c("gross", "score"))
+movies_and_genres <- cbind(gross = movies$gross, score = movies$imdb_score, movie_title = movies$movie_title, movies_and_genres, stringsAsFactors = FALSE)
+movies_and_genres <- melt(movies_and_genres, id = c("gross", "score", "movie_title"))
 movies_and_genres$variable <- gsub("[.]", " ", movies_and_genres$variable)
 movies_and_genres <- movies_and_genres[movies_and_genres$value == 1, ] 
 movies_and_genres$value <- NULL
-colnames(movies_and_genres) <- c("gross", "score", "genre")
+colnames(movies_and_genres) <- c("gross", "score", "movie_title", "genre")
 movies_and_genres$genre <- factor(movies_and_genres$genre, levels = genres_sum$genre)
 movies_and_genres <- movies_and_genres[complete.cases(movies_and_genres), ]
 
@@ -338,8 +338,6 @@ ggplot(movies_and_genres, aes(x = gross, y = score, colour = genre)) +
   facet_wrap(~ genre) +
   theme_few() + 
   theme(legend.position = "None")
-
-
 ```
 
 
@@ -558,14 +556,7 @@ sorteddirectorsummary <- arrange(directorssummary,desc(number_of_movies), desc(s
 sorteddirectorsummary$director_name <- factor(sorteddirectorsummary$director_name, levels = sorteddirectorsummary$director_name[order(sorteddirectorsummary$number_of_movies)])
 ```
 
-There are `r nrow(sorteddirectorsummary)` distinct directors in the data sample. The top 20 directors with the highest number of movies in our sample are as below:
-
-```{r echo=FALSE}
-##plot for top 20 directors
-ggplot(sorteddirectorsummary[1:20,], aes(x=director_name, y=number_of_movies, fill=director_name)) + geom_bar(stat="identity") + coord_flip() + guides(fill=FALSE) + scale_y_continuous(expand = c(0, 0)) + labs(x = "", y="Number of movies in sample") + ggtitle("Top 20 directors with multiple IMDB top 5000 movies") +  scale_y_continuous(expand = c(0,0)) +  expand_limits(y = c(0,1.05 * max(sorteddirectorsummary$number_of_movies)))
-```
-
-The density of movies per director is as below:
+There are `r nrow(sorteddirectorsummary)` distinct directors in the data sample.The density of movies per director is as below:
 
 ```{r echo=FALSE}
 ##Histogram for number of moveies per director
@@ -642,52 +633,43 @@ for (i in 1:nrow(movies)){
   low <- movieswithdirectordata$title_year[i] - (movieswithdirectordata$title_year[i] %% 10)
   high <- movieswithdirectordata$title_year[i] - (movieswithdirectordata$title_year[i] %% 10) + 9
   movieswithdirectordata$decade[i] <- paste(as.character(low), as.character(high), sep = "-")}
-
-
 ```
 
 ```{r echo=FALSE}
 ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross, colour = decade)) + 
-  geom_jitter(alpha = 0.1) + scale_y_continuous(label=human_usd) + labs(title = "Gross Revenue and # of director movies for different decades", x = "# of Movies by Director", y = "Gross Revenue") + facet_wrap(~ decade, ncol = 5) + theme(legend.position = "None")
+  geom_jitter(alpha = 0.1) + scale_y_continuous(label=human_usd) + labs(title = "Gross Revenue and # of director movies for different decades", x = "# of Movies by Director", y = "Gross Revenue") + facet_wrap(~ decade, ncol = 5) + theme(legend.position = "None") + geom_smooth(color="#000000")
 ```
 
-And by genres, then we see the below:
+As the number of data elements in the sample grows for each decade, a geomtrical pattern also seems to emerge, which is an upwards trend of gross revenue by movies per director up to about 10 movies per director, andthen a less clear trend for movies for movies with 10+ movies per director.
 
-```{r eval=FALSE, echo=FALSE}
-##this doesn't work at the moment when knitting, but does when running only George's chunks, so need to see what's going on here.
-##data prep to get genre + director data together
-##note: would be good if we could just use the same data frame
-movies$genres <- strsplit(movies$genres, "[|]")
-genres_idx <- movies[, c("movie_title", "genres")]
-i = 1
-mat <- matrix(rep(0, (dim(movies)[1] * length(genres))), nrow = dim(movies)[1])
-for (g in genres_idx$genres){
-    idx <- which(genres %in% g)
-    mat[i, idx] <- 1
-    i = i + 1
-}
-colnames(mat) <- genres
-movies_and_genres <- data.frame(mat)
-movies_and_genres <- cbind(gross = movies$gross, score = movies$imdb_score, director_name = movies$director_name, movies_and_genres, stringsAsFactors = FALSE)
-movies_and_genres <- melt(movies_and_genres, id = c("gross", "score", "director_name"))
-movies_and_genres$variable <- gsub("[.]", " ", movies_and_genres$variable)
-movies_and_genres <- movies_and_genres[movies_and_genres$value == 1, ] 
-movies_and_genres$value <- NULL
-colnames(movies_and_genres) <- c("gross", "score", "director_name","genre")
-movies_and_genres$genre <- factor(movies_and_genres$genre, levels = genres_sum$genre)
-movies_and_genres <- movies_and_genres[complete.cases(movies_and_genres), ]
+Similarly for genres:
 
-movies_and_genres_withdirectordata <- merge(movies_and_genres, sorteddirectorsummary, by="director_name")
+```{r echo=FALSE}
+movies_and_genres_withdirectordata <- merge(movies_and_genres, movieswithdirectordata[,c("movie_title","dir_number_of_movies")], by="movie_title")
 ```
 
-```{r eval=FALSE, echo=FALSE}
+```{r echo=FALSE}
 ##requires the above
-ggplot(movies_and_genres_withdirectordata, aes(x = number_of_movies, y = gross, colour = genre)) + 
-  geom_jitter(alpha = 0.1) + scale_y_continuous(label=human_usd) + labs(title = "Gross Revenue and # of director movies for different genres", x = "# of Movies by Director", y = "Gross Revenue") + facet_wrap(~ genre) + theme(legend.position = "None")
+ggplot(movies_and_genres_withdirectordata, aes(x = dir_number_of_movies, y = gross, colour = genre)) + 
+  geom_jitter(alpha = 0.1) + scale_y_continuous(label=human_usd) + labs(title = "Gross Revenue and # of director movies for different genres", x = "# of Movies by Director", y = "Gross Revenue") + facet_wrap(~ genre) + theme(legend.position = "None") + geom_smooth(color="#000000")
 ```
 
-Next steps:
-- look at the graph without the outliers (top 20) - I think there will be an upwards trend here
+Most of the genres also seem to approximately follow the pattern of a positive correlation up to 10 movies by director, and then a less predictable path for those with directors with higher numbers of movies.
+
+```{r echo=FALSE}
+##add a categorical variable for one movie or more
+sorteddirectorsummary$more_than_ten_movies <- rep.int(0, nrow(sorteddirectorsummary))
+sorteddirectorsummary$more_than_ten_movies[sorteddirectorsummary$number_of_movies>=10] <- 1
+##calculate the percentage of directors with exactly one movie
+morethantendirpercentage <- round(100*length(sorteddirectorsummary$number_of_movies[sorteddirectorsummary$more_than_ten_movies==1])/length(sorteddirectorsummary$number_of_movies),2)
+
+movieswithdirectordata <- merge(movieswithdirectordata, sorteddirectorsummary[,c("director_name","more_than_ten_movies")], by="director_name")
+
+morethantenmovpercentage <- round(100*length(movieswithdirectordata$more_than_ten_movies[movieswithdirectordata$more_than_ten_movies==1])/length(movieswithdirectordata$more_than_ten_movies),2)
+
+```
+
+Only approximately `r morethantendirpercentage`% directors have more than ten movies, which, when considering movies, constitutes approximately `r morethantenmovpercentage`% of movies in our sample.
 
 # Inferential Data Analysis
 
@@ -876,7 +858,7 @@ genres_model_gross <- lm(gross ~ genre, data = movies_and_genres)
 summary(genres_model_gross)
 intercept1 <- lm(movies_and_genres$gross ~ genres_model_gross$fitted)$coefficients[[1]]
 
-movies_and_genres_full <- data.frame(movies_and_genres, predicted_gross = genres_model_gross$fitted)
+movies_and_genres_full <- data.frame(movies_and_genres[,c("gross","score","genre")], predicted_gross = genres_model_gross$fitted)
 avg_gross <- movies_and_genres_full[, 3:4]
 avg_gross <- avg_gross[!duplicated(avg_gross$genre), ]
 avg_gross <- avg_gross[order(avg_gross$predicted_gross), ]
@@ -911,7 +893,7 @@ genres_model_score <- lm(score ~ genre, data = movies_and_genres)
 summary(genres_model_score)
 intercept2 <- lm(movies_and_genres$score ~ genres_model_score$fitted)$coefficients[[1]]
 
-movies_and_genres_full <- data.frame(movies_and_genres, predicted_score = genres_model_score$fitted)
+movies_and_genres_full <- data.frame(movies_and_genres[,c("gross","score","genre")], predicted_score = genres_model_score$fitted)
 avg_score <- movies_and_genres_full[, 3:4]
 avg_score <- avg_score[!duplicated(avg_score$genre), ]
 avg_score <- avg_score[order(avg_score$predicted_score), ]
