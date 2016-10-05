@@ -439,7 +439,7 @@ ggplot(movies_and_keywords, aes(x = gross, y = score, colour = keywords)) +
 
 ### Steven
 Boxplot IMDB scores against year, decade
-```{r}
+```{r, echo = FALSE}
 
 # create continent column
 movies$continent <- countrycode(as.character(movies$country), "country.name", "continent")
@@ -466,11 +466,14 @@ ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_yea
   labs(title = "IMDB scores against year", x = "", y = "IMDB Score")
 
 # make decade column
-for (i in 1:nrow(movies)){
-  low <- movies$title_year[i] - (movies$title_year[i] %% 10)
-  high <- movies$title_year[i] - (movies$title_year[i] %% 10) + 9
-  movies$decade[i] <- paste(as.character(low), as.character(high), sep = "-")
+convert_decade <- function(year){
+  low <- year - year %% 10
+  high <- year - year %% 10 + 9
+  paste(as.character(low), as.character(high), sep = "-")
 }
+
+# apply function to create decade column
+movies$decade <- sapply(movies$title_year, convert_decade)
 
 # for all countries by decade
 # remove entries with NA-NA
@@ -997,7 +1000,9 @@ When we actually make predictions based on a linear model for categorical data, 
 
 Test whether, on average, European movies get higher IMDB scores than North American ones.
 H0 -> Europe and North America get equal scores
-```{r}
+
+
+```{r, echo = FALSE}
 # make dataframes for North America and Europe
 North_America <- movies[movies$continent == "North America",]
 Europe <- movies[movies$continent == "Europe",]
