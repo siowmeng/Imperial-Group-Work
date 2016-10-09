@@ -1095,6 +1095,9 @@ ggplot(data = movies[movies$title_year >= 2010, ], aes(x = budget, y = gross)) +
 model4 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score + country, data = movies[movies$title_year >= 2010, ])
 summary(model4)
 
+model5 <- lm(imdb_score ~ country + genres + movie_facebook_likes + language + num_user_for_reviews + num_critic_for_reviews, data = train)
+summary(model5)
+
 ```
 
 
