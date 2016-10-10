@@ -1,0 +1,52 @@
+---
+title: "Louise - Predictive Model"
+output: html_document
+---
+
+```{r, echo = FALSE}
+movies <- read.csv(file = "movie_metadata.csv", header = TRUE, stringsAsFactors = FALSE, strip.white = TRUE)
+```
+
+
+```{r, echo = FALSE}
+## function to calculate list of NAs within a column
+colNA <- function(dfCol){ sum(is.na(dfCol)) }
+## To show table of sum of NAs by column
+apply(movies, 2, colNA)
+```
+
+
+```{r, echo = FALSE}
+## To remove rows where NAs are present for any of the applicable columns
+movies <- movies[complete.cases(movies[c("title_year","budget","gross")]),]
+## To remove aspect ratio and imdb link columns
+movies$aspect_ratio<- NULL
+movies$movie_imdb_link<- NULL
+## To show table of sum of NAs by column
+apply(movies, 2, colNA)
+```
+
+```{r, echo = FALSE}
+## for loop to replace NAs with means for particular columns
+for (i in c("actor_1_facebook_likes" , "actor_2_facebook_likes" , "actor_3_facebook_likes" , "num_critic_for_reviews" , "duration" , "facenumber_in_poster"))
+ {k <- which(colnames(movies)==i)
+ movies[k][is.na(movies[k]==TRUE)] <- round(mean(movies[[k]], na.rm=TRUE),0)}
+```
+
+```{r, echo = FALSE}
+movies <- movies[!duplicated(movies$movie_title),]
+# Function to remove Â, leading and trailing whitespace from movies$movie_title
+movie_title_processing <- function(str){
+  str <- sub(pattern = "Â", replacement = "", str)
+  str <- sub(pattern = "^\\s+|\\s+$", replacement ="", str)
+}
+# Apply previous function
+movies$movie_title <- sapply(movies$movie_title, FUN = movie_title_processing)
+```
+
+```{r, echo = FALSE, message = FALSE}
+set.seed(1)
+intrain <- createDataPartition(y = movies[[1]], p = 0.9, list = FALSE)
+train <- movies[intrain, ]
+test <- movies[-intrain, ]
+```
