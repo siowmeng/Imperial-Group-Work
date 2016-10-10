@@ -1,4 +1,4 @@
-2---
+---
 title: "Analysis of IMDB Movie Dataset"
 output: html_document
 date: "16 October 2016"
