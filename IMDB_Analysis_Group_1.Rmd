@@ -651,7 +651,7 @@ multiplot(p1, p2)
 The plots above give a less biased represenation of the development of IMDB scores. The scores now appear more constant over the years. Although minimal, the scatter plot reveals that there is still a slight downward trend in scores.
 
 ```{r, echo = FALSE}
-# create function that converst years into decades
+# create function that converts years into decades
 convert_decade <- function(year){
   low <- year - year %% 10
   high <- year - year %% 10 + 9
@@ -815,20 +815,29 @@ human_usd   <- function(x){human_numbers(x, smbl = "$")}
 ```
 
 ```{r echo=FALSE, message=FALSE}
-##plot for gross revenue vs score
-## to do - sort out the axes
+##plot for gross revenue vs number of directors in sample
 ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross)) + 
   geom_jitter(alpha = 0.2, width = 0.05) +
   labs(x = "Number of movies by director in sample", y = "Average Gross Revenue") + scale_y_continuous(label=human_usd)
 ```
 
+To check against one potential confounder, we plot the # of movies per director against budget:
+
+```{r echo=FALSE, message=FALSE}
+##plot for budget vs number of directors in sample
+ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = budget)) + 
+  geom_jitter(alpha = 0.2, width = 0.05) +
+  labs(x = "Number of movies by director in sample", y = "Budget") + scale_y_continuous(label=human_usd)
+
+cor.test(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget)
+```
+
+Even though this correlation is statistically significant, it is quite small (`r round(cor(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget),3)`%), so the analysis of movies by director sample on gross revenue can be continued without an obvious confounder of budget.
+
 If we then split this out by decades, we can see the below:
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
 ##add the decades in as per Steven's code (note: potentially change into a function?)
-for (i in 1:nrow(movies)){
-  low <- movieswithdirectordata$title_year[i] - (movieswithdirectordata$title_year[i] %% 10)
-  high <- movieswithdirectordata$title_year[i] - (movieswithdirectordata$title_year[i] %% 10) + 9
-  movieswithdirectordata$decade[i] <- paste(as.character(low), as.character(high), sep = "-")}
+movieswithdirectordata$decade <- sapply(movieswithdirectordata$title_year, FUN = convert_decade)
 ```
 
 ```{r echo=FALSE}
@@ -853,7 +862,7 @@ ggplot(movies_and_genres_withdirectordata, aes(x = dir_number_of_movies, y = gro
 Most of the genres also seem to approximately follow the pattern of a positive correlation up to 10 movies by director, and then a less predictable path for those with directors with higher numbers of movies.
 
 ```{r echo=FALSE}
-##add a categorical variable for one movie or more
+##add a categorical variable for ten movies or more
 sorteddirectorsummary$more_than_ten_movies <- rep("Fewer than 10", nrow(sorteddirectorsummary))
 sorteddirectorsummary$more_than_ten_movies[sorteddirectorsummary$number_of_movies>10] <- "10+"
 ##calculate the percentage of directors with exactly one movie
@@ -1284,10 +1293,54 @@ Also, the opposite of the initial intuition appears to be the case for variance,
 
 ##Predictive Model - Louise
 
-```{r echo = FALSE}
-##first get a data set including the # of directors movies + the genre matrix
-
+```{r echo=FALSE}
+traindirectorsummary <- ddply(train, ~ director_name,summarise, number_of_movies=length(director_name))
+##add a categorical variable for ten movies or more
+traindirectorsummary$more_than_ten_movies <- rep("Fewer than 10", nrow(traindirectorsummary))
+traindirectorsummary$more_than_ten_movies[traindirectorsummary$number_of_movies>10] <- "10+"
+trainwithdirectordata <- merge(train, traindirectorsummary[,c("director_name","more_than_ten_movies")], by="director_name")
+##set factors so that Fewer than Ten is the default variable, and 10+ will show in the model
+trainwithdirectordata$more_than_ten_movies <- factor(trainwithdirectordata$more_than_ten_movies, levels=c("Fewer than 10", "10+"))
 ```
+
+```{r echo=FALSE}
+directormodel <- lm(gross ~ more_than_ten_movies + budget + imdb_score + num_voted_users + content_rating + duration + cast_total_facebook_likes + director_facebook_likes + movie_facebook_likes, data=trainwithdirectordata)
+summary(directormodel)
+```
+
+###Justification
+###Variables included in the model:
+* Inferential analysis showed that whether or not the director has more than ten movies in the sample is correlated with the mean of gross revenue, so this is included as a dependent variable.
+* Inferential analysis also showed that the budget of a movie is positively correlated with the gross revenue, which can be interpreted as movie-makers being wise enough to get a high return on investment.
+* IMDB score can be seen as the "quality" of a movie, as voted on by the public. At first look this variable is positively correlated with the gross revenue, but interestingly the coefficient for this variable is negative once the "number of user reviews" variable is included. An interpretation of this is that the popularity of a movie is more fully explained by the number of people reviewing the movie, and after this is taken into account, the movies with a higher "quality", as measured by imdb score, actually do less well in the box office. This could be because people are more likely to go and vote on imdb for movies they liked, and also for the obvious reason that people are more likely to go and vote on imdb for movies they have seen, so number of user reviews will be linked to number of cinema tickets sold, which is linked to gross revenue.
+* Inferential analysis also showed that for a few of the key ratings (G, PG and PG-13) there was some impact on gross revenue, so rating has been included in the model.
+* The duration, when included into the model has a statistically significant positive coefficient, this could be interpreted as movie-goers perceiving longer movies as more value for money or higher quality.
+* Cast total facebook likes can also be seen as a potential predictor for gross revenue, as in theory the more popular the actor (measured by facebook likes), the more people will go to see the movie to see that actor, the more tickets are sold and therefore the higher the revenue. We can see from the positive coefficient that this seems to be reflected in the data.
+* Director facebook likes is statistically significant when included into the model, interestingly with a negative coefficient. Again, this variable is at first glance positively correlated with the gross revenue, however once you take into account the number of voted users, this relationship is reversed, potentially for similar reasons to the above.
+* Movie facebook likes is also statistically significant when included into the model, this can be interpreted as a proxy for the popularity of the movie, and also could be that the more people who saw the movie (based on gross revenue), the more people then subsequently liked the page.
+
+###Not included into the model
+* Movie title, director name, genres, plot keywords, and actor names were not included into the variable as there many different values for these variables with a small number of observations (usually one observation) for each.
+* Number of critic reviews is quite highly correlated with the number of user reviews, with a correlation coefficient of (`r round(cor(movies$num_user_for_reviews,movies$num_critic_for_reviews),2)). So it was decided to include only one of these variable into the model, in this case number of user reviews.
+* When decade is included then none are found to be statistically significant, after other variables are included.
+* When color is included into the model then none of the options are found to be statistically significant, there is also not a very large variation in this variable in the sample set.
+```{r echo=FALSE}
+ggplot(movies, aes(x=color)) + geom_bar() + xlab("")
+```
+* When either language or country are included into the model, the R squared does go up, but by less than 0.01, and this also includes a lot of additional values to be interpreted, so the model loses some interpretability. Due to this, these factors have been left out. 
+* The multpiple actor "facebook likes" variables are mostly correlated with each other, as can be seen from the correlation matrix, so the total cast facebook likes has been chosen as the "overall" variable to explain the effects of facebook popularity of the cast.
+* The number of faces in the poster has not been included into the model, when included it is only slightly statistically significant, and the intuition behind this variable is unclear, so including it may lead to model overfitting.
+
+This model has This model has much lower predictive power (adjusted R squared of `r summary(directormodel)$adj.r.squared`), R squared on the training set.
+
+##Second Model, with only pre-known variables
+
+```{r echo=FALSE}
+directormodelknownvariables <- lm(gross ~ more_than_ten_movies + budget + content_rating + duration + cast_total_facebook_likes + director_facebook_likes + movie_facebook_likes, data=trainwithdirectordata)
+summary(directormodelknownvariables)
+```
+
+To build a model to predict revenue of movies that have not yet been released, we include only variables that are known before the time of release. Our dataset provided us with number of facebook likes at a specific point in time, and to use this as part of our predictive model we would need to analyse number of facebook likes before the movie was released, however we will use what we currently have as a proxy to build the model. This model has much lower predictive power (adjusted R squared of `r summary(directormodelknownvariables)$adj.r.squared`), but could be used in a more usefull business context.
 
 
 # Predictive Data Analysis
@@ -1334,10 +1387,10 @@ summary(model5)
 
 #adjusted R-squared value = 0.5126
 
-model5 <- lm(imdb_score ~ country + genres + movie_facebook_likes + language + num_user_for_reviews + num_critic_for_reviews, data = train)
+model5 <- lm(imdb_score ~ country + genres + movie_facebook_likes + language + num_user_for_reviews + num_critic_for_reviews, data = train[train$title_year >= 2010, ])
 summary(model5)
 
-#adjusted R-squared value = 0.4047
+#adjusted R-squared value = 0.5067
 
 ```
 
@@ -1418,3 +1471,4 @@ At the end of the assignment we should go back to:
 * Make sure we don't use language that implies causation when we can only infer correlation
 * Double check each others' analyses for Simpson's paradox.
 * Maybe put all libraries at the top?
+
