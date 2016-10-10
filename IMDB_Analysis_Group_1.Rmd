@@ -629,17 +629,29 @@ human_usd   <- function(x){human_numbers(x, smbl = "$")}
 ```
 
 ```{r echo=FALSE, message=FALSE}
-##plot for gross revenue vs score
-## to do - sort out the axes
+##plot for gross revenue vs number of directors in sample
 ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross)) + 
   geom_jitter(alpha = 0.2, width = 0.05) +
   labs(x = "Number of movies by director in sample", y = "Average Gross Revenue") + scale_y_continuous(label=human_usd)
 ```
 
+To check against one potential confounder, we plot the # of movies per director against budget:
+
+```{r echo=FALSE, message=FALSE}
+##plot for budget vs number of directors in sample
+ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = budget)) + 
+  geom_jitter(alpha = 0.2, width = 0.05) +
+  labs(x = "Number of movies by director in sample", y = "Budget") + scale_y_continuous(label=human_usd)
+
+cor.test(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget)
+```
+
+Even though this correlation is statistically significant, it is quite small (`r round(cor(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget),3)`%), so the analysis of movies by director sample on gross revenue can be continued without an obvious confounder of budget.
+
 If we then split this out by decades, we can see the below:
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
 ##add the decades in as per Steven's code (note: potentially change into a function?)
-for (i in 1:nrow(movies)){
+for (i in 1:nrow(movieswithdirectordata)){
   low <- movieswithdirectordata$title_year[i] - (movieswithdirectordata$title_year[i] %% 10)
   high <- movieswithdirectordata$title_year[i] - (movieswithdirectordata$title_year[i] %% 10) + 9
   movieswithdirectordata$decade[i] <- paste(as.character(low), as.character(high), sep = "-")}
@@ -667,7 +679,7 @@ ggplot(movies_and_genres_withdirectordata, aes(x = dir_number_of_movies, y = gro
 Most of the genres also seem to approximately follow the pattern of a positive correlation up to 10 movies by director, and then a less predictable path for those with directors with higher numbers of movies.
 
 ```{r echo=FALSE}
-##add a categorical variable for one movie or more
+##add a categorical variable for ten movies or more
 sorteddirectorsummary$more_than_ten_movies <- rep("Fewer than 10", nrow(sorteddirectorsummary))
 sorteddirectorsummary$more_than_ten_movies[sorteddirectorsummary$number_of_movies>10] <- "10+"
 ##calculate the percentage of directors with exactly one movie
@@ -1230,3 +1242,10 @@ At the end of the assignment we should go back to:
 * Make sure we don't use language that implies causation when we can only infer correlation
 * Double check each others' analyses for Simpson's paradox.
 * Maybe put all libraries at the top?
+
+```{r}
+
+cor.test(movies$imdb_score,movies$gross)
+
+```
+
