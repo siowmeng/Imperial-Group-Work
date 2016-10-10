@@ -1,6 +1,6 @@
 ---
 title: "Analysis of IMDB Movie Dataset"
-output: pdf_document
+output: html_document
 date: "16 October 2016"
 ---
 
@@ -16,6 +16,7 @@ library(caret)
 library(scales)
 library(countrycode)
 library(GGally)
+library(knitr)
 ```
 
 
@@ -35,12 +36,84 @@ movies <- read.csv(file = "movie_metadata.csv", header = TRUE, stringsAsFactors 
 
 *Explanation of the data and how it was extracted from IMDB to go here - Steven L*
 
-* explain what IMDB is
+The dataset used in this report was downloaded from *kaggle.com*, a website for data analysis competitions. The data was scraped from three websites using *Scrapy*, a Python library. The first website, *the-numbers.com*, is a website providing movie industry data. This first website was used to scrape 5000 movies names along with other relevant data such as budget and gross domestic revenue. The scraped data was then matched with *imdb.com*, a popular resource for movie and TV-show ratings, and celebrity content, in order to get movie scores, direct links to movie pages, and other data. All the the movie and actor names were then aggregated and used to extract the number of Facebook likes on their respective official Facebook page. Finally, a face detection algorithm was applied to all movie posters to extract the number of faces in each poster. The dataset contains `r dim(movies)[1]` movies with `r dim(movies)[2]` variables spanning 100 years and 66 countries of origin.    
+   
+Although *imdb.com* covers movies from various different countries, the website is only offered in English, which implies certain limitations. The movies included in the dataset are skewed towards an English-speaking audience. This means that movies from North America, the UK, and other English speaking countries are overrepresented. In addition, the dataset includes more movies with release dates after 1980. In fact, multiple release years prior to 1980 include as little as one movie. NA?  
+   
+Despite these limitations the dataset offers extensive information on movies as well as a large enough number of observations. This will allow the analysis to  reveal interesting insights and answer the report's leading question. The dataset can be retrieved [here](https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset).
 
-The dataset used for this analysis was downloaded from Kaggle. The data was scraped from IMDB website using "Scrapy", a Python library. It contains `r dim(movies)[1]` movies with `r dim(movies)[2]` variables spanning 100 years and 66 countries. The dataset can be retrieved [here](https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset).
+The dataset includes the following variables:
+```{r echo = FALSE}
+# make table with column names and explanations
 
-The dataset includes the following columns:
-`r names(movies)`
+# create new df with column names ar rows
+movie_variables <- colnames(movies)
+movie_variables <- data.frame(sort(movie_variables))
+# rename fisrt column
+colnames(movie_variables) <- ("Variable Name")
+
+actor_1_facebook_likes <- "Number of likes on main actor's Facebook page."
+actor_1_name <- "Main actor's name."
+actor_2_facebook_likes <- "Number of likes on first supporting actor's Facebook page."
+actor_2_name <- "First supporting actor's name."
+actor_3_facebook_likes <- "Number of likes on second supporting actor's Facebook page."
+actor_3_name <- "Second supporting actor's name."
+aspect_ratio <- "Aspect ratio the movie was shot in."
+budget <- "Budget in USD. All budget's are estimates based on press reports."
+cast_total_facebook_likes <- "Total number of likes of all actor Facebook pages."
+color <- "Describes whether the movie was shot in color or black and white"
+content_rating <- "Rating of suitability of movie for audience."
+country <- "Country the movie was shot in. If the movie was shot in more than one country only the first country appearing was chosen. Throughout the analysis this variable will serve as proxy for the country of origin."
+director_facebook_likes <- "Number of likes on director's Facebook page."
+director_name <- "Name of director."
+duration <- "Movie length in minutes."
+facenumber_in_poster <- "Number of faces on movie poster."
+genres <- "Movie genre."
+gross <- "Latest domestic gross revenue reported on the-number.com, in USD."
+imdb_score <- "Score voted by IMDB users, from 1 to 10 (highest)."
+language <- "Language in which movie was shot."
+movie_facebook_likes <- "Number of likes on movie's official Facebook page."
+movie_imdb_link <- "Link to movie page."
+movie_title <- "Movie name."
+num_critic_for_reviews <- "Number of critics that wrote a review."
+num_user_for_reviews <- "Number of imdb users that wrote a review."
+num_voted_users <- "Number of imdb users that gave a rating."
+plot_keywords <- "Keywords describing the movie plot."
+title_year <- "Movie release year."
+
+# initiate new column for explanations
+movie_variables$Explanation <- c(actor_1_facebook_likes,
+                                 actor_1_name,
+                                 actor_2_facebook_likes,
+                                 actor_2_name,
+                                 actor_3_facebook_likes,
+                                 actor_3_name,
+                                 aspect_ratio,
+                                 budget,
+                                 cast_total_facebook_likes,
+                                 color,
+                                 content_rating,
+                                 country,
+                                 director_facebook_likes,
+                                 director_name,
+                                 duration,
+                                 facenumber_in_poster,
+                                 genres,
+                                 gross,
+                                 imdb_score,
+                                 language,
+                                 movie_facebook_likes,
+                                 movie_imdb_link,
+                                 movie_title,
+                                 num_critic_for_reviews,
+                                 num_user_for_reviews,
+                                 num_voted_users,
+                                 plot_keywords,
+                                 title_year)
+
+# create table
+kable(movie_variables, format = "markdown")
+```
 
 *also to potentially include as discussed: explanation of each of the columns and what they mean (box office gross or total gross including dvd sales etc.? and budget as final budget or expected budget?*
 
