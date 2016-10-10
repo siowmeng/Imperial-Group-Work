@@ -1352,27 +1352,27 @@ To build a model to predict revenue of movies that have not yet been released, w
 
 ```{r echo=FALSE}
 
-sort(names(movies))
+sort(names(train))
 
-model1 <- lm(gross ~ budget, data = movies)
+model1 <- lm(gross ~ budget, data = train)
 summary(model1)
-ggplot(data = movies, aes(x = budget, y = gross)) + geom_point() + geom_smooth(method = "lm") + coord_cartesian(xlim = c(0, 3e8))
+ggplot(data = train, aes(x = budget, y = gross)) + geom_point() + geom_smooth(method = "lm") + coord_cartesian(xlim = c(0, 3e8))
 
 #adjusted R-squared value: 0.04956
 
-model2 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score + country, data = movies)
+model2 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score + country, data = train)
 summary(model2)
 
 #adjusted R-squared value: 0.2415
 
-model3 <- lm(gross ~ budget, data = movies[movies$title_year >= 2010, ])
+model3 <- lm(gross ~ budget, data = train[train$title_year >= 2010, ])
 summary(model3)
-ggplot(data = movies[movies$title_year >= 2010, ], aes(x = budget, y = gross)) + geom_point() + geom_smooth(method = "lm") + coord_cartesian(xlim = c(0, 3e8))
+ggplot(data = train[train$title_year >= 2010, ], aes(x = budget, y = gross)) + geom_point() + geom_smooth(method = "lm") + coord_cartesian(xlim = c(0, 3e8))
 
 #adjusted R-squared value: 0.4451
 
 
-model4 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score + country, data = movies[movies$title_year >= 2010, ])
+model4 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score + country, data = train[train$title_year >= 2010, ])
 summary(model4)
 
 #adjusted R-squared value: 0.5616
@@ -1414,21 +1414,21 @@ summary(model6)
 
 ```{r, echo = FALSE}
 
-sort(names(movies))
+sort(names(train))
 
 ##Models to predict imdb score
 
-model6 <- lm(imdb_score ~ budget, data = movies[movies$title_year >= 2010, ])
+model6 <- lm(imdb_score ~ budget, data = train[train$title_year >= 2010, ])
 summary(model5)
-ggplot(data = movies, aes(x = budget, y = gross)) + geom_point() + geom_smooth(method = "lm") + coord_cartesian(xlim = c(0, 3e8))
+ggplot(data = train, aes(x = budget, y = gross)) + geom_point() + geom_smooth(method = "lm") + coord_cartesian(xlim = c(0, 3e8))
 
 #adjusted R-squared value: 0.02132
 
 
 
-model7 <- lm(imdb_score ~ director_facebook_likes + cast_total_facebook_likes + gross + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + director_facebook_likes + director_name, data = movies[movies$title_year >= 2010, ])
+model7 <- lm(imdb_score ~ director_facebook_likes + cast_total_facebook_likes + gross + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + director_facebook_likes + director_name, data = train[train$title_year >= 2010, ])
 
-model6 <- lm(imdb_score ~ director_facebook_likes + cast_total_facebook_likes + gross + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + director_name, data = movies[movies$title_year >= 2010, ])
+model6 <- lm(imdb_score ~ director_facebook_likes + cast_total_facebook_likes + gross + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + director_name, data = train[train$title_year >= 2010, ])
 
 summary(model6)
 
@@ -1439,20 +1439,20 @@ summary(model6)
 ## Models to predict gross
 
 ```{r echo=FALSE}
-model8 <- lm(gross ~ budget + content_rating + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score, data = movies)
+model8 <- lm(gross ~ budget + content_rating + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score, data = train)
 summary(model7)
 
 #adjusted R-squared value: 0.2859
 
-model9 <- lm(gross ~ director_facebook_likes + cast_total_facebook_likes + imdb_score + country + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + content_rating, data = movies[movies$title_year >= 2010, ])
+model9 <- lm(gross ~ director_facebook_likes + cast_total_facebook_likes + imdb_score + country + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + content_rating, data = train[train$title_year >= 2010, ])
 summary(model8)
 
 #adjusted R-squared value: 0.3668
 
 
-model10 <- lm(gross ~ director_facebook_likes + cast_total_facebook_likes + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + content_rating + budget, data = movies[movies$title_year >= 2010, ])
+model10 <- lm(gross ~ director_facebook_likes + cast_total_facebook_likes + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + content_rating + budget, data = train[train$title_year >= 2010, ])
 
-model9 <- lm(gross ~ director_facebook_likes + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + content_rating + budget, data = movies[movies$title_year >= 2010, ])
+model9 <- lm(gross ~ director_facebook_likes + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + content_rating + budget, data = train[train$title_year >= 2010, ])
 
 summary(model9)
 
