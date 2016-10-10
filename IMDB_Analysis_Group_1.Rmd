@@ -637,7 +637,7 @@ ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross)) +
 ```
 
 If we then split this out by decades, we can see the below:
-```{r}
+```{r echo=FALSE, warning=FALSE}
 ##add the decades in as per Steven's code (note: potentially change into a function?)
 for (i in 1:nrow(movies)){
   low <- movieswithdirectordata$title_year[i] - (movieswithdirectordata$title_year[i] %% 10)
@@ -654,7 +654,7 @@ As the number of data elements in the sample grows for each decade, a geomtrical
 
 Similarly for genres:
 
-```{r echo=FALSE}
+```{r echo=FALSE, warning=FALSE}
 movies_and_genres_withdirectordata <- merge(movies_and_genres, movieswithdirectordata[,c("movie_title","dir_number_of_movies")], by="movie_title")
 ```
 
@@ -1078,7 +1078,7 @@ These correlation tests do infer that there is a slight positive correlation bet
 
 If we look at the categorical variable of whether or not a director has directed >10 movies, then we can see these distributions look slightly different:
 
-```{r}
+```{r echo=FALSE}
 ggplot(movieswithdirectordata, aes(x=1, y = gross, fill = more_than_ten_movies)) + geom_boxplot() + facet_grid(. ~ more_than_ten_movies) + labs(x="", title="Gross revenue distribution by \n number of movies per director") + scale_y_continuous(label=human_num) + theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
@@ -1087,7 +1087,7 @@ ggplot(movieswithdirectordata, aes(x=1, y = gross, fill = more_than_ten_movies))
 
 The plots seem to suggest that the movies where the director has 10+ movies in the sample have a higher mean and a lower variance of gross revenue. However, this may be largely explained by the number of observations in each sample. To determine whether the change is statistically significant we run a t test and an f test.
 
-```{r}
+```{r echo = FALSE}
 t.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="10+"], movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="Fewer than 10"], alternative="greater")
 
 var.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="10+"], movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="Fewer than 10"], alternative="greater")
@@ -1095,7 +1095,7 @@ var.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movie
 
 The data therefore suggests that the average gross revenue is higher for movies where the director has over 10 movies in the sample - which gives evidence to the claim that prolific directors are produce more popular movies (if we see gross revenue as a proxy for popularity).
 
-Also, the opposite of the initial intuition appears to be the case for variance, . This can be explained by the different number of movies in each set.
+Also, the opposite of the initial intuition appears to be the case for variance, the movies made by directors with over 10 movies in the sample has higher variance than others. This can be explained by the much larger number of movies made by directors with fewer than 10 movies.
 
 # Predictive Data Analysis
 
