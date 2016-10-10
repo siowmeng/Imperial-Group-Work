@@ -1,4 +1,4 @@
----
+2---
 title: "Analysis of IMDB Movie Dataset"
 output: html_document
 date: "16 October 2016"
@@ -1381,16 +1381,25 @@ summary(model4)
 ```{r}
 # Models to predict IMDB score
 
+model5a <- lm(gross ~ country + movie_facebook_likes + language + num_user_for_reviews + num_critic_for_reviews + num_voted_users + content_rating, data = train)
+summary(model5a)
 
-model5 <- lm(imdb_score ~ country + genres + movie_facebook_likes + language + num_user_for_reviews + num_critic_for_reviews + content_rating, data = train[train$title_year >= 2010, ])
-summary(model5)
+#adjusted R-squared value = 0.5043
 
-#adjusted R-squared value = 0.5126
+model5b <- lm(gross ~ country + movie_facebook_likes + language + num_user_for_reviews + num_critic_for_reviews + content_rating, data = train[train$title_year >= 2010, ])
+summary(model5b)
 
-model5 <- lm(imdb_score ~ country + genres + movie_facebook_likes + language + num_user_for_reviews + num_critic_for_reviews, data = train[train$title_year >= 2010, ])
-summary(model5)
+#adjusted R-squared value = 0.4976
 
-#adjusted R-squared value = 0.5067
+model6a <- lm(gross ~ country + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + language + content_rating, data = train)
+summary(model6a)
+
+#adjusted R-squared value = 0.2592
+
+model6b <- lm(gross ~ country + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + language + content_rating, data = train[train$title_year >= 2010, ])
+summary(model6b)
+
+#adjusted R-squared value = 0.4443
 
 ```
 
