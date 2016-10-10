@@ -1475,6 +1475,20 @@ summary(model9)
 #Conclusion
 *to be completed after our analysis*
 
+#Appendix
+
+##Nikhita
+
+##Steven
+
+##Cecilia
+
+##Siow Meng
+
+##George
+
+##Louise
+
 #To be removed- Notes and comments:
 
 At the end of the assignment we should go back to:
