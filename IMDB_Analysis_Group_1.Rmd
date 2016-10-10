@@ -5,7 +5,7 @@ date: "16 October 2016"
 ---
 
 ```{r setup, include = FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 library(ggplot2)
 library(ggthemes)
 library(ggrepel)
@@ -17,6 +17,7 @@ library(scales)
 library(countrycode)
 library(GGally)
 library(knitr)
+library(stargazer)
 ```
 
 
@@ -113,6 +114,7 @@ movie_variables$Explanation <- c(actor_1_facebook_likes,
 
 # create table
 kable(movie_variables, format = "markdown")
+stargazer(movie_variables, type = "html")
 ```
 
 *also to potentially include as discussed: explanation of each of the columns and what they mean (box office gross or total gross including dvd sales etc.? and budget as final budget or expected budget?*
@@ -127,7 +129,10 @@ First we look into the amount of NA variables found in each column our data:
 ## function to calculate list of NAs within a column
 colNA <- function(dfCol){ sum(is.na(dfCol)) }
 ## To show table of sum of NAs by column
-apply(movies, 2, colNA)
+na_values <- data.frame(colnames(movies), apply(movies, 2, colNA))
+colnames(na_values) <- c("Variable Name", "Number of NA values")
+na_values <- na_values[order(na_values[, "Variable Name"]), ]
+kable(na_values, format = "markdown", align = "l", row.names = FALSE)
 ```
 
 The following cleansing process is then applied:
@@ -147,7 +152,10 @@ movies <- movies[complete.cases(movies[c("title_year","budget","gross")]),]
 movies$aspect_ratio<- NULL
 movies$movie_imdb_link<- NULL
 ## To show table of sum of NAs by column
-apply(movies, 2, colNA)
+na_values_2 <- data.frame(colnames(movies), apply(movies, 2, colNA))
+colnames(na_values_2) <- c("Variable Name", "Number of NA values")
+na_values_2 <- na_values_2[order(na_values_2[, "Variable Name"]), ]
+kable(na_values_2, format = "markdown", align = "l", row.names = FALSE)
 ```
 
 * For all other columns where there are NAs, the mean value will be used to replace all NAs within that column. Although this has some drawbacks in terms of accuracy, it allows us to maintain rows of data with other valid information, and is an unbiased approach to handling NAs.
@@ -176,8 +184,13 @@ Although some of these steps reduce the sample size for analysis, the rows remov
 
 This cleansed dataset (of `r nrow(movies)` rows) contains no NA values and is used for the remainder of the analysis.
 
+*Do we need to present this table with no NA values? --George*
+
 ```{r, echo = FALSE}
-apply(movies, 2, colNA)
+na_values_3 <- data.frame(colnames(movies), apply(movies, 2, colNA))
+colnames(na_values_3) <- c("Variable Name", "Number of NA values")
+na_values_3 <- na_values_3[order(na_values_3[, "Variable Name"]), ]
+kable(na_values_3, format = "markdown", align = "l", row.names = FALSE)
 ```
 *General note: I plan to tidy up the writing here later but just wanted to get down our discussion :)*
 
@@ -208,7 +221,7 @@ test <- movies[-intrain, ]
 
 ### Siow Meng
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 
 revYear <- ddply(movies, ~ title_year, summarise, meanRev = mean(gross, na.rm = TRUE))
 
@@ -224,33 +237,74 @@ ggplot(data = revLanguage[revLanguage$language != "English", ], aes(x = title_ye
 
 moviesnumeric<- movies[c("duration", "title_year", "budget", "imdb_score", "movie_facebook_likes", "actor_1_facebook_likes", "actor_2_facebook_likes", "actor_3_facebook_likes", "cast_total_facebook_likes", "director_facebook_likes", "num_user_for_reviews", "num_critic_for_reviews", "facenumber_in_poster", "gross")]
 
+
+labels_values <- rev(c("Gross", "# of faces in poster", "# of critics for reviews", "# of users for reviews", "Director FB likes",
+                   "Total cast FB likes", "Actor 3 FB likes", "Actor 2 FB likes", "Actor 1 FB likes", "Movie FB likes",
+                   "IMDB Score", "Budget", "Year of title", "Duration"))
+
 ##used pairwise complete obs to handle NAs for fields with a high number of nas
 corrmatrix <- round(cor(moviesnumeric, use="pairwise.complete.obs"), 2)
 meltedmovies<- melt(corrmatrix)
-ggplot(data = meltedmovies, aes(x=Var1, y=Var2, fill=value)) + geom_tile() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(x="", y="") + ggtitle("Correlation Matrix")
 
+ggplot(data = meltedmovies, aes(x=Var1, y=Var2, fill=value)) + 
+    geom_tile() + 
+    labs(x = "", y = "", title = "Correlation Matrix") +
+    theme_few() + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+    scale_fill_continuous(guide = guide_legend(title = NULL)) +
+    scale_x_discrete(labels = labels_values) + scale_y_discrete(labels = labels_values)
+    
 # Added correlation plot for movies after 2005
 corrmatrix2005 <- round(cor(moviesnumeric[moviesnumeric$title_year >= 2005, ], use="pairwise.complete.obs"), 2)
 meltedmovies2005 <- melt(corrmatrix2005)
-ggplot(data = meltedmovies2005, aes(x=Var1, y=Var2, fill=value)) + geom_tile() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(x="", y="") + ggtitle("Correlation Matrix")
 
+ggplot(data = meltedmovies2005, aes(x=Var1, y=Var2, fill=value)) + 
+    geom_tile() + 
+    labs(x = "", y = "", title = "Correlation Matrix (Movies after 2005)") +
+    theme_few() + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+    scale_fill_continuous(guide = guide_legend(title = NULL)) +
+    scale_x_discrete(labels = labels_values) + scale_y_discrete(labels = labels_values)
+    
 # Added correlation plot for movies after 2010
 corrmatrix2010 <- round(cor(moviesnumeric[moviesnumeric$title_year >= 2010, ], use="pairwise.complete.obs"), 2)
 meltedmovies2010 <- melt(corrmatrix2010)
-ggplot(data = meltedmovies2010, aes(x=Var1, y=Var2, fill=value)) + geom_tile() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(x="", y="") + ggtitle("Correlation Matrix")
 
+ggplot(data = meltedmovies2010, aes(x=Var1, y=Var2, fill=value)) +
+    geom_tile() + 
+    labs(x = "", y = "", title = "Correlation Matrix (Movies after 2010)") +
+    theme_few() + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+    scale_fill_continuous(guide = guide_legend(title = NULL)) +
+    scale_x_discrete(labels = labels_values) + scale_y_discrete(labels = labels_values)
+    
 ```
 
-```{r GrossVSScore, echo = FALSE}
+*Shall we keep only the one with the logarithmic scale? --George*
+
+```{r GrossVSScore, echo = FALSE, fig.width = 10, fig.align = "center"}
 
 temp <- movies
 temp$us_or_others <- temp$country
-temp$us_or_others[temp$country != "USA"] = "Others"
+temp$us_or_others[temp$country != "USA"] = "Non-USA"
 
-ggplot(data = temp, aes(x = imdb_score, y = gross, colour = us_or_others)) + geom_point() + geom_smooth(method = "lm") + labs(title = "Gross Revenue against IMDB Score for USA and non-USA Movies", x = "IMDB Score", y = "Gross Revenue") + scale_colour_discrete(name = "Countries")
+ggplot(data = temp, aes(x = imdb_score, y = gross, colour = us_or_others)) + 
+    geom_point() + 
+    geom_smooth(method = "lm") + 
+    labs(title = "Gross Revenue against IMDB Score for USA and non-USA Movies", x = "IMDB Score", y = "Gross Revenue") + 
+    scale_colour_discrete(name = "Countries")
 
-ggplot(data = temp, aes(x = imdb_score, y = log10(gross), colour = us_or_others)) + geom_point() + geom_smooth(method = "lm") + labs(title = "Gross Revenue against IMDB Score for USA and non-USA Movies", x = "IMDB Score", y = expression("Gross Revenue - log(10) Scale")) + scale_colour_discrete(name = "Countries")
-
+ggplot(data = temp, aes(x = imdb_score, y = gross, colour = us_or_others)) +
+    geom_jitter(alpha = 0.1, width = 0.1) +
+    geom_smooth(method = "lm") +
+    theme_few() +
+    labs(title = "Gross Revenue against IMDB Score for USA and non-USA Movies", x = "IMDB Score", y = expression("Gross Revenue")) +
+    scale_colour_discrete(name = "Countries") +
+    scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10),
+                  labels = c("100", "10,000", "1 million", "100 millions", "1 billion")) +
+    scale_x_continuous(breaks = 1:10) +
+    facet_grid(~ us_or_others) +
+    theme(legend.position = "None")
 ```
 
 
@@ -258,7 +312,7 @@ ggplot(data = temp, aes(x = imdb_score, y = log10(gross), colour = us_or_others)
 
 Descriptive analysis on the country
 
-```{r}
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # Sorting the movies by country and picking out the top 10
 counted <- count(movies, 'country')
 removednas <- counted[complete.cases(counted),]
@@ -313,7 +367,7 @@ Descriptive analysis on the budget
 
 2. Budget of films in the top 13 countries (with 10 or more movies in the data set, the rest have been omitted)
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 
 ##Histogram for movie budget
 ggplot(data=movies, aes(movies$budget)) + geom_histogram(fill="#FF9999", colour="black") + scale_x_log10() + labs(x = "Budget (USD)", y="Count", title = "Budget of Movies") 
@@ -534,7 +588,7 @@ ggplot(movies_and_keywords, aes(x = gross, y = score, colour = keywords)) +
 
 ### Steven
 Boxplot IMDB scores against year, decade
-```{r, echo = FALSE}
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 
 # create continent column
 movies$continent <- countrycode(as.character(movies$country), "country.name", "continent")
@@ -583,7 +637,7 @@ ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_yea
 The plot above show that there might be a downward trend in IMDB scores over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of IMDB scores only years with ten or more entries will be plotted below.
 
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # plot all years that have at least ten movies
 # table(movies$title_year)  
 # shows that from 1980 onwards all the years have at least ten entries
@@ -626,8 +680,6 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   }
 }
 
-
-
 # subset movies data frame to include all movies from 1980 onwards
 temp <- movies[movies$title_year >= 1980,]
 # plot the range of IMDB scores for all years
@@ -645,12 +697,11 @@ p2 <- ggplot(temp, aes(x = title_year, y = imdb_score)) +
   scale_x_continuous(breaks = seq(min(temp$title_year), max(temp$title_year), by = 1), 0.5)
 
 multiplot(p1, p2)
-
 ```
 
 The plots above give a less biased represenation of the development of IMDB scores. The scores now appear more constant over the years. Although minimal, the scatter plot reveals that there is still a slight downward trend in scores.
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # create function that converts years into decades
 convert_decade <- function(year){
   low <- year - year %% 10
@@ -743,7 +794,7 @@ ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
 
 ###Louise
 
-```{r echo = FALSE, message = FALSE}
+```{r echo = FALSE, message = FALSE, fig.width = 10, fig.align = "center"}
 ##create summary statistics for average imdb score & number of movies for each director
 directorssummary <- ddply(movies, ~ director_name,summarise,score_average=round(mean(imdb_score),2), gross_average=round(mean(gross),2), number_of_movies=length(director_name))
 ##sort by # of movies then imdb average score
@@ -754,12 +805,12 @@ sorteddirectorsummary$director_name <- factor(sorteddirectorsummary$director_nam
 
 There are `r nrow(sorteddirectorsummary)` distinct directors in the data sample.The density of movies per director is as below:
 
-```{r echo=FALSE}
+```{r echo=FALSE, fig.width = 10, fig.align = "center"}
 ##Histogram for number of moveies per director
 ggplot(sorteddirectorsummary, aes(x=number_of_movies)) + geom_histogram(binwidth=1, fill="darkblue") + labs(x = "Number of movies in sample") + ggtitle("Density of number of movies per director")
 ```
 
-```{r echo=FALSE}
+```{r echo=FALSE, fig.width = 10, fig.align = "center"}
 ##add a categorical variable for one movie or more
 sorteddirectorsummary$more_than_one_movie <- rep.int(0, nrow(sorteddirectorsummary))
 sorteddirectorsummary$more_than_one_movie[sorteddirectorsummary$number_of_movies>1] <- 1
@@ -771,13 +822,13 @@ This is clearly positively skewed, with many directors having only 1 movie in th
 
 An initial look at the relationship between # of movies that the director has in the dataset, and gross revenue does not show a clearly defined correlation:
 
-```{r echo=FALSE}
+```{r echo=FALSE, fig.width = 10, fig.align = "center"}
 ##add # of movies per director to the main dataset.
 movieswithdirectordata <- merge(movies, sorteddirectorsummary, by="director_name")
 movieswithdirectordata <- rename(movieswithdirectordata, c('number_of_movies'='dir_number_of_movies'))
 ```
 
-```{r echo=FALSE}
+```{r echo=FALSE, fig.width = 10, fig.align = "center"}
 ##function to create human readable axis labels.
 ##code taken from publically available github to give human readable axis labels. (https://github.com/fdryan/R/blob/master/ggplot2_formatter.r)
 human_numbers <- function(x = NULL, smbl =""){
@@ -814,7 +865,7 @@ human_num   <- function(x){human_numbers(x, smbl = "")}
 human_usd   <- function(x){human_numbers(x, smbl = "$")}
 ```
 
-```{r echo=FALSE, message=FALSE}
+```{r echo = FALSE, message = FALSE, fig.width = 10, fig.align = "center"}
 ##plot for gross revenue vs number of directors in sample
 ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross)) + 
   geom_jitter(alpha = 0.2, width = 0.05) +
@@ -823,7 +874,7 @@ ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross)) +
 
 To check against one potential confounder, we plot the # of movies per director against budget:
 
-```{r echo=FALSE, message=FALSE}
+```{r echo = FALSE, message = FALSE, fig.width = 10, fig.align = "center"}
 ##plot for budget vs number of directors in sample
 ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = budget)) + 
   geom_jitter(alpha = 0.2, width = 0.05) +
@@ -835,12 +886,12 @@ cor.test(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$bud
 Even though this correlation is statistically significant, it is quite small (`r round(cor(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget),3)`%), so the analysis of movies by director sample on gross revenue can be continued without an obvious confounder of budget.
 
 If we then split this out by decades, we can see the below:
-```{r echo=FALSE, warning=FALSE, message=FALSE}
+```{r echo = FALSE, warning = FALSE, message = FALSE}
 ##add the decades in as per Steven's code (note: potentially change into a function?)
 movieswithdirectordata$decade <- sapply(movieswithdirectordata$title_year, FUN = convert_decade)
 ```
 
-```{r echo=FALSE}
+```{r echo = FALSE, fig.width = 10, fig.align = "center"}
 ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross, colour = decade)) + 
   geom_jitter(alpha = 0.1) + scale_y_continuous(label=human_usd) + labs(title = "Gross Revenue and # of director movies for different decades", x = "# of Movies by Director", y = "Gross Revenue") + facet_wrap(~ decade, ncol = 5) + theme(legend.position = "None") + geom_smooth(color="#000000")
 ```
@@ -849,11 +900,11 @@ As the number of data elements in the sample grows for each decade, a geomtrical
 
 Similarly for genres:
 
-```{r echo=FALSE, warning=FALSE, message=FALSE}
+```{r echo = FALSE, warning = FALSE, message = FALSE}
 movies_and_genres_withdirectordata <- merge(movies_and_genres, movieswithdirectordata[,c("movie_title","dir_number_of_movies")], by="movie_title")
 ```
 
-```{r echo=FALSE}
+```{r echo = FALSE, fig.width = 10, fig.align = "center"}
 ##requires the above
 ggplot(movies_and_genres_withdirectordata, aes(x = dir_number_of_movies, y = gross, colour = genre)) + 
   geom_jitter(alpha = 0.1) + scale_y_continuous(label=human_usd) + labs(title = "Gross Revenue and # of director movies for different genres", x = "# of Movies by Director", y = "Gross Revenue") + facet_wrap(~ genre) + theme(legend.position = "None") + geom_smooth(color="#000000")
@@ -861,7 +912,7 @@ ggplot(movies_and_genres_withdirectordata, aes(x = dir_number_of_movies, y = gro
 
 Most of the genres also seem to approximately follow the pattern of a positive correlation up to 10 movies by director, and then a less predictable path for those with directors with higher numbers of movies.
 
-```{r echo=FALSE}
+```{r echo = FALSE}
 ##add a categorical variable for ten movies or more
 sorteddirectorsummary$more_than_ten_movies <- rep("Fewer than 10", nrow(sorteddirectorsummary))
 sorteddirectorsummary$more_than_ten_movies[sorteddirectorsummary$number_of_movies>10] <- "10+"
