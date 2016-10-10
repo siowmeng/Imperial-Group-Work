@@ -111,3 +111,29 @@ summary(directormodelknownvariables)
 ```
 
 To build a model to predict revenue of movies that have not yet been released, we include only variables that are known before the time of release. Our dataset provided us with number of facebook likes at a specific point in time, and to use this as part of our predictive model we would need to analyse number of facebook likes before the movie was released, however we will use what we currently have as a proxy to build the model. This model has much lower predictive power (adjusted R squared of `r summary(directormodelknownvariables)$adj.r.squared`), but could be used in a more usefull business context.
+
+```{r dependson="gv",results="asis", eval=FALSE}
+library(googleVis)
+moviesbycountry <- ddply(movies, ~ country ,summarise, number_of_movies=length(country))
+Geo=gvisGeoChart(moviesbycountry, locationvar="country", 
+                 colorvar="number_of_movies",
+                 options=list(projection="kavrayskiy-vii"))
+plot(Geo)
+```
+
+```{r eval=FALSE}
+library(rworldmap)
+map.world <- map_data(map="world")
+
+#Add the data you want to map countries by to map.world
+#In this example, I add lengths of country names plus some offset
+map.world$name_len <- nchar(map.world$region) + sample(nrow(map.world))
+
+gg <- ggplot()
+gg <- gg + theme(legend.position="none")
+gg <- gg + geom_map(data=map.world, map=map.world, aes(map_id=region, x=long, y=lat, fill=name_len))
+
+gg <- gg + scale_fill_gradient(low = "green", high = "brown3", guide = "colourbar")
+gg <- gg + coord_equal()
+gg
+```
