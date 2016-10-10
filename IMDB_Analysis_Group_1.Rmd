@@ -1,6 +1,6 @@
 ---
 title: "Analysis of IMDB Movie Dataset"
-output: pdf_document
+output: html_document
 date: "16 October 2016"
 ---
 
@@ -170,6 +170,8 @@ ggplot(data = meltedmovies2010, aes(x=Var1, y=Var2, fill=value)) + geom_tile() +
 
 ### Nikhita
 
+Descriptive analysis on the country
+
 ```{r}
 # Sorting the movies by country and picking out the top 10
 counted <- count(movies, 'country')
@@ -219,7 +221,7 @@ Therefore, it can be deduced that revenue and IMDB scores are clearly independen
 
 ### Cecilia
 
-Descriptive analysis on the the budget
+Descriptive analysis on the budget
 
 1. Budget of movies
 
@@ -1244,17 +1246,20 @@ summary(model4)
 model5 <- lm(imdb_score ~ country + genres + movie_facebook_likes + language + num_user_for_reviews + num_critic_for_reviews + content_rating, data = train[train$title_year >= 2010, ])
 summary(model5)
 
-#adjusted R-squared value = 0.4267
+#adjusted R-squared value = 0.5126
 
 model5 <- lm(imdb_score ~ country + genres + movie_facebook_likes + language + num_user_for_reviews + num_critic_for_reviews, data = train)
 summary(model5)
+
+#adjusted R-squared value = 0.4047
+
 ```
 
 ```{r echo =FALSE}
 model6 <- lm(imdb_score ~ genres + language + content_rating + country + title_year + movie_facebook_likes + cast_total_facebook_likes, data = train[train$title_year >= 2010, ])
 summary(model6)
 
-#adjusted R-squared value = 0.3881
+#adjusted R-squared value = 0.4204
 
 ```
 
