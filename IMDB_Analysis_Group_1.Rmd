@@ -651,7 +651,7 @@ multiplot(p1, p2)
 The plots above give a less biased represenation of the development of IMDB scores. The scores now appear more constant over the years. Although minimal, the scatter plot reveals that there is still a slight downward trend in scores.
 
 ```{r, echo = FALSE}
-# create function that converst years into decades
+# create function that converts years into decades
 convert_decade <- function(year){
   low <- year - year %% 10
   high <- year - year %% 10 + 9
@@ -837,10 +837,7 @@ Even though this correlation is statistically significant, it is quite small (`r
 If we then split this out by decades, we can see the below:
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
 ##add the decades in as per Steven's code (note: potentially change into a function?)
-for (i in 1:nrow(movieswithdirectordata)){
-  low <- movieswithdirectordata$title_year[i] - (movieswithdirectordata$title_year[i] %% 10)
-  high <- movieswithdirectordata$title_year[i] - (movieswithdirectordata$title_year[i] %% 10) + 9
-  movieswithdirectordata$decade[i] <- paste(as.character(low), as.character(high), sep = "-")}
+movieswithdirectordata$decade <- sapply(movieswithdirectordata$title_year, FUN = convert_decade)
 ```
 
 ```{r echo=FALSE}
