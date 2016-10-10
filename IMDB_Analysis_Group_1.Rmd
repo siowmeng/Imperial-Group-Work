@@ -637,7 +637,7 @@ ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross)) +
 ```
 
 If we then split this out by decades, we can see the below:
-```{r echo=FALSE, warning=FALSE}
+```{r echo=FALSE, warning=FALSE, message=FALSE}
 ##add the decades in as per Steven's code (note: potentially change into a function?)
 for (i in 1:nrow(movies)){
   low <- movieswithdirectordata$title_year[i] - (movieswithdirectordata$title_year[i] %% 10)
@@ -654,7 +654,7 @@ As the number of data elements in the sample grows for each decade, a geomtrical
 
 Similarly for genres:
 
-```{r echo=FALSE, warning=FALSE}
+```{r echo=FALSE, warning=FALSE, message=FALSE}
 movies_and_genres_withdirectordata <- merge(movies_and_genres, movieswithdirectordata[,c("movie_title","dir_number_of_movies")], by="movie_title")
 ```
 
@@ -1099,6 +1099,11 @@ Also, the opposite of the initial intuition appears to be the case for variance,
 
 ##Predictive Model - Louise
 
+```{r echo = FALSE}
+##first get a data set including the # of directors movies + the genre matrix
+
+```
+
 
 # Predictive Data Analysis
 
@@ -1149,7 +1154,7 @@ summary(model5)
 ```
 
 ```{r echo =FALSE}
-model6 <- lm(imdb_score ~ genres + language + content_rating + country + title_year + movie_facebook_likes + cast_total_facebook_likes, data = train[title_year >= 2010, ])
+model6 <- lm(imdb_score ~ genres + language + content_rating + country + title_year + movie_facebook_likes + cast_total_facebook_likes, data = train[train$title_year >= 2010, ])
 summary(model6)
 
 #adjusted R-squared value = 0.3881
