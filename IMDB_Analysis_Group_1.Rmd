@@ -1097,6 +1097,9 @@ The data therefore suggests that the average gross revenue is higher for movies 
 
 Also, the opposite of the initial intuition appears to be the case for variance, the movies made by directors with over 10 movies in the sample has higher variance than others. This can be explained by the much larger number of movies made by directors with fewer than 10 movies.
 
+##Predictive Model - Louise
+
+
 # Predictive Data Analysis
 
 ###Model Building and Justification
@@ -1145,7 +1148,7 @@ model5 <- lm(imdb_score ~ country + genres + movie_facebook_likes + language + n
 summary(model5)
 ```
 
-
+```{r echo =FALSE}
 model6 <- lm(imdb_score ~ genres + language + content_rating + country + title_year + movie_facebook_likes + cast_total_facebook_likes, data = train[title_year >= 2010, ])
 summary(model6)
 
@@ -1175,12 +1178,12 @@ model6 <- lm(imdb_score ~ director_facebook_likes + cast_total_facebook_likes + 
 summary(model6)
 
 #adjusted R-squared value: 0.4767
-
+```
 
 
 ## Models to predict gross
 
-
+```{r echo=FALSE}
 model8 <- lm(gross ~ budget + content_rating + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score, data = movies)
 summary(model7)
 
