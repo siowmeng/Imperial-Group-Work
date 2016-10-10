@@ -312,7 +312,11 @@ ggplot(data = temp, aes(x = imdb_score, y = gross, colour = us_or_others)) +
 
 Descriptive analysis on the country
 
+<<<<<<< HEAD
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+=======
+```{r echo=FALSE}
+>>>>>>> abc7fbbd9f0083002324fba9310e7f9c833e4d45
 # Sorting the movies by country and picking out the top 10
 counted <- count(movies, 'country')
 removednas <- counted[complete.cases(counted),]
@@ -449,6 +453,8 @@ ggplot(genres_sum, aes(x = genre, y = sum, fill = genre)) +
 
 ######################### Create an appropriate dataframe with gross, imdb_score and genres for each movie
 movies_and_genres <- cbind(gross = movies$gross, score = movies$imdb_score, movie_title = movies$movie_title, movies_and_genres, stringsAsFactors = FALSE)
+## saving a full wide data frame to be used in later analysis
+movies_and_genres_wide <- movies_and_genres
 movies_and_genres <- melt(movies_and_genres, id = c("gross", "score", "movie_title"))
 movies_and_genres$variable <- gsub("[.]", " ", movies_and_genres$variable)
 movies_and_genres <- movies_and_genres[movies_and_genres$value == 1, ] 
@@ -608,7 +614,7 @@ south_America = c("Brazil", "Argentina", "Chile", "Colombia", "Peru")
 #     continent <- "North America"
 #   }
 # }
-# 
+#  
 # movies$continent <- sapply(movies$continent, FUN = convert_continent, country = movies$country)
 
 for (i in 1:nrow(movies)) {
@@ -620,16 +626,6 @@ for (i in 1:nrow(movies)) {
     movies$continent[i] <- "North America"
   } 
 }
-
-# for all countries and all years
-# remove NA from title_year column first 
-#### should you remove outliers from plot????
-temp <- movies[!is.na(movies$title_year),]
-ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
-  geom_boxplot(outlier.shape = NA) +
-  theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
-  labs(title = "IMDB scores against year", x = "", y = "IMDB Score") +
-  scale_y_continuous(limits = c(2.5, max(movies$imdb_score)))
 
 ```
 
@@ -701,6 +697,7 @@ multiplot(p1, p2)
 
 The plots above give a less biased represenation of the development of IMDB scores. The scores now appear more constant over the years. Although minimal, the scatter plot reveals that there is still a slight downward trend in scores.
 
+<<<<<<< HEAD
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # create function that converts years into decades
 convert_decade <- function(year){
@@ -710,86 +707,96 @@ convert_decade <- function(year){
 }
 # apply previous function
 movies$decade <- sapply(movies$title_year, FUN = convert_decade)
+=======
+>>>>>>> abc7fbbd9f0083002324fba9310e7f9c833e4d45
 
-# for all countries by decade
-# remove entries with NA-NA
-temp <- movies[!movies$decade == "NA-NA", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, all countries", x = "", y = "IMDB Score")
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+# plot gross vs. years
+temp <- movies[!is.na(movies$title_year),]
+ggplot(temp, aes(x = factor(title_year), y = gross, fill = factor(title_year))) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
+  labs(title = "Gross revenues against year, for years with >= 10 entries", x = "", y = "Gross Revenue")
+```
 
-# for Europe
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$continent == "Europe", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, Europe", x = "", y = "IMDB Score")
+The plot above show that there might be a downward trend in gross revenue over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of IMDB scores only years with ten or more entries will be plotted below.
 
-# for North America
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$continent == "North America", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, North America", x = "", y = "IMDB Score")
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+# plot all years that have at least ten movies
+# table(movies$title_year)  
+# shows that from 1980 onwards all the years have at least ten entries
 
-# for France
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "France", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5),legend.position = "None") +
-  labs(title = "IMDB scores against decade, France", x = "", y = "IMDB Score")
+# function to plot multiple plots at in one grid (from r-cookbook)
 
-# for Germany
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "Germany", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, Germany", x = "", y = "IMDB Score")
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
 
-# for USA
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "USA", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, USA", x = "", y = "IMDB Score")
+# subset movies data frame to include all movies from 1980 onwards
+temp <- movies[movies$title_year >= 1980,]
+# plot the range of IMDB scores for all years
+p1 <- ggplot(temp, aes(x = factor(title_year), y = gross, fill = factor(title_year))) + 
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
+  labs(title = "Gross revenues against year, for years with >= 10 entries", x = "", y = "Gross Revenue")
 
-# for UK
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "UK", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, UK", x = "", y = "IMDB Score")
+# make a scatter plot that shows trend in IMDB scores
+p2 <- ggplot(temp, aes(x = title_year, y = gross, alpha = 0.4)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(x = "", y = "Gross Revenue") +
+  theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
+  scale_x_continuous(breaks = seq(min(temp$title_year), max(temp$title_year), by = 1), 0.5)
 
-# for India
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "India", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, India", x = "", y = "IMDB Score")
+multiplot(p1, p2)
 
-# for China
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "China", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
-  geom_boxplot(outlier.shape = NA) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, China", x = "", y = "IMDB Score")
+```
 
-# for Hong Kong
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "Hong Kong", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, Hong Kong", x = "", y = "IMDB Score")
+The plots above give a less biased represenation of the development of gross revenues. The revenues now appear more constant. Although minimal, the scatter plot reveals that there is a slight upward trend. Since the effect is minimal, gross revenue will not be included in the following regression model.
+
+```{r, echo = FALSE}
+# create function that converts years into decades
+# function left here because used by Louise
+convert_decade <- function(year){
+  low <- year - year %% 10
+  high <- year - year %% 10 + 9
+  paste(as.character(low), as.character(high), sep = "-")
+}
+# apply previous function
+movies$decade <- sapply(movies$title_year, FUN = convert_decade)
+
 ```
 
 ###Louise
@@ -961,7 +968,7 @@ We are confident to say that the English movies in this dataset are generally mo
 
 Looking at the content rating for the movies
 
-```{r}
+```{r echo=FALSE}
 
 ratingcounts <- count(movies, 'content_rating')
 ratingsort <- arrange(ratingcounts, desc(freq))
@@ -1013,7 +1020,7 @@ This is consistent with the t-test results. There is no difference in the mean s
 
 Does budget affect imdb score?
 
-```{r}
+```{r echo=FALSE}
 
 #scatter plot for budget vs imdb score
 
@@ -1034,7 +1041,7 @@ The covariance value of 5306036 suggests that there is an upward trend, as budge
 Even if we dig deeper to look at the effect of budget on IMDB score for movies from different countries, it appears to be that there is not much of a trend.
 
 
-```{r}
+```{r echo=FALSE}
 
 ggplot(data = budgetcountry) + geom_jitter(aes(x = budget, y = imdb_score, color=country, alpha = 0.1)) + labs(x = "Budget", y = "IMDB Score") + scale_x_log10(breaks = c(1e+03, 1e+05, 1e+07, 1e+09), labels = c("1000", "100,000", "10 million", "1000 million"))
 
@@ -1050,7 +1057,7 @@ ggplot(budgetcountry, aes(x = budget, y = imdb_score, colour = country)) +
 
 Does budget affect gross revenue of a movie?
 
-```{r}
+```{r echo=FALSE}
 
 #scatter plot for budget vs gross
 
@@ -1070,7 +1077,7 @@ The covariance value of 1.6 x 10^15 suggests that there is an upward trend, as b
 
 If we subset the data by different countries, we still do not see a huge correlation between budget versus gross revenue.
 
-```{r}
+```{r echo=FALSE}
 
 ggplot(data = budgetcountry) + geom_jitter(aes(x = budget, y = gross, color=country, alpha = 0.1)) + labs(x = "Budget", y = "Gross Revenue") + scale_x_log10() 
 
@@ -1090,7 +1097,7 @@ As both variables are indicators of a movie's popularity, we can conclude from t
 
 Does budget affect gross profit margin?
 
-```{r}
+```{r echo=FALSE}
 
 #create grossprofit column
 movieswprofit <- data.frame(movies)
@@ -1275,7 +1282,8 @@ When we actually make predictions based on a linear model for categorical data, 
 
 ### Steven
 
-Test whether, on average, European movies get higher IMDB scores than North American ones.
+This section will test 
+Test whether European movies get higher IMDB scores than North American ones.
 H0 -> Europe and North America get equal scores
 
 
@@ -1299,9 +1307,7 @@ ggplot(comb, aes(x = comb$imdb_score, fill = continent)) +
   xlab("IMDB score")
 ```
 
-### Louise
-
-*Would potentially like to do some inference regarding directors*
+### Director data impact on gross revenue
 
 ```{r echo=FALSE, message=FALSE}
 ##plot for gross revenue vs # of movies
@@ -1352,6 +1358,9 @@ Also, the opposite of the initial intuition appears to be the case for variance,
 ##Predictive Model - Louise
 
 ```{r echo=FALSE}
+##Data Preparation for model building
+
+##create a summary for directors with count of instances in the sample
 traindirectorsummary <- ddply(train, ~ director_name,summarise, number_of_movies=length(director_name))
 ##add a categorical variable for ten movies or more
 traindirectorsummary$more_than_ten_movies <- rep("Fewer than 10", nrow(traindirectorsummary))
@@ -1359,46 +1368,70 @@ traindirectorsummary$more_than_ten_movies[traindirectorsummary$number_of_movies>
 trainwithdirectordata <- merge(train, traindirectorsummary[,c("director_name","more_than_ten_movies")], by="director_name")
 ##set factors so that Fewer than Ten is the default variable, and 10+ will show in the model
 trainwithdirectordata$more_than_ten_movies <- factor(trainwithdirectordata$more_than_ten_movies, levels=c("Fewer than 10", "10+"))
+trainwithdirectordata$PG_13 <- "Not PG-13"
+trainwithdirectordata$PG_13[trainwithdirectordata$content_rating=="PG-13"] <- "PG-13"
+trainwithdirectordata$PG_13 <- factor(trainwithdirectordata$PG_13, levels=c("Not PG-13", "PG-13"))
+## merge with genre data based on title_year
+## column subset 3:26 is to remove duplicating the score and gross columns)
+trainwithdirectorandgenredata <- merge(movies_and_genres_wide[3:26], trainwithdirectordata, by="movie_title")
 ```
 
+Model including all data:
 ```{r echo=FALSE}
-directormodel <- lm(gross ~ more_than_ten_movies + budget + imdb_score + num_voted_users + content_rating + duration + cast_total_facebook_likes + director_facebook_likes + movie_facebook_likes, data=trainwithdirectordata)
+pre2010model <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews + more_than_ten_movies, data=trainwithdirectorandgenredata)
+summary(pre2010model)
+```
+
+Post 2010 model:
+```{r echo=FALSE}
+fullmodel <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews, data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >=2010,])
+summary(fullmodel)
+```
+
+```{r echo=FALSE, eval=FALSE}
+## to be removed, but for Siow Meng to copy if you want to include all of the genres.
+directormodel <- lm(gross ~ Action + Adventure + Fantasy + Sci.Fi + Thriller + Romance + Animation + Comedy + Family + Musical + Mystery + Western + Drama + History + Sport + Crime + Horror + War + Biography + Music + Documentary + Short + Film.Noir, data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year>=2010,])
 summary(directormodel)
 ```
 
 ###Justification
+
+A final model is built using data for movies created post 2010, this is because some of our predictive variables (e.g. facebook likes) are only relevant since facebook has become widely popular for celebrities and movies.
+
 ###Variables included in the model:
-* Inferential analysis showed that whether or not the director has more than ten movies in the sample is correlated with the mean of gross revenue, so this is included as a dependent variable.
-* Inferential analysis also showed that the budget of a movie is positively correlated with the gross revenue, which can be interpreted as movie-makers being wise enough to get a high return on investment.
-* IMDB score can be seen as the "quality" of a movie, as voted on by the public. At first look this variable is positively correlated with the gross revenue, but interestingly the coefficient for this variable is negative once the "number of user reviews" variable is included. An interpretation of this is that the popularity of a movie is more fully explained by the number of people reviewing the movie, and after this is taken into account, the movies with a higher "quality", as measured by imdb score, actually do less well in the box office. This could be because people are more likely to go and vote on imdb for movies they liked, and also for the obvious reason that people are more likely to go and vote on imdb for movies they have seen, so number of user reviews will be linked to number of cinema tickets sold, which is linked to gross revenue.
-* Inferential analysis also showed that for a few of the key ratings (G, PG and PG-13) there was some impact on gross revenue, so rating has been included in the model.
+* Inferential analysis showed that the budget of a movie is positively correlated with the gross revenue, which can be interpreted as movie-makers being wise enough to get a high return on investment.
+* Although IMDB score can be seen as the "quality" of a movie, as voted on by the public. At first look this variable is positively correlated with the gross revenue, but interestingly the coefficient for this variable is negative once the "number of users voted" variable is included. An interpretation of this is that the popularity of a movie is more fully explained by the number of people reviewing the movie, and after this is taken into account, the movies with a higher "quality", as measured by imdb score, actually do less well in the box office. This could be because people are more likely to go and vote on imdb for movies they liked, and also for the obvious reason that people are more likely to go and vote on imdb for movies they have seen, so number of user votes will be linked to number of cinema tickets sold, which is linked to gross revenue. If we include number of voted users then the imdb score is statistically insignificant so is removed from the analysis.
+* Inferential analysis also showed that for some ratings (e.g. PG-13) there was some impact on gross revenue, so rating has been included in the model to include these effects.
 * The duration, when included into the model has a statistically significant positive coefficient, this could be interpreted as movie-goers perceiving longer movies as more value for money or higher quality.
 * Cast total facebook likes can also be seen as a potential predictor for gross revenue, as in theory the more popular the actor (measured by facebook likes), the more people will go to see the movie to see that actor, the more tickets are sold and therefore the higher the revenue. We can see from the positive coefficient that this seems to be reflected in the data.
 * Director facebook likes is statistically significant when included into the model, interestingly with a negative coefficient. Again, this variable is at first glance positively correlated with the gross revenue, however once you take into account the number of voted users, this relationship is reversed, potentially for similar reasons to the above.
 * Movie facebook likes is also statistically significant when included into the model, this can be interpreted as a proxy for the popularity of the movie, and also could be that the more people who saw the movie (based on gross revenue), the more people then subsequently liked the page.
+* Key genres have been included into the model if they had statistically significant predictive power, there is a risk of overfitting here, so the variables that have been included are those that have a logical intuition, for example animated and family films are possibly more likely to be targeted to a younger audience, which may therefore have larger potential viewership, and Drama movies are the   
 
 ###Not included into the model
-* Movie title, director name, genres, plot keywords, and actor names were not included into the variable as there many different values for these variables with a small number of observations (usually one observation) for each.
-* Number of critic reviews is quite highly correlated with the number of user reviews, with a correlation coefficient of (`r round(cor(movies$num_user_for_reviews,movies$num_critic_for_reviews),2)). So it was decided to include only one of these variable into the model, in this case number of user reviews.
+* Movie title, director names and actor names were not included into the variable as there many different values for these variables with a small number of observations (usually one observation) for each.
+* Plot keywords were not included as there was a high number of possible values, and they were not statistically significant when included into the model.
+* Number of critic reviews is quite highly correlated with the number of user reviews, with a correlation coefficient of `r round(cor(movies$num_user_for_reviews,movies$num_critic_for_reviews),2)`. So it was decided to include only one of these variable into the model, in this case number of user reviews.
 * When decade is included then none are found to be statistically significant, after other variables are included.
 * When color is included into the model then none of the options are found to be statistically significant, there is also not a very large variation in this variable in the sample set.
 ```{r echo=FALSE}
 ggplot(movies, aes(x=color)) + geom_bar() + xlab("")
 ```
-* When either language or country are included into the model, the R squared does go up, but by less than 0.01, and this also includes a lot of additional values to be interpreted, so the model loses some interpretability. Due to this, these factors have been left out. 
-* The multpiple actor "facebook likes" variables are mostly correlated with each other, as can be seen from the correlation matrix, so the total cast facebook likes has been chosen as the "overall" variable to explain the effects of facebook popularity of the cast.
+* When either language or country are included into the model, the R squared does go up, but by a small amount, and this also includes a lot of additional values to be interpreted, so the model loses some interpretability. Due to this, these factors have been left out. 
+* The multiple actor "facebook likes" variables are mostly correlated with each other, as can be seen from the correlation matrix, so the total cast facebook likes has been chosen as the "overall" variable to explain the effects of facebook popularity of the cast.
 * The number of faces in the poster has not been included into the model, when included it is only slightly statistically significant, and the intuition behind this variable is unclear, so including it may lead to model overfitting.
-
-This model has This model has much lower predictive power (adjusted R squared of `r summary(directormodel)$adj.r.squared`), R squared on the training set.
+* IMDB score as discussed above.
+* The number of users for review has been included as it is statistically significant and may be correlated due to the two possible mechanisms that reviews may encourage more people to watch the movie, or the more people that see the movie, the more reviews are left.
+* Director number of movies, although significant individually, when other variables are taken into account loses its statistical significance, so is omitted from the model.
 
 ##Second Model, with only pre-known variables
 
 ```{r echo=FALSE}
-directormodelknownvariables <- lm(gross ~ more_than_ten_movies + budget + content_rating + duration + cast_total_facebook_likes + director_facebook_likes + movie_facebook_likes, data=trainwithdirectordata)
-summary(directormodelknownvariables)
+knownvariablesmodel <- lm(gross ~ budget + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + more_than_ten_movies, data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year>=2010,])
+summary(knownvariablesmodel)
 ```
 
-To build a model to predict revenue of movies that have not yet been released, we include only variables that are known before the time of release. Our dataset provided us with number of facebook likes at a specific point in time, and to use this as part of our predictive model we would need to analyse number of facebook likes before the movie was released, however we will use what we currently have as a proxy to build the model. This model has much lower predictive power (adjusted R squared of `r summary(directormodelknownvariables)$adj.r.squared`), but could be used in a more usefull business context.
+To build a model to predict revenue of movies that have not yet been released, we include only variables that are known before the time of release. Our dataset provided us with number of facebook likes at a specific point in time, and to use this as part of our predictive model we would need to analyse number of facebook likes before the movie was released, however we will use what we currently have as a proxy to build the model. This model has lower predictive power (adjusted R squared of `r summary(knownvariablesmodel)$adj.r.squared`), but could be used in a more useful business context.
 
 
 # Predictive Data Analysis
@@ -1436,7 +1469,7 @@ summary(model4)
 #adjusted R-squared value: 0.5616
 ```
 
-```{r}
+```{r echo=FALSE}
 # Models to predict IMDB score
 
 model5a <- lm(gross ~ country + movie_facebook_likes + language + num_user_for_reviews + num_critic_for_reviews + num_voted_users + content_rating, data = train)
@@ -1523,7 +1556,7 @@ summary(model9)
 ###Model Performance
 *we will then test this model using the test dataset, make a plot of the predictions against the actual values, and calculate the MSE/other success statistics*
 
-#Conclusion
+#Conclusion & Next Steps
 *to be completed after our analysis*
 
 #Appendix
@@ -1531,6 +1564,98 @@ summary(model9)
 ##Nikhita
 
 ##Steven
+
+```{r, echo = FALSE}
+
+# imdb score vs year
+temp <- movies[!is.na(movies$title_year),]
+ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
+  geom_boxplot(outlier.shape = NA) +
+  theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
+  labs(title = "IMDB scores against year", x = "", y = "IMDB Score") +
+  scale_y_continuous(limits = c(2.5, max(movies$imdb_score)))
+
+
+# for all countries by decade
+# remove entries with NA-NA
+temp <- movies[!movies$decade == "NA-NA", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot(outlier.shape = NA) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, all countries", x = "", y = "IMDB Score")
+
+# for Europe
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$continent == "Europe", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot(outlier.shape = NA) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, Europe", x = "", y = "IMDB Score")
+
+# for North America
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$continent == "North America", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot(outlier.shape = NA) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, North America", x = "", y = "IMDB Score")
+
+# for France
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "France", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot(outlier.shape = NA) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5),legend.position = "None") +
+  labs(title = "IMDB scores against decade, France", x = "", y = "IMDB Score")
+
+# for Germany
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "Germany", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot(outlier.shape = NA) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, Germany", x = "", y = "IMDB Score")
+
+# for USA
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "USA", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot(outlier.shape = NA) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, USA", x = "", y = "IMDB Score")
+
+# for UK
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "UK", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot(outlier.shape = NA) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, UK", x = "", y = "IMDB Score")
+
+# for India
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "India", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot(outlier.shape = NA) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, India", x = "", y = "IMDB Score")
+
+# for China
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "China", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
+  geom_boxplot(outlier.shape = NA) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, China", x = "", y = "IMDB Score")
+
+# for Hong Kong
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "Hong Kong", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot(outlier.shape = NA) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, Hong Kong", x = "", y = "IMDB Score")
+```
 
 ##Cecilia
 
