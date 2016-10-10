@@ -197,29 +197,38 @@ ggplot(countries, aes(country, gross, fill = country)) +
 # Plot of imdb score for the above movies
 ggplot(countries, aes(country, score, fill = country)) + 
     geom_boxplot() + 
-    labs(title = "IMDB SCore of movies by country", x = "", y = "Gross revenue") + 
+    labs(title = "IMDB Score of movies by country", x = "", y = "Gross revenue") + 
     theme_few() +
     theme(legend.position = "None") +
-    theme(axis.ticks.y = element_blank()) + 
-    scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("100", "10,000", "1 million", "100 millions", "1 billion"))
+    theme(axis.ticks.y = element_blank())
 
 ggplot(countries, aes(x = score, y = gross, colour = country)) + 
-  geom_jitter() + scale_x_log10()+ labs(title = "Budget and Gross Revenue for different countries", x = "IMDB Score", y = "Gross Revenue") +
+  geom_jitter() + scale_x_log10()+ labs(title = "IMDB Score and Gross Revenue for different countries", x = "IMDB Score", y = "Gross Revenue") +
   facet_wrap(~ country) +
   theme_few() + 
-  theme(legend.position = "None")
+  theme(legend.position = "None") + 
+    scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                  labels = c("100", "10,000", "1 million", "100 millions", "1 billion"))
 ```
 
+More than 50% of US, UK and Germany releases are generating high revenues of over 10 million. On the other hand, more than 25% of releases in India, Japan and China respectively are generating revenues of lower than 1 million.
+
+Looking at the IMDB scores, movies across all ten countries are getting IMDB scores above 6. In Indian & Japan, at least 40% of the movies got more than 7, whereas movies in Australia and USA have almost equal numbers scoring between 6 and 7.
+
+Therefore, it can be deduced that revenue and IMDB scores are clearly independent of each other. This can be seen in the scatterplots - UK & US movies seem to be symmetrically about 'y = x'; however, the other countries show no particular relationship between the two variables.
 
 ### Cecilia
 
-Will do a plot for budget vs gross and budget vs imdb score *test*
+Descriptive analysis on the the budget
 
-```{r}
+1. Budget of movies
+
+2. Budget of films in the top 13 countries (with 10 or more movies in the data set, the rest have been omitted)
+
+```{r, echo = FALSE}
 
 ##Histogram for movie budget
-ggplot(data=movies, aes(movies$budget)) + geom_histogram(fill="#FF9999", colour="black") + scale_x_log10() + labs(x = "Budget", y="Count") 
+ggplot(data=movies, aes(movies$budget)) + geom_histogram(fill="#FF9999", colour="black") + scale_x_log10() + labs(x = "Budget (USD)", y="Count", title = "Budget of Movies") 
 
 
 ##Country vs budget boxplot
@@ -238,11 +247,9 @@ budgetcountry <- subset(movies, country %in% c("Australia", "Canada", "China", "
 
 ggplot(data = budgetcountry) + geom_boxplot(aes(x = country, y = budget, fill = country)) + scale_y_log10() + labs(x = "Country", y="Budget (USD)") + ggtitle("Budget of films by country") + theme(legend.position="none")
 
-
-
-
 ```
 
+From the plots, we can see that the average budget on the films across different countries is similar, around a ballpark range of 10 million to 100 million. India and Mexico appears to have a lower average for film budget than the rest of ther other countries.
 
 ### George
 
@@ -439,7 +446,7 @@ ggplot(movies_and_keywords, aes(x = gross, y = score, colour = keywords)) +
 
 ### Steven
 Boxplot IMDB scores against year, decade
-```{r}
+```{r, echo = FALSE}
 
 # create continent column
 movies$continent <- countrycode(as.character(movies$country), "country.name", "continent")
@@ -466,11 +473,14 @@ ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_yea
   labs(title = "IMDB scores against year", x = "", y = "IMDB Score")
 
 # make decade column
-for (i in 1:nrow(movies)){
-  low <- movies$title_year[i] - (movies$title_year[i] %% 10)
-  high <- movies$title_year[i] - (movies$title_year[i] %% 10) + 9
-  movies$decade[i] <- paste(as.character(low), as.character(high), sep = "-")
+convert_decade <- function(year){
+  low <- year - year %% 10
+  high <- year - year %% 10 + 9
+  paste(as.character(low), as.character(high), sep = "-")
 }
+
+# apply function to create decade column
+movies$decade <- sapply(movies$title_year, convert_decade)
 
 # for all countries by decade
 # remove entries with NA-NA
@@ -737,21 +747,24 @@ ggplot(topratedmovies, aes(contentrating, contentgross, fill = contentrating)) +
 # Does the overall IMDB Score vary with different ratings?
 t.test(movies$imdb_score[movies$content_rating == "R"], movies$imdb_score[movies$content_rating == "PG-13"])
 
-t.test(movies$imdb_score[movies$content_rating == "PG-13"], movies$imdb_score[movies$content_rating == "G"])
+t.test(movies$imdb_score[movies$content_rating == "PG-13"], movies$imdb_score[movies$content_rating == "PG"])
 
-t.test(movies$imdb_score[movies$content_rating == "R"], movies$imdb_score[movies$content_rating == "G"])
+t.test(movies$imdb_score[movies$content_rating == "R"], movies$imdb_score[movies$content_rating == "PG"])
 ```
+
+PG, PG-13 and R are the most common ratings observed in our datatset. Looking the boxplots, there is no major difference in gross revenues or IMDB scores for the three categories. However, R movies tend to on average have higher IMDB scores and lower revenues than G or PG-13 rated movies. 
+
+This is consistent with the t-test results. There is no difference in the mean scores for PG and PG-13 movies whereas p-values lower than 5% support the alternative hypothesis that the difference in mean scores for R and P/PG-13 movies is not equal to 0.
 
 ### Cecilia
 
-Budget vs IMDB score
+Does budget affect imdb score?
 
 ```{r}
 
 #scatter plot for budget vs imdb score
 
 ggplot(data = movies) + geom_point(aes(x = budget, y = imdb_score, colour="#FF9999")) + labs(x = "Budget", y = "IMDB Score") + scale_x_log10(breaks = c(1e+03, 1e+05, 1e+07, 1e+09), labels = c("1000", "100,000", "10 million", "1000 million")) + theme(legend.position="none")
-
 
 #covariance test
 
@@ -770,11 +783,11 @@ Even if we dig deeper to look at the effect of budget on IMDB score for movies f
 
 ```{r}
 
-ggplot(data = budgetcountry) + geom_jitter(aes(x = budget, y = imdb_score, color=country, alpha = 0.1)) + labs(x = "Budget", y = "IMDB Score") + scale_x_log10() 
+ggplot(data = budgetcountry) + geom_jitter(aes(x = budget, y = imdb_score, color=country, alpha = 0.1)) + labs(x = "Budget", y = "IMDB Score") + scale_x_log10(breaks = c(1e+03, 1e+05, 1e+07, 1e+09), labels = c("1000", "100,000", "10 million", "1000 million"))
 
 
 ggplot(budgetcountry, aes(x = budget, y = imdb_score, colour = country)) + 
-  geom_jitter() + scale_x_log10()+ labs(title = "Budget and IMDB score for different genres", x = "Budget", y = "IMDB Score") +
+  geom_jitter() + scale_x_log10()+ labs(title = "Budget and IMDB score for different countries", x = "Budget", y = "IMDB Score") + scale_x_log10(breaks = c(1e+03, 1e+05, 1e+07, 1e+09), labels = c("1000", "100,000", "10 million", "1000 million")) +
   facet_wrap(~ country) +
   theme_few() + 
   theme(legend.position = "None")
@@ -782,7 +795,7 @@ ggplot(budgetcountry, aes(x = budget, y = imdb_score, colour = country)) +
 ```
 
 
-Budget vs Gross
+Does budget affect gross revenue of a movie?
 
 ```{r}
 
@@ -810,7 +823,7 @@ ggplot(data = budgetcountry) + geom_jitter(aes(x = budget, y = gross, color=coun
 
 
 ggplot(budgetcountry, aes(x = budget, y = gross, colour = country)) + 
-  geom_jitter() + scale_x_log10()+ labs(title = "Budget and Gross Revenue for different countries", x = "Budget", y = "Gross Revenue") +
+  geom_jitter() + scale_x_log10()+ labs(title = "Budget and Gross Revenue for different countries", x = "Budget", y = "Gross Revenue") + scale_x_log10(breaks = c(1e+03, 1e+05, 1e+07, 1e+09), labels = c("1000", "100,000", "10 million", "1000 million")) +
   facet_wrap(~ country) +
   theme_few() + 
   theme(legend.position = "None")
@@ -822,7 +835,7 @@ As both variables are indicators of a movie's popularity, we can conclude from t
 
 
 
-Budget vs Gross Profit Margin
+Does budget affect gross profit margin?
 
 ```{r}
 
@@ -845,6 +858,18 @@ cor.test(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.
 ```
 
 Finally, we would also like to look at the effect of gross vs on gross profit margin, whether the an increase in budget would make a better movie, and hence a higher gross profit margin. Gross profit margin can be used as an indictor of profitability of movie. Based on the data, it appears that there is a negative correlation (-0.31) between budget and profit. Although it is not very strong, it still suggests that an increase in budget has a slight negative impact on gross profit margin.
+
+From the plot, we can see that a lot of movies are not profitable. Around half of the movies are profitable (count = 1988), half are not (count = 1801).
+
+```{r, echo = FALSE}
+
+movieswprofit$profitable <- ifelse(movieswprofit$grossprofitmargin >= 0, "yes", "no")
+
+table(movieswprofit$profitable)
+                               
+
+```
+
 
 
 ### George
@@ -999,7 +1024,9 @@ When we actually make predictions based on a linear model for categorical data, 
 
 Test whether, on average, European movies get higher IMDB scores than North American ones.
 H0 -> Europe and North America get equal scores
-```{r}
+
+
+```{r, echo = FALSE}
 # make dataframes for North America and Europe
 North_America <- movies[movies$continent == "North America",]
 Europe <- movies[movies$continent == "Europe",]
@@ -1085,17 +1112,96 @@ model1 <- lm(gross ~ budget, data = movies)
 summary(model1)
 ggplot(data = movies, aes(x = budget, y = gross)) + geom_point() + geom_smooth(method = "lm") + coord_cartesian(xlim = c(0, 3e8))
 
+#adjusted R-squared value: 0.04956
+
 model2 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score + country, data = movies)
 summary(model2)
+
+#adjusted R-squared value: 0.2415
 
 model3 <- lm(gross ~ budget, data = movies[movies$title_year >= 2010, ])
 summary(model3)
 ggplot(data = movies[movies$title_year >= 2010, ], aes(x = budget, y = gross)) + geom_point() + geom_smooth(method = "lm") + coord_cartesian(xlim = c(0, 3e8))
 
+#adjusted R-squared value: 0.4451
+
+
 model4 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score + country, data = movies[movies$title_year >= 2010, ])
 summary(model4)
 
+#adjusted R-squared value: 0.5616
 ```
+
+```{r}
+# Models to predict IMDB score
+
+<<<<<<< HEAD
+model5 <- lm(imdb_score ~ country + genres + movie_facebook_likes + language + num_user_for_reviews + num_critic_for_reviews + content_rating, data = train[title_year >= 2010, ])
+summary(model5)
+
+#adjusted R-squared value = 0.4267
+=======
+model5 <- lm(imdb_score ~ country + genres + movie_facebook_likes + language + num_user_for_reviews + num_critic_for_reviews, data = train)
+summary(model5)
+```
+>>>>>>> 622a7bfe59750ec7a622a3dc344ea391e0d65e3f
+
+model6 <- lm(imdb_score ~ genres + language + content_rating + country + title_year + movie_facebook_likes + cast_total_facebook_likes, data = train[title_year >= 2010, ])
+summary(model6)
+
+#adjusted R-squared value = 0.3881
+
+```
+
+
+```{r, echo = FALSE}
+
+sort(names(movies))
+
+##Models to predict imdb score
+
+model6 <- lm(imdb_score ~ budget, data = movies[movies$title_year >= 2010, ])
+summary(model5)
+ggplot(data = movies, aes(x = budget, y = gross)) + geom_point() + geom_smooth(method = "lm") + coord_cartesian(xlim = c(0, 3e8))
+
+#adjusted R-squared value: 0.02132
+
+
+<<<<<<< HEAD
+model7 <- lm(imdb_score ~ director_facebook_likes + cast_total_facebook_likes + gross + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + director_facebook_likes + director_name, data = movies[movies$title_year >= 2010, ])
+=======
+model6 <- lm(imdb_score ~ director_facebook_likes + cast_total_facebook_likes + gross + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + director_name, data = movies[movies$title_year >= 2010, ])
+>>>>>>> 622a7bfe59750ec7a622a3dc344ea391e0d65e3f
+summary(model6)
+
+#adjusted R-squared value: 0.4767
+
+
+
+## Models to predict gross
+
+
+model8 <- lm(gross ~ budget + content_rating + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score, data = movies)
+summary(model7)
+
+#adjusted R-squared value: 0.2859
+
+model9 <- lm(gross ~ director_facebook_likes + cast_total_facebook_likes + imdb_score + country + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + content_rating, data = movies[movies$title_year >= 2010, ])
+summary(model8)
+
+#adjusted R-squared value: 0.3668
+
+<<<<<<< HEAD
+model10 <- lm(gross ~ director_facebook_likes + cast_total_facebook_likes + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + content_rating + budget, data = movies[movies$title_year >= 2010, ])
+=======
+model9 <- lm(gross ~ director_facebook_likes + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + content_rating + budget, data = movies[movies$title_year >= 2010, ])
+>>>>>>> 622a7bfe59750ec7a622a3dc344ea391e0d65e3f
+summary(model9)
+
+#adjusted R-squared value: 0.4941
+
+```
+
 
 
 ###Model Performance
