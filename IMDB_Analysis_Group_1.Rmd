@@ -1136,7 +1136,7 @@ summary(model4)
 # Models to predict IMDB score
 
 
-model5 <- lm(imdb_score ~ country + genres + movie_facebook_likes + language + num_user_for_reviews + num_critic_for_reviews + content_rating, data = train[title_year >= 2010, ])
+model5 <- lm(imdb_score ~ country + genres + movie_facebook_likes + language + num_user_for_reviews + num_critic_for_reviews + content_rating, data = train[train$title_year >= 2010, ])
 summary(model5)
 
 #adjusted R-squared value = 0.4267
