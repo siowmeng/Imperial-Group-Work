@@ -945,6 +945,13 @@ t.test(movies$imdb_score[movies$content_rating == "R"], movies$imdb_score[movies
 t.test(movies$imdb_score[movies$content_rating == "PG-13"], movies$imdb_score[movies$content_rating == "PG"])
 
 t.test(movies$imdb_score[movies$content_rating == "R"], movies$imdb_score[movies$content_rating == "PG"])
+
+# Does the gross revenue vary with different ratings?
+t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG-13"])
+
+t.test(movies$gross[movies$content_rating == "PG-13"], movies$gross[movies$content_rating == "PG"])
+
+t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG"])
 ```
 
 PG, PG-13 and R are the most common ratings observed in our datatset. Looking the boxplots, there is no major difference in gross revenues or IMDB scores for the three categories. However, R movies tend to on average have higher IMDB scores and lower revenues than G or PG-13 rated movies. 
