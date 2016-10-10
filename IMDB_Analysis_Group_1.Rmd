@@ -312,11 +312,7 @@ ggplot(data = temp, aes(x = imdb_score, y = gross, colour = us_or_others)) +
 
 Descriptive analysis on the country
 
-<<<<<<< HEAD
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
-=======
-```{r echo=FALSE}
->>>>>>> abc7fbbd9f0083002324fba9310e7f9c833e4d45
 # Sorting the movies by country and picking out the top 10
 counted <- count(movies, 'country')
 removednas <- counted[complete.cases(counted),]
@@ -343,18 +339,20 @@ ggplot(countries, aes(country, gross, fill = country)) +
 # Plot of imdb score for the above movies
 ggplot(countries, aes(country, score, fill = country)) + 
     geom_boxplot() + 
-    labs(title = "IMDB Score of movies by country", x = "", y = "Gross revenue") + 
+    labs(title = "IMDB Score of movies by country", x = "", y = "IMDB Score") + 
     theme_few() +
     theme(legend.position = "None") +
     theme(axis.ticks.y = element_blank())
 
 ggplot(countries, aes(x = score, y = gross, colour = country)) + 
-  geom_jitter() + scale_x_log10()+ labs(title = "IMDB Score and Gross Revenue for different countries", x = "IMDB Score", y = "Gross Revenue") +
-  facet_wrap(~ country) +
-  theme_few() + 
-  theme(legend.position = "None") + 
+    geom_jitter(alpha = 0.2) + 
+    labs(title = "IMDB Score and Gross Revenue for different countries", x = "IMDB Score", y = "Gross Revenue") +
+    facet_wrap(~ country, nrow = 2) +
+    theme_few() + 
+    theme(legend.position = "None") + 
     scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("100", "10,000", "1 million", "100 millions", "1 billion"))
+                  labels = c("100", "10,000", "1 million", "100 millions", "1 billion")) +
+    scale_x_continuous(breaks = 0:10, limits = c(1, 10)) 
 ```
 
 More than 50% of US, UK and Germany releases are generating high revenues of over 10 million. On the other hand, more than 25% of releases in India, Japan and China respectively are generating revenues of lower than 1 million.
@@ -697,7 +695,6 @@ multiplot(p1, p2)
 
 The plots above give a less biased represenation of the development of IMDB scores. The scores now appear more constant over the years. Although minimal, the scatter plot reveals that there is still a slight downward trend in scores.
 
-<<<<<<< HEAD
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # create function that converts years into decades
 convert_decade <- function(year){
@@ -707,8 +704,7 @@ convert_decade <- function(year){
 }
 # apply previous function
 movies$decade <- sapply(movies$title_year, FUN = convert_decade)
-=======
->>>>>>> abc7fbbd9f0083002324fba9310e7f9c833e4d45
+```
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # plot gross vs. years
