@@ -168,6 +168,19 @@ ggplot(data = meltedmovies2010, aes(x=Var1, y=Var2, fill=value)) + geom_tile() +
 
 ```
 
+```{r GrossVSScore, echo = FALSE}
+
+temp <- movies
+temp$us_or_others <- temp$country
+temp$us_or_others[temp$country != "USA"] = "Others"
+
+ggplot(data = temp, aes(x = imdb_score, y = gross, colour = us_or_others)) + geom_point() + geom_smooth(method = "lm") + labs(title = "Gross Revenue against IMDB Score for USA and non-USA Movies", x = "IMDB Score", y = "Gross Revenue") + scale_colour_discrete(name = "Countries")
+
+ggplot(data = temp, aes(x = imdb_score, y = log10(gross), colour = us_or_others)) + geom_point() + geom_smooth(method = "lm") + labs(title = "Gross Revenue against IMDB Score for USA and non-USA Movies", x = "IMDB Score", y = expression("Gross Revenue - log(10) Scale")) + scale_colour_discrete(name = "Countries")
+
+```
+
+
 ### Nikhita
 
 ```{r}
