@@ -1426,7 +1426,7 @@ sort(names(train))
 ##Models to predict imdb score
 
 model6 <- lm(imdb_score ~ budget, data = train[train$title_year >= 2010, ])
-summary(model5)
+summary(model6)
 ggplot(data = train, aes(x = budget, y = gross)) + geom_point() + geom_smooth(method = "lm") + coord_cartesian(xlim = c(0, 3e8))
 
 #adjusted R-squared value: 0.02132
@@ -1474,6 +1474,20 @@ summary(model9)
 
 #Conclusion
 *to be completed after our analysis*
+
+#Appendix
+
+##Nikhita
+
+##Steven
+
+##Cecilia
+
+##Siow Meng
+
+##George
+
+##Louise
 
 #To be removed- Notes and comments:
 
