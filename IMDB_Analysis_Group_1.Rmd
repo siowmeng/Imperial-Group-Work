@@ -554,7 +554,7 @@ south_America = c("Brazil", "Argentina", "Chile", "Colombia", "Peru")
 #     continent <- "North America"
 #   }
 # }
-# 
+#  
 # movies$continent <- sapply(movies$continent, FUN = convert_continent, country = movies$country)
 
 for (i in 1:nrow(movies)) {
@@ -566,16 +566,6 @@ for (i in 1:nrow(movies)) {
     movies$continent[i] <- "North America"
   } 
 }
-
-# for all countries and all years
-# remove NA from title_year column first 
-#### should you remove outliers from plot????
-temp <- movies[!is.na(movies$title_year),]
-ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
-  geom_boxplot(outlier.shape = NA) +
-  theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
-  labs(title = "IMDB scores against year", x = "", y = "IMDB Score") +
-  scale_y_continuous(limits = c(2.5, max(movies$imdb_score)))
 
 ```
 
@@ -1223,7 +1213,8 @@ When we actually make predictions based on a linear model for categorical data, 
 
 ### Steven
 
-Test whether, on average, European movies get higher IMDB scores than North American ones.
+This section will test 
+Test whether European movies get higher IMDB scores than North American ones.
 H0 -> Europe and North America get equal scores
 
 
@@ -1481,6 +1472,16 @@ summary(model9)
 ##Steven
 
 ```{r, echo = FALSE}
+
+# imdb score vs year
+temp <- movies[!is.na(movies$title_year),]
+ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
+  geom_boxplot(outlier.shape = NA) +
+  theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
+  labs(title = "IMDB scores against year", x = "", y = "IMDB Score") +
+  scale_y_continuous(limits = c(2.5, max(movies$imdb_score)))
+
+
 # for all countries by decade
 # remove entries with NA-NA
 temp <- movies[!movies$decade == "NA-NA", ]
