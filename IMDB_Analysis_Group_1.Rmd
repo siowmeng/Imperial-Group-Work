@@ -274,7 +274,7 @@ gross <- countries$gross
 
 # Plot of gross revenue for the above countries
 ggplot(countries, aes(country, gross, fill = country)) + 
-    geom_boxplot() + 
+    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
     labs(title = "Gross revenue of movies by country", x = "", y = "Gross revenue") + 
     theme_few() +
     theme(legend.position = "None") +
@@ -284,14 +284,14 @@ ggplot(countries, aes(country, gross, fill = country)) +
 
 # Plot of imdb score for the above movies
 ggplot(countries, aes(country, score, fill = country)) + 
-    geom_boxplot() + 
+    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
     labs(title = "IMDB Score of movies by country", x = "", y = "Gross revenue") + 
     theme_few() +
     theme(legend.position = "None") +
     theme(axis.ticks.y = element_blank())
 
 ggplot(countries, aes(x = score, y = gross, colour = country)) + 
-  geom_jitter() + scale_x_log10()+ labs(title = "IMDB Score and Gross Revenue for different countries", x = "IMDB Score", y = "Gross Revenue") +
+  geom_jitter() + scale_x_log10() + labs(title = "IMDB Score and Gross Revenue for different countries", x = "IMDB Score", y = "Gross Revenue") +
   facet_wrap(~ country) +
   theme_few() + 
   theme(legend.position = "None") + 
@@ -333,7 +333,7 @@ budgetcountry <- subset(movies, country %in% c("Australia", "Canada", "China", "
 
 #box plot for countries vs budget
 
-ggplot(data = budgetcountry) + geom_boxplot(aes(x = country, y = budget, fill = country)) + scale_y_log10() + labs(x = "Country", y="Budget (USD)") + ggtitle("Budget of films by country") + theme(legend.position="none")
+ggplot(data = budgetcountry) + geom_boxplot(aes(x = country, y = budget, fill = country)) + scale_y_log10() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(x = "Country", y="Budget (USD)") + ggtitle("Budget of films by country") + theme(legend.position="none")
 
 ```
 
@@ -405,7 +405,7 @@ movies_and_genres <- movies_and_genres[complete.cases(movies_and_genres), ]
 
 # Boxplot of genres and profit
 ggplot(movies_and_genres, aes(genre, gross, fill = genre)) + 
-    geom_boxplot() + 
+    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
     coord_flip() +
     labs(title = "Gross revenue of movies by genre", x = "", y = "Gross revenue") + 
     theme_few() +
@@ -416,7 +416,7 @@ ggplot(movies_and_genres, aes(genre, gross, fill = genre)) +
 
 # Boxplot of genres and imdb score
 ggplot(movies_and_genres, aes(genre, score, fill = genre)) + 
-    geom_boxplot() + 
+    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
     coord_flip() +
     labs(title = "IMDB score of movies by genre", x = "", y = "IMDB score") + 
     theme_few() +
@@ -502,7 +502,7 @@ movies_and_keywords <- movies_and_keywords[complete.cases(movies_and_keywords), 
 
 # Boxplot of genres and profit
 ggplot(movies_and_keywords, aes(keywords, gross, fill = keywords)) + 
-    geom_boxplot() + 
+    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
     coord_flip() +
     labs(title = "Gross revenue of movies by keyword", x = "", y = "Gross revenue") + 
     theme_few() +
@@ -513,7 +513,7 @@ ggplot(movies_and_keywords, aes(keywords, gross, fill = keywords)) +
 
 # Boxplot of genres and imdb score
 ggplot(movies_and_keywords, aes(keywords, score, fill = keywords)) + 
-    geom_boxplot() + 
+    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
     coord_flip() +
     labs(title = "IMDB score of movies by keyword", x = "", y = "IMDB score") + 
     theme_few() +
@@ -572,7 +572,7 @@ for (i in 1:nrow(movies)) {
 #### should you remove outliers from plot????
 temp <- movies[!is.na(movies$title_year),]
 ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
-  geom_boxplot(outlier.shape = NA) +
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
   labs(title = "IMDB scores against year", x = "", y = "IMDB Score") +
   scale_y_continuous(limits = c(2.5, max(movies$imdb_score)))
@@ -632,7 +632,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 temp <- movies[movies$title_year >= 1980,]
 # plot the range of IMDB scores for all years
 p1 <- ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
-  geom_boxplot(outlier.shape = NA) +
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
   labs(title = "IMDB scores against year, for years with >= 10 entries", x = "", y = "IMDB Score")
 
@@ -664,7 +664,7 @@ movies$decade <- sapply(movies$title_year, FUN = convert_decade)
 # remove entries with NA-NA
 temp <- movies[!movies$decade == "NA-NA", ]
 ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) +
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
   labs(title = "IMDB scores against decade, all countries", x = "", y = "IMDB Score")
 
@@ -672,7 +672,7 @@ ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
 temp <- movies[!movies$decade == "NA-NA", ]
 temp <- temp[temp$continent == "Europe", ]
 ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) +
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
   labs(title = "IMDB scores against decade, Europe", x = "", y = "IMDB Score")
 
@@ -680,7 +680,7 @@ ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
 temp <- movies[!movies$decade == "NA-NA", ]
 temp <- temp[temp$continent == "North America", ]
 ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) +
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
   labs(title = "IMDB scores against decade, North America", x = "", y = "IMDB Score")
 
@@ -688,7 +688,7 @@ ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
 temp <- movies[!movies$decade == "NA-NA", ]
 temp <- temp[temp$country == "France", ]
 ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) +
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5),legend.position = "None") +
   labs(title = "IMDB scores against decade, France", x = "", y = "IMDB Score")
 
@@ -696,7 +696,7 @@ ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
 temp <- movies[!movies$decade == "NA-NA", ]
 temp <- temp[temp$country == "Germany", ]
 ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) +
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
   labs(title = "IMDB scores against decade, Germany", x = "", y = "IMDB Score")
 
@@ -704,7 +704,7 @@ ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
 temp <- movies[!movies$decade == "NA-NA", ]
 temp <- temp[temp$country == "USA", ]
 ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) +
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
   labs(title = "IMDB scores against decade, USA", x = "", y = "IMDB Score")
 
@@ -712,7 +712,7 @@ ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
 temp <- movies[!movies$decade == "NA-NA", ]
 temp <- temp[temp$country == "UK", ]
 ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) +
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
   labs(title = "IMDB scores against decade, UK", x = "", y = "IMDB Score")
 
@@ -720,7 +720,7 @@ ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
 temp <- movies[!movies$decade == "NA-NA", ]
 temp <- temp[temp$country == "India", ]
 ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) +
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
   labs(title = "IMDB scores against decade, India", x = "", y = "IMDB Score")
 
@@ -728,7 +728,7 @@ ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
 temp <- movies[!movies$decade == "NA-NA", ]
 temp <- temp[temp$country == "China", ]
 ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
-  geom_boxplot(outlier.shape = NA) +
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
   labs(title = "IMDB scores against decade, China", x = "", y = "IMDB Score")
 
@@ -736,7 +736,7 @@ ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
 temp <- movies[!movies$decade == "NA-NA", ]
 temp <- temp[temp$country == "Hong Kong", ]
 ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) +
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
   labs(title = "IMDB scores against decade, Hong Kong", x = "", y = "IMDB Score")
 ```
@@ -892,7 +892,7 @@ temp <- movies
 
 temp$english <- factor(temp$language == "English", levels = c(TRUE, FALSE), labels = c("English", "Non-English"))
 
-ggplot(data = temp, aes(x = english, y = gross)) + geom_boxplot() + labs(title = "Gross Revenue of English and non-English Movies", x = "English or Non-English Movies", y = "Gross Revenue") + coord_cartesian(ylim = c(0, 1e8))
+ggplot(data = temp, aes(x = english, y = gross)) + geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(title = "Gross Revenue of English and non-English Movies", x = "English or Non-English Movies", y = "Gross Revenue") + coord_cartesian(ylim = c(0, 1e8))
 
 t.test(movies$gross[movies$language == "English"], movies$gross[movies$language != "English"], alternative = "greater")
 
@@ -912,6 +912,7 @@ Looking at the content rating for the movies
 
 ```{r}
 
+movies[,content_rating == "GP"] <- "PG"
 ratingcounts <- count(movies, 'content_rating')
 ratingsort <- arrange(ratingcounts, desc(freq))
 topratings <- ratingsort[1:5,]
@@ -922,7 +923,7 @@ contentscore <- topratedmovies$imdb_score
 contentgross <- topratedmovies$gross
 
 ggplot(topratedmovies, aes(contentrating, contentscore, fill = contentrating)) + 
-    geom_boxplot() + 
+    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
     labs(title = "IMDB Score of movies by rating", x = "Content Rating", y = "IMDB Score") + 
     theme_few() +
     theme(legend.position = "None") +
@@ -931,7 +932,7 @@ ggplot(topratedmovies, aes(contentrating, contentscore, fill = contentrating)) +
                   labels = c("100", "10,000", "1 million", "100 millions", "1 billion"))
 
 ggplot(topratedmovies, aes(contentrating, contentgross, fill = contentrating)) + 
-    geom_boxplot() + 
+    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
     labs(title = "Gross Revenue of movies by rating", x = "Content Rating", y = "Gross Revenue") +
     theme_few() +
     theme(legend.position = "None") +
@@ -1280,7 +1281,7 @@ These correlation tests do infer that there is a slight positive correlation bet
 If we look at the categorical variable of whether or not a director has directed >10 movies, then we can see these distributions look slightly different:
 
 ```{r echo=FALSE}
-ggplot(movieswithdirectordata, aes(x=1, y = gross, fill = more_than_ten_movies)) + geom_boxplot() + facet_grid(. ~ more_than_ten_movies) + labs(x="", title="Gross revenue distribution by \n number of movies per director") + scale_y_continuous(label=human_num) + theme(axis.title.x=element_blank(),
+ggplot(movieswithdirectordata, aes(x=1, y = gross, fill = more_than_ten_movies)) + geom_boxplot() + facet_grid(. ~ more_than_ten_movies) + + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(x="", title="Gross revenue distribution by \n number of movies per director") + scale_y_continuous(label=human_num) + theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
         legend.position = "None") 
