@@ -128,7 +128,7 @@ kable(movie_variables, format = "markdown")
 First we look into the amount of NA variables found in each column our data:
 
 ```{r, echo = FALSE}
-## function to calculate list of NAs within a column
+    ## function to calculate list of NAs within a column
 colNA <- function(dfCol){ sum(is.na(dfCol)) }
 ## To show table of sum of NAs by column
 na_values <- data.frame(colnames(movies), apply(movies, 2, colNA))
@@ -1545,7 +1545,6 @@ These correlation tests do infer that there is a slight positive correlation bet
 
 If we look at the categorical variable of whether or not a director has directed >10 movies, then we can see these distributions look slightly different:
 
-<<<<<<< HEAD
 ```{r echo=FALSE}
 ggplot(movieswithdirectordata, aes(x=1, y = gross, fill = more_than_ten_movies)) + geom_boxplot() + facet_grid(. ~ more_than_ten_movies) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(x="", title="Gross revenue distribution by \n number of movies per director") + scale_y_continuous(label=human_num) + theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -1661,101 +1660,69 @@ To build a model to predict revenue of movies that have not yet been released, w
 
 ```{r echo=FALSE}
 
-sort(names(train))
+trainwithdirectorandgenredata$us_or_others <- trainwithdirectorandgenredata$country
+trainwithdirectorandgenredata$us_or_others[trainwithdirectorandgenredata$country != "USA"] <- "Non-USA"
+trainwithdirectorandgenredata$english <- factor(trainwithdirectorandgenredata$language == "English", 
+                                                levels = c(TRUE, FALSE), labels = c("English", 
+                                                                                    "Non-English"))
+fbmodel <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes 
+              + director_facebook_likes + imdb_score + PG_13 + Action + Adventure + Fantasy + Family 
+              + Western + Drama + Crime + Biography + Documentary + us_or_others + english, 
+              data = trainwithdirectorandgenredata)
+summary(fbmodel)
 
-model1 <- lm(gross ~ budget, data = train)
-summary(model1)
-ggplot(data = train, aes(x = budget, y = gross)) + geom_point() + geom_smooth(method = "lm") + coord_cartesian(xlim = c(0, 3e8))
-
-#adjusted R-squared value: 0.04956
-
-model2 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score + country, data = train)
-summary(model2)
-
-model2b <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score + country + content_rating + num_user_for_reviews + num_voted_users, data = train)
-summary(model2b)
-
-#adjusted R-squared value: 0.2415
-
-model3 <- lm(gross ~ budget, data = train[train$title_year >= 2010, ])
-summary(model3)
-ggplot(data = train[train$title_year >= 2010, ], aes(x = budget, y = gross)) + geom_point() + geom_smooth(method = "lm") + coord_cartesian(xlim = c(0, 3e8))
-
-#adjusted R-squared value: 0.4451
-
-
-model4 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score + country, data = train[train$title_year >= 2010, ])
-summary(model4)
-
-#adjusted R-squared value: 0.5616
-
-model4b <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score + country + content_rating, data = train[train$title_year >= 2010, ])
-summary(model4b)
+fbmodel2010 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes 
+              + director_facebook_likes + imdb_score + PG_13 + Action + Adventure + Fantasy + Family 
+              + Western + Drama + Crime + Biography + Documentary + us_or_others + english, 
+              data = trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >= 2010, ])
+summary(fbmodel2010)
 
 ```
-
-```{r echo=FALSE}
-# Models to predict IMDB score
-
-model5a <- lm(gross ~ country + movie_facebook_likes + language + num_user_for_reviews + num_critic_for_reviews + num_voted_users + content_rating, data = train)
-summary(model5a)
-
-#adjusted R-squared value = 0.5043
-
-model5b <- lm(gross ~ country + movie_facebook_likes + language + num_user_for_reviews + num_critic_for_reviews + content_rating, data = train[train$title_year >= 2010, ])
-summary(model5b)
-
-#adjusted R-squared value = 0.4976
-
-model6a <- lm(gross ~ country + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + language + content_rating, data = train)
-summary(model6a)
-
-#adjusted R-squared value = 0.2592
-
-model6b <- lm(gross ~ country + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + language + content_rating, data = train[train$title_year >= 2010, ])
-summary(model6b)
-
-#adjusted R-squared value = 0.4443
-
-```
-
-```{r echo =FALSE}
-model6 <- lm(imdb_score ~ genres + language + content_rating + country + title_year + movie_facebook_likes + cast_total_facebook_likes, data = train[train$title_year >= 2010, ])
-summary(model6)
-
-#adjusted R-squared value = 0.4204
-
-```
-
-
-## Models to predict gross
-
-```{r echo=FALSE}
-model8 <- lm(gross ~ budget + content_rating + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score, data = train)
-summary(model8)
-
-#adjusted R-squared value: 0.2859
-
-model9 <- lm(gross ~ director_facebook_likes + cast_total_facebook_likes + imdb_score + country + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + content_rating, data = train[train$title_year >= 2010, ])
-summary(model8)
-
-#adjusted R-squared value: 0.3668
-
-
-model10 <- lm(gross ~ director_facebook_likes + cast_total_facebook_likes + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + content_rating + budget, data = train[train$title_year >= 2010, ])
-
-model9 <- lm(gross ~ director_facebook_likes + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + content_rating + budget, data = train[train$title_year >= 2010, ])
-
-summary(model9)
-
-#adjusted R-squared value: 0.4941
-
-```
-
-
 
 ###Model Performance
 *we will then test this model using the test dataset, make a plot of the predictions against the actual values, and calculate the MSE/other success statistics*
+
+```{r conditiontestdata, echo=FALSE}
+##Data Preparation for model building
+
+##create a summary for directors with count of instances in the sample
+testdirectorsummary <- ddply(test, ~ director_name,summarise, number_of_movies=length(director_name))
+##add a categorical variable for ten movies or more
+testdirectorsummary$more_than_ten_movies <- rep("Fewer than 10", nrow(testdirectorsummary))
+testdirectorsummary$more_than_ten_movies[testdirectorsummary$number_of_movies>10] <- "10+"
+testwithdirectordata <- merge(test, testdirectorsummary[,c("director_name","more_than_ten_movies")], by="director_name")
+##set factors so that Fewer than Ten is the default variable, and 10+ will show in the model
+testwithdirectordata$more_than_ten_movies <- factor(testwithdirectordata$more_than_ten_movies, levels=c("Fewer than 10", "10+"))
+testwithdirectordata$PG_13 <- "Not PG-13"
+testwithdirectordata$PG_13[testwithdirectordata$content_rating=="PG-13"] <- "PG-13"
+testwithdirectordata$PG_13 <- factor(testwithdirectordata$PG_13, levels=c("Not PG-13", "PG-13"))
+## merge with genre data based on title_year
+## column subset 3:26 is to remove duplicating the score and gross columns)
+test <- merge(movies_and_genres_wide[3:26], testwithdirectordata, by="movie_title")
+
+test$us_or_others <- test$country
+test$us_or_others[test$country != "USA"] <- "Non-USA"
+test$english <- factor(test$language == "English", levels = c(TRUE, FALSE), labels = c("English",
+                                                                                       "Non-English"))
+```
+
+
+```{r prediction, echo=FALSE}
+
+predpre <- predict(pre2010model, test)
+rmsepre <- sqrt(mean((predpre - test$gross)^2))
+predFB <- predict(fbmodel, test)
+rmseFB <- sqrt(mean((predFB - test$gross)^2))
+
+
+predFB2010 <- predict(fbmodel2010, test[test$title_year >= 2010, ])
+rmseFB2010 <- sqrt(mean((predFB2010 - test$gross[test$title_year >= 2010])^2))
+predFull2010 <- predict(fullmodel, test[test$title_year >= 2010, ])
+rmseFull2010 <- sqrt(mean((predFull2010 - test$gross[test$title_year >= 2010])^2))
+predKnown2010 <- predict(knownvariablesmodel, test[test$title_year >= 2010, ])
+rmseKnown2010 <- sqrt(mean((predKnown2010 - test$gross[test$title_year >= 2010])^2))
+
+```
 
 #Conclusion & Next Steps
 *to be completed after our analysis*
