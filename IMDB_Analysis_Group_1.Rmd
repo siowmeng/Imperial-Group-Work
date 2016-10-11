@@ -1162,6 +1162,9 @@ Looking at the content rating for the movies
 
 
 ```{r}
+
+movies$content_rating[movies$content_rating == "M"] <- "PG"
+movies$content_rating[movies$content_rating == "GP"] <- "PG"
 ratingcounts <- count(movies, 'content_rating')
 ratingsort <- arrange(ratingcounts, desc(freq))
 topratings <- ratingsort[1:5,]
