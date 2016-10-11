@@ -142,7 +142,7 @@ The following cleansing process is then applied:
 * All rows where the title year is NA are removed - as there are a high number, and this variable is not expected to be key to the analysis.
 * All rows where gross is NA are removed - as there are a high number, and this variable is expected to be one of the output variables
 * All rows where the budget is NA are removed - as there are a high number, and this variable is expected to be key to the analysis.
-* The aspect ratio column is removed - as there are a high number of NAs, and this variable is not expected to be key to the analysis. (*Louise comment - should we justify this somewhere?*)
+* The aspect ratio column is removed - as there are a high number of NAs, and this variable is not expected to be key to the analysis. 
 * The IMDB link column is removed - as this variable is not expected to be key to the analysis
 
 After this point there are only a few NAs remaining.
@@ -937,12 +937,12 @@ cor.test(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$bud
 Even though this correlation is statistically significant, it is quite small (`r round(cor(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget),3)`%), so the analysis of movies by director sample on gross revenue can be continued without an obvious confounder of budget.
 
 If we then split this out by decades, we can see the below:
-```{r echo = FALSE, warning = FALSE, message = FALSE}
+```{r echo = FALSE}
 ##add the decades in as per Steven's code (note: potentially change into a function?)
 movieswithdirectordata$decade <- sapply(movieswithdirectordata$title_year, FUN = convert_decade)
 ```
 
-```{r echo = FALSE, fig.width = 10, fig.align = "center"}
+```{r echo = FALSE, fig.width = 10, fig.align = "center", warning = FALSE, message = FALSE}
 ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross, colour = decade)) + 
     geom_jitter(alpha = 0.1) + 
     scale_y_continuous(label = human_usd) + 
@@ -958,11 +958,11 @@ As the number of data elements in the sample grows for each decade, a geomtrical
 
 Similarly for genres:
 
-```{r echo = FALSE, warning = FALSE, message = FALSE}
+```{r echo = FALSE}
 movies_and_genres_withdirectordata <- merge(movies_and_genres, movieswithdirectordata[,c("movie_title","dir_number_of_movies")], by="movie_title")
 ```
 
-```{r echo = FALSE, fig.width = 10, fig.align = "center"}
+```{r echo = FALSE, fig.width = 10, fig.align = "center", warning = FALSE, message = FALSE}
 ##requires the above
 ggplot(movies_and_genres_withdirectordata, aes(x = dir_number_of_movies, y = gross, colour = genre)) + 
   geom_jitter(alpha = 0.1) + 
