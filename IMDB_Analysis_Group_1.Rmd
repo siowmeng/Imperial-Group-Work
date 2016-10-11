@@ -1363,6 +1363,9 @@ ggplot(data = train, aes(x = budget, y = gross)) + geom_point() + geom_smooth(me
 model2 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score + country, data = train)
 summary(model2)
 
+model2b <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score + country + content_rating + num_user_for_reviews + num_voted_users, data = train)
+summary(model2b)
+
 #adjusted R-squared value: 0.2415
 
 model3 <- lm(gross ~ budget, data = train[train$title_year >= 2010, ])
@@ -1376,6 +1379,10 @@ model4 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes +
 summary(model4)
 
 #adjusted R-squared value: 0.5616
+
+model4b <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score + country + content_rating, data = train[train$title_year >= 2010, ])
+summary(model4b)
+
 ```
 
 ```{r}
