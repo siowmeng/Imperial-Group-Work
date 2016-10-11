@@ -1,0 +1,28 @@
+---
+title: "Notes from meetings"
+output: html_document
+---
+
+##Immediate next steps
+
+* Remove any unecessary elements into the appendix - All
+* Change name titles to descriptive titles - All
+* Check that the correlation plots give you absolute value - LF
+* Can add all the genres as variables into the two main models - LF - SML
+* Convert output into stargazer - GP
+* Make t test output pretty - GP
+* ggplot scheme - GP
+* test SM model and LF model against the test set - SML
+* decades analysis for gross revenue - SL
+* See if we can find a way to put output scales consistently to be human readable - SL
+* Add mean spots into boxplots - NV
+
+##Subsequent next steps
+
+* Introduction & Executive summary - CC
+
+* Review & co-review
+
+##Optional to do:
+
+* See if we can justify using the t-test.
