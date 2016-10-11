@@ -1418,7 +1418,6 @@ ggplot(data = movies, aes(x = budget, y = gross)) + geom_point() + geom_smooth(m
 
 
 model7 <- lm(imdb_score ~ director_facebook_likes + cast_total_facebook_likes + gross + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + director_facebook_likes + director_name, data = movies[movies$title_year >= 2010, ])
-summary(model7)
 
 model6 <- lm(imdb_score ~ director_facebook_likes + cast_total_facebook_likes + gross + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + director_name, data = movies[movies$title_year >= 2010, ])
 
