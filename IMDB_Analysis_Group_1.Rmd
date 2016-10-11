@@ -777,13 +777,6 @@ ggplot(temp, aes(x = factor(title_year), y = gross, fill = factor(title_year))) 
     scale_x_discrete(breaks = seq(1920, 2016, 2), labels = seq(1920, 2016, 2), drop = FALSE) +
     annotation_logticks(sides = "lr", colour = "gray") 
 
-<<<<<<< HEAD
-=======
-ggplot(movies, aes(x = factor(title_year), y = gross, fill = factor(title_year))) + 
-  geom_boxplot() +
-  theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
-  labs(title = "Gross revenues plotted against years", x = "", y = "Gross Revenue")
->>>>>>> 6bbd59a7fc3898aa8c29d7e63adcdf722650b174
 ```
 
 The above plot shows that there might be a slight upward trend in gross revenue over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of gross revenues over time the foloowing two plots will only include years which have a minimum of ten entries.
