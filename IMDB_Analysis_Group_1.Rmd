@@ -775,6 +775,7 @@ ggplot(temp, aes(x = factor(title_year), y = gross, fill = factor(title_year))) 
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billion"), limits = c(1, 1e+10)) +
     scale_x_discrete(breaks = seq(1920, 2016, 2), labels = seq(1920, 2016, 2), drop = FALSE) +
     annotation_logticks(sides = "lr", colour = "gray") 
+
 ```
 
 The plot above show that there might be a downward trend in gross revenue over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of IMDB scores only years with ten or more entries will be plotted below.
