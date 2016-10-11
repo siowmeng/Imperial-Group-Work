@@ -17,6 +17,7 @@ library(scales)
 library(countrycode)
 library(GGally)
 library(knitr)
+library(scales)
 ```
 
 #Executive Summary
@@ -618,28 +619,14 @@ ggplot(movies_and_keywords, aes(x = score, y = gross, colour = keywords)) +
 ```
 
 ### Steven
-Boxplot IMDB scores against year, decade
+Boxplot gross against year, decade
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
-# create continent column
+
+# code to create continent column
 movies$continent <- countrycode(as.character(movies$country), "country.name", "continent")
 
 # divide "Americas" into "North Americas" and "South America"
 south_America = c("Brazil", "Argentina", "Chile", "Colombia", "Peru")
-
-##### change this to function
-# feel free to fix this if you can. I can't get it to work
-# convert_continent <- function(continent, country){
-#   south_America = c("Brazil", "Argentina", "Chile", "Colombia", "Peru")
-#   if (is.na(continent)) {
-#     next
-#   } else if ((continent == "Americas") & (country %in% south_America)) {
-#     continent <- "South America"
-#   } else if ((continent == "Americas") & (!(country %in% south_America))) {
-#     continent <- "North America"
-#   }
-# }
-#  
-# movies$continent <- sapply(movies$continent, FUN = convert_continent, country = movies$country)
 
 for (i in 1:nrow(movies)) {
   if (is.na(movies$continent[i])) {
@@ -653,12 +640,7 @@ for (i in 1:nrow(movies)) {
 
 ```
 
-The plot above show that there might be a downward trend in IMDB scores over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of IMDB scores only years with ten or more entries will be plotted below.
-
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
-# plot all years that have at least ten movies
-# table(movies$title_year)  
-# shows that from 1980 onwards all the years have at least ten entries
 
 # function to plot multiple plots at in one grid (from r-cookbook)
 
@@ -698,26 +680,8 @@ multiplot <- function(..., plotlist = NULL, file, cols = 1, layout = NULL) {
   }
 }
 
-# subset movies data frame to include all movies from 1980 onwards
-temp <- movies[movies$title_year >= 1980,]
-# plot the range of IMDB scores for all years
-p1 <- ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
-  geom_boxplot(outlier.shape = NA) +
-  theme(axis.text.x=element_text(angle = 45, hjust = 0.5, vjust = 0.5),legend.position = "None") +
-  labs(title = "IMDB scores against year, for years with >= 10 entries", x = "", y = "IMDB Score")
-
-# make a scatter plot that shows trend in IMDB scores
-p2 <- ggplot(temp, aes(x = title_year, y = imdb_score)) + 
-  geom_point() +
-  geom_smooth(method = "lm") +
-  labs(x = "", y = "IMDB Score") +
-  theme(axis.text.x=element_text(angle = 45, hjust = 0.5, vjust = 0.5),legend.position = "None") +
-  scale_x_continuous(breaks = seq(min(temp$title_year), max(temp$title_year), by = 1), 0.5)
-
-multiplot(p1, p2)
 ```
 
-The plots above give a less biased represenation of the development of IMDB scores. The scores now appear more constant over the years. Although minimal, the scatter plot reveals that there is still a slight downward trend in scores.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # create function that converts years into decades
@@ -732,8 +696,7 @@ movies$decade <- sapply(movies$title_year, FUN = convert_decade)
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # plot gross vs. years
-temp <- movies[!is.na(movies$title_year),]
-ggplot(temp, aes(x = factor(title_year), y = gross, fill = factor(title_year))) + 
+ggplot(movies, aes(x = factor(title_year), y = gross, fill = factor(title_year))) + 
   geom_boxplot() +
   theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
   labs(title = "Gross revenues against year, for years with >= 10 entries", x = "", y = "Gross Revenue")
@@ -1620,8 +1583,33 @@ ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_yea
   theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
   labs(title = "IMDB scores against year", x = "", y = "IMDB Score") +
   scale_y_continuous(limits = c(2.5, max(movies$imdb_score)))
+```
+The plot above show that there might be a downward trend in IMDB scores over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of IMDB scores only years with ten or more entries will be plotted below.
 
+```{r, echo = FALSE}
+# subset movies data frame to include all movies from 1980 onwards
+temp <- movies[movies$title_year >= 1980,]
+# plot the range of IMDB scores for all years
+p1 <- ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
+  geom_boxplot(outlier.shape = NA) +
+  theme(axis.text.x=element_text(angle = 45, hjust = 0.5, vjust = 0.5),legend.position = "None") +
+  labs(title = "IMDB scores against year, for years with >= 10 entries", x = "", y = "IMDB Score")
 
+# make a scatter plot that shows trend in IMDB scores
+p2 <- ggplot(temp, aes(x = title_year, y = imdb_score)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(x = "", y = "IMDB Score") +
+  theme(axis.text.x=element_text(angle = 45, hjust = 0.5, vjust = 0.5),legend.position = "None") +
+  scale_x_continuous(breaks = seq(min(temp$title_year), max(temp$title_year), by = 1), 0.5)
+
+multiplot(p1, p2)
+
+```
+
+The plots above give a less biased represenation of the development of IMDB scores. The scores now appear more constant over the years. Although minimal, the scatter plot reveals that there is still a slight downward trend in scores.
+
+```{r}
 # for all countries by decade
 # remove entries with NA-NA
 temp <- movies[!movies$decade == "NA-NA", ]
