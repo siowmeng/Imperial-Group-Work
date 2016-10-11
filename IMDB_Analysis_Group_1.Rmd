@@ -1710,12 +1710,17 @@ test$english <- factor(test$language == "English", levels = c(TRUE, FALSE), labe
 ```
 
 
-```{r prediction, echo=FALSE}
+```{r prediction, echo = TRUE}
 
 predpre <- predict(pre2010model, test)
 rmsepre <- sqrt(mean((predpre - test$gross)^2))
 predFB <- predict(fbmodel, test)
 rmseFB <- sqrt(mean((predFB - test$gross)^2))
+
+modelperf <- matrix(data = c(rmsepre, rmseFB), nrow = 2)
+rownames(modelperf) <- c("Pre Model", "FaceBook Model")
+colnames(modelperf) <- c("Root-Mean-Square Error")
+modelperf
 
 
 predFB2010 <- predict(fbmodel2010, test[test$title_year >= 2010, ])
@@ -1724,6 +1729,12 @@ predFull2010 <- predict(fullmodel, test[test$title_year >= 2010, ])
 rmseFull2010 <- sqrt(mean((predFull2010 - test$gross[test$title_year >= 2010])^2))
 predKnown2010 <- predict(knownvariablesmodel, test[test$title_year >= 2010, ])
 rmseKnown2010 <- sqrt(mean((predKnown2010 - test$gross[test$title_year >= 2010])^2))
+
+modelperf2010 <- matrix(data = c(rmseFB2010, rmseFull2010, rmseKnown2010), nrow = 3)
+rownames(modelperf2010) <- c("FaceBook (Post-2010) Model", "Full (Post-2010) Model", 
+                             "Known Variable (Post-2010) Model")
+colnames(modelperf2010) <- c("Root-Mean-Square Error")
+modelperf2010
 
 ```
 
