@@ -19,7 +19,6 @@ library(GGally)
 library(knitr)
 library(scales)
 library(gridExtra)
-library(pander)
 ```
 
 #Executive Summary
@@ -31,10 +30,7 @@ With the advent of big data and advanced predictive analytics capabilities, very
 
 Similarly, a question which can be posed - whether one can predict the successfulness of a movie before it is released on cinema. To address this question, we have obtained a dataset from Kaggle scraped from the *imdb.com* containing 28 different variables for our analysis. Our key objectives for this report is to determine what makes a movie popular (based on gross revenue), and what makes a movie highly rated by the public (based on IMDB score). Descriptive analyses and influential analyses to look at which of the variables available in the dataset affect user ratings and gross revenue, will be followed by an attempt to develop a predictive model. This predictive model will try to determine which movies will be successful based on the relevant variable identified. 10% of the original data has been set aside to act as the test dataset and the model will be evaluated on its accuracy to predict gross revenue using Mean Squared Error and other success statistics.
 
-
-#Methods
-
-##Dataset
+#Data
 
 ```{r, echo = FALSE}
 movies <- read.csv(file = "movie_metadata.csv", header = TRUE, stringsAsFactors = FALSE, strip.white = TRUE)
@@ -119,7 +115,7 @@ movie_variables$Explanation <- c(actor_1_facebook_likes,
 kable(movie_variables, format = "markdown")
 ```
 
-## Data Cleansing
+# Data Cleansing
 
 An initial review of our dataset identified a few key issues to be addressed before progressing with the analysis:
 
@@ -128,15 +124,16 @@ An initial review of our dataset identified a few key issues to be addressed bef
 * The inclusion of erroneous special characters that may be an artefact of text format conversion
 * The inclusion of leading and trailing white spaces.
 
-The below table shows the columns with missing values:
+The below table shows the number of missing values found in each column:
+
+*LF comment - can we make this smaller/into more rows so that it takes up less page space?*
 
 ```{r, echo = FALSE}
     ## function to calculate list of NAs within a column
 colNA <- function(dfCol){ sum(is.na(dfCol)) }
 ## To show table of sum of NAs by column
 na_values <- data.frame(colnames(movies), apply(movies, 2, colNA))
-na_values <- na_values[na_values$apply.movies..2..colNA.>0,]
-colnames(na_values) <- c("Variable Name", "Number of missing values")
+colnames(na_values) <- c("Variable Name", "Number of NA values")
 na_values <- na_values[order(na_values[, "Variable Name"]), ]
 kable(na_values, format = "markdown", align = "l", row.names = FALSE)
 ```
@@ -197,11 +194,8 @@ kable(t(movies[1:3, ]), format = "markdown", row.names = TRUE)
 
 10% of the cleansed dataset (`r nrow(test)`) is then set aside to be the "test" dataset, leaving the remaining 90%  of our dataset (`r nrow(movies)`) as the training dataset. The training dataset alone will be used for all descriptive, inferential and predictive analysis, including model building. The "test" dataset will be used at a later stage to check the accuracy of the predicted model.
 
-#Theory
 
-# Analysis
-
-##Descriptive Data Analysis
+# Descriptive Data Analysis
 
 An initial correlation plot of all numerical variables displays the relationships between the variables in the dataset:
 
@@ -335,36 +329,37 @@ ggplot(data = temp, aes(x = imdb_score, y = gross, colour = us_or_others)) +
 
 ### Country
 
-Descriptive analysis on the country
+In this section, we look at whether the country of origin has a huge influence on the number of movies and the revenue that a movie generates. Then, we check if there is any relationship between the gross revenue and IMDB score for countries with more than 10 movies.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
-# Sorting the movies by country and picking out the top 10
-counted <- count(movies, 'country')
+# Sorting the movies by country and picking out those with more than 10 movies
+counted <- count(movies, vars = "country")
 removednas <- counted[complete.cases(counted), ]
 sorted <- arrange(removednas, desc(freq))
-topcountries <- sorted[1:10, ]
+topcountries <- sorted[1:12, ]
 topcountries$country <- factor(topcountries$country, levels = topcountries$country[order(topcountries$freq)])
 
-# Taking the countries with more than 10 movies
-countries <- subset(movies, country %in% c("Australia", "Canada", "China", "France", "Germany", "India", "Japan", "Spain", "UK", "USA"))
+# Plot showing number of movies for the above countries
+ggplot(data = topcountries, aes(x = country, y = freq, fill = country)) + 
+    geom_bar(stat = "identity", colour = "black") +
+    labs(title = "Number of movies for countries with more than 10 movies", x = "", y = "") + 
+    geom_text(aes(label = freq), hjust = -0.2, vjust = 0.4) + 
+    coord_flip() +
+    theme_few() +
+    theme(legend.position = "None") +
+    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank(),
+          axis.title.x = element_blank(), axis.title.y = element_blank()) 
 
-score <- countries$imdb_score
-gross <- countries$gross
+# Subsetting the countries with 10 or more movies
+countries <- subset(movies, country %in% c("Australia", "Canada", "China", "France", "Germany", "Hong Kong", "India", "Italy", "Japan", "Spain", "UK", "USA"))
 
 # Plot of gross revenue for the above countries
+gross <- countries$gross
 ggplot(countries, aes(country, gross, fill = country)) + 
     geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(title = "Gross revenue of movies by country", x = "", y = "Gross revenue") + theme_bw() + theme(legend.position = "None") + theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank()) + scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) 
-    
-# Plot of imdb score for the above countries
-ggplot(countries, aes(country, score, fill = country)) + 
-    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(title = "IMDB Score of movies by country", x = "", y = "Gross revenue") + 
-    labs(title = "IMDB Score of movies by country", x = "", y = "IMDB Score") + 
-    theme_bw() +
-    theme(legend.position = "None") +
-    theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank()) +
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) 
 
-
+# Plot of gross revenue vs IMDB score for the above countries
+score <- countries$imdb_score
 ggplot(countries, aes(x = score, y = gross, colour = country)) + 
   geom_jitter() + scale_x_log10() + labs(title = "IMDB Score and Gross Revenue for different countries", x = "IMDB Score", y = "Gross Revenue") +
   facet_wrap(~ country) +
@@ -381,13 +376,15 @@ ggplot(countries, aes(x = score, y = gross, colour = country)) +
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
     scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
     annotation_logticks(sides = "lr", colour = "gray") 
+
+
 ```
 
-More than 50% of US, UK and Germany releases are generating high revenues of over 10 million. On the other hand, more than 25% of releases in China and Spain are generating revenues of lower than 1 million.
+In terms of frequency, we observe that the number of movies originated in USA is almost 10 times that of UK. Also, the top five countries with the most number of movies are in Europe. On the other end, Asian countries have no more than 20 movies in our dataset. 
 
-Looking at the IMDB scores, movies across all ten countries have a mean score between 6 and 7. In India & Japan, at least 40% of the movies scored more than 7, whereas movies in Australia and USA have almost equal numbers scoring between 6 and 7.
+Next, we will look at the gross revenues for the top 12 countries. More than 50% of US, UK and Germany releases are generating high revenues of over 10 million. On the other hand, more than 25% of releases in China and Spain are generating revenues of lower than 1 million.
 
-Therefore, it can be deduced that revenue and IMDB scores are clearly independent of each other. This can be seen in the scatterplots - UK & US movies seem to be symmetrically about 'y = x'; however, the other countries show no particular relationship between the two variables.
+Lastly, when we look at the scatterplots, we see that UK & US movies seem to be symmetrically about 'y = x' indicating a nearly positive correlation between IMDB score and gross revenue; however, the other countries show no particular relationship between the two variables.
 
 ### Budget
 
@@ -418,15 +415,6 @@ subsetcountry <- subsetcountry[order(subsetcountry[,2], decreasing = FALSE),]
 subsetcountry$country <- factor(subsetcountry$country, levels = subsetcountry$country)
 subsetcountry <- subsetcountry[subsetcountry[,2] >= 10,]
 
-ggplot(data = subsetcountry, aes(x = country, y = freq, fill = country)) + 
-    geom_bar(stat = "identity", colour = "black") +
-    coord_flip() +
-    labs(title = "Number of movies by country", x = "", y = "") + 
-    geom_text(aes(label = freq), hjust = -0.2, vjust = 0.4) + 
-    theme_few() +
-    theme(legend.position = "None") +
-    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank(),
-          axis.title.x = element_blank(), axis.title.y = element_blank()) 
 
 #Create dataframe with just Australia, Canada, China, France, Germany, Hong Kong, India, Italy, Japan, Mexico, Spain, UK, USA
 budgetcountry <- subset(movies, country %in% c("Australia", "Canada", "China", "France", "Germany", "Hong Kong", "India", "Italy", "Japan", "Mexico", "Spain", "UK", "USA"))
@@ -647,7 +635,199 @@ ggplot(movies_and_keywords, aes(x = score, y = gross, colour = keywords)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 ```
 
-### Gross revenue over time
+### Decades
+Boxplot gross against year, decade
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+
+# code to create continent column
+movies$continent <- countrycode(as.character(movies$country), "country.name", "continent")
+
+# divide "Americas" into "North Americas" and "South America"
+south_America = c("Brazil", "Argentina", "Chile", "Colombia", "Peru")
+
+for (i in 1:nrow(movies)) {
+  if (is.na(movies$continent[i])) {
+    next
+  } else if ((movies$continent[i] == "Americas") & (movies$country[i] %in% south_America)) {
+    movies$continent[i] <- "South America"
+  } else if ((movies$continent[i] == "Americas") & (!(movies$country[i] %in% south_America))) {
+    movies$continent[i] <- "North America"
+  } 
+}
+
+# for all countries and all years
+# remove NA from title_year column first 
+#### should you remove outliers from plot????
+temp <- movies[!is.na(movies$title_year),]
+ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
+  theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
+  labs(title = "IMDB scores against year", x = "", y = "IMDB Score") +
+  scale_y_continuous(limits = c(2.5, max(movies$imdb_score)))
+```
+
+
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+
+# function to plot multiple plots at in one grid (from r-cookbook)
+
+multiplot <- function(..., plotlist = NULL, file, cols = 1, layout = NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots / cols)),
+                     ncol = cols, nrow = ceiling(numPlots / cols))
+  }
+  
+  if (numPlots == 1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+# subset movies data frame to include all movies from 1980 onwards
+temp <- movies[movies$title_year >= 1980,]
+# plot the range of IMDB scores for all years
+p1 <- ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
+  theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
+  labs(title = "IMDB scores against year, for years with >= 10 entries", x = "", y = "IMDB Score") +
+    geom_boxplot(outlier.shape = NA) +
+    theme_bw() +
+    theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank(),
+          axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5),legend.position = "None") +
+    labs(title = "IMDB scores against year, for years with >= 10 entries", x = "", y = "IMDB Score") +
+    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10))
+
+lm_model <- lm(imdb_score ~ title_year, data = temp)
+# make a scatter plot that shows trend in IMDB scores
+p2 <- ggplot(temp, aes(x = title_year, y = imdb_score, colour = factor(title_year))) + 
+    geom_jitter(alpha = 0.4) +
+    geom_abline(intercept = lm_model$coefficients[1], slope = lm_model$coefficients[2], size = 1) +
+    theme_bw() +
+    labs(x = "", y = "IMDB Score") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5), legend.position = "None", axis.title.x = element_blank()) +
+    scale_x_continuous(breaks = seq(min(temp$title_year), max(temp$title_year), by = 1), 0.5) +
+    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) 
+
+multiplot(p1, p2)
+```
+
+
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+# create function that converts years into decades
+convert_decade <- function(year){
+  low <- year - year %% 10
+  high <- year - year %% 10 + 9
+  paste(as.character(low), as.character(high), sep = "-")
+}
+# apply previous function
+movies$decade <- sapply(movies$title_year, FUN = convert_decade)
+```
+
+```{r echo=FALSE}
+# For all countries by decade 
+# remove entries with NA-NA
+temp <- movies[!movies$decade == "NA-NA", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, all countries", x = "", y = "IMDB Score")
+
+# for Europe
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$continent == "Europe", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, Europe", x = "", y = "IMDB Score")
+
+# for North America
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$continent == "North America", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, North America", x = "", y = "IMDB Score")
+
+# for France
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "France", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5),legend.position = "None") +
+  labs(title = "IMDB scores against decade, France", x = "", y = "IMDB Score")
+
+# for Germany
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "Germany", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, Germany", x = "", y = "IMDB Score")
+
+# for USA
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "USA", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, USA", x = "", y = "IMDB Score")
+
+# for UK
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "UK", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, UK", x = "", y = "IMDB Score")
+
+# for India
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "India", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, India", x = "", y = "IMDB Score")
+
+# for China
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "China", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, China", x = "", y = "IMDB Score")
+
+# for Hong Kong
+temp <- movies[!movies$decade == "NA-NA", ]
+temp <- temp[temp$country == "Hong Kong", ]
+ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
+  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
+  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
+  labs(title = "IMDB scores against decade, Hong Kong", x = "", y = "IMDB Score")
+```
 
 This section will analyze the evolution of revenues over time.
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
@@ -665,14 +845,12 @@ ggplot(temp, aes(x = factor(title_year), y = gross, fill = factor(title_year))) 
 
 ```
 
-The above plot shows that there might be a slight upward trend in gross revenue over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of gross revenues over time the following two plots will only include years which have a minimum of ten entries.
+The above plot shows that there might be a slight upward trend in gross revenue over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of gross revenues over time the foloowing two plots will only include years which have a minimum of ten entries.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # plot all years that have at least ten movies
 # table(movies$title_year)  
 # shows that from 1980 onwards all the years have at least ten entries
-
-# function to plot multiple plots at in one grid (from r-cookbook)
 
 # subset movies data frame to include all movies from 1980 onwards
 temp <- movies[movies$title_year >= 1980, ]
@@ -687,7 +865,9 @@ p1 <- ggplot(temp, aes(x = factor(title_year), y = gross, fill = factor(title_ye
    annotation_logticks(sides = "lr", colour = "gray") 
 
 lm_model2 <- lm(log10(gross) ~ title_year, data = temp)
+
 # make a scatter plot that shows trend in IMDB scores
+
 p2 <- ggplot(temp, aes(x = title_year, y = gross, colour = factor(title_year))) + 
     geom_jitter(alpha = 0.4) +
     geom_abline(intercept = lm_model2$coefficients[1], slope = lm_model2$coefficients[2], size = 1) +
@@ -747,7 +927,6 @@ dirpercentage <- round(100 * length(sorteddirectorsummary$number_of_movies[sorte
                        / length(sorteddirectorsummary$number_of_movies), 2)
 ```
 
-\
 Before looking into the relationship with the key output variable, gross revenue, descriptive statistics of the director data are explored. There are `r nrow(sorteddirectorsummary)` distinct directors in the data sample, the density of movies per director is shown on the figure on the right.
 
 This is clearly positively skewed, with many directors having only 1 movie in the dataset, and only a few having significantly more. In fact, approximately  `r dirpercentage` of those directors have only 1 movie in the top 5000, leaving `r 100-dirpercentage` that have more than 1.
@@ -954,14 +1133,11 @@ ggplot(topratedmovies, aes(contentrating, contentgross, fill = contentrating)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 
 # Does the gross revenue vary with different ratings?
-RvsPG13 <- t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG-13"])
-pander(RvsPG13)
+t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG-13"])
 
-PG13vsPG <- t.test(movies$gross[movies$content_rating == "PG-13"], movies$gross[movies$content_rating == "PG"])
-pander(PG13vsPG)
+t.test(movies$gross[movies$content_rating == "PG-13"], movies$gross[movies$content_rating == "PG"])
 
-RvsPG <- t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG"])
-pander(RvsPG)
+t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG"])
 ```
 
 PG, PG-13 and R are the most common ratings observed in our datatset. Looking the boxplots, R movies tend to on average have higher IMDB scores and lower revenues than PG or PG-13 rated movies. 
@@ -1246,28 +1422,11 @@ When we actually make predictions based on a linear model for categorical data, 
 
 ### Steven
 
-This section tests whether North American movies have a higher mean IMDB score than European ones. Intuitively, one would assume that North American movies score higher than European ones. This intuition stems from the prevalence of North American movies in media and the proven positive effect of media on sales.
+This section tests whether North American movies have a higher mean IMDB score than European ones. Intuitively, one would assume that North American movies score higher than European ones. This intuition stems from the prevalence of North American movies in media. 
 
 H0 -> Europe and North America get equal scores
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
-
-# code to create continent column
-movies$continent <- countrycode(as.character(movies$country), "country.name", "continent")
-
-# divide "Americas" into "North Americas" and "South America"
-south_America = c("Brazil", "Argentina", "Chile", "Colombia", "Peru")
-
-for (i in 1:nrow(movies)) {
-  if (is.na(movies$continent[i])) {
-    next
-  } else if ((movies$continent[i] == "Americas") & (movies$country[i] %in% south_America)) {
-    movies$continent[i] <- "South America"
-  } else if ((movies$continent[i] == "Americas") & (!(movies$country[i] %in% south_America))) {
-    movies$continent[i] <- "North America"
-  } 
-}
-
 # make dataframes for North America and Europe
 North_America <- movies[movies$continent == "North America",]
 Europe <- movies[movies$continent == "Europe",]
@@ -1358,7 +1517,7 @@ Also, the opposite of the initial intuition appears to be the case for variance,
 Multiple models were created to predict gross revenue based on input parameters. Two "full" models were build using all data available, to determine which was the most effective when tested on the test set, and one "known" model was built based on variables that would normally be available *before* a movie is released.
 
 
-### Second full model
+### First full model
 
 ```{r echo=FALSE}
 ##Data Preparation for model building
@@ -1378,10 +1537,14 @@ trainwithdirectordata$PG_13 <- factor(trainwithdirectordata$PG_13, levels=c("Not
 ## column subset 3:26 is to remove duplicating the score and gross columns)
 trainwithdirectorandgenredata <- merge(movies_and_genres_wide[3:26], trainwithdirectordata, by="movie_title")
 ```
+
 _Model summary_
 ```{r echo=FALSE}
-fullmodel <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews,  data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >=2010,])
+fullmodel <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews,  data=trainwithdirectorandgenredata)
 summary(fullmodel)
+
+fullmodel2010 <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews,  data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >=2010,])
+summary(fullmodel2010)
 ```
 
 ####Justification
@@ -1414,13 +1577,15 @@ ggplot(movies, aes(x=color)) + geom_bar() + xlab("")
 * The number of users for review has been included as it is statistically significant and may be correlated due to the two possible mechanisms that reviews may encourage more people to watch the movie, or the more people that see the movie, the more reviews are left.
 * Director number of movies, although significant individually, when other variables are taken into account loses its statistical significance, so is omitted from the model.
 
-### First Full Model
+### Second Full Model
 
 ```{r linearmodel, echo=FALSE}
-
+##Data preparation
 trainwithdirectorandgenredata$us_or_others <- trainwithdirectorandgenredata$country
 trainwithdirectorandgenredata$us_or_others[trainwithdirectorandgenredata$country != "USA"] <- "Non-USA"
 trainwithdirectorandgenredata$english <- factor(trainwithdirectorandgenredata$language == "English", levels = c(TRUE, FALSE), labels = c("English", "Non-English"))
+
+##Linear model
 fbmodel <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes 
               + imdb_score + PG_13 + Action + Adventure + Fantasy + Family + Western + Drama + Crime 
               + Biography + Documentary + us_or_others + english, 
@@ -1439,8 +1604,11 @@ summary(fbmodel2010)
 ####Third Model, with only pre-known variables
 
 ```{r echo=FALSE}
-knownvariablesmodel <- lm(gross ~ budget + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + more_than_ten_movies, data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year>=2010,])
+knownvariablesmodel <- lm(gross ~ budget + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + more_than_ten_movies, data=trainwithdirectorandgenredata)
 summary(knownvariablesmodel)
+
+knownvariablesmodel2010 <- lm(gross ~ budget + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + more_than_ten_movies, data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year>=2010,])
+summary(knownvariablesmodel2010)
 ```
 
 To build a model to predict revenue of movies that have not yet been released, we include only variables that are known before the time of release. Our dataset provided us with number of facebook likes at a specific point in time, and to use this as part of our predictive model we would need to analyse number of facebook likes before the movie was released, however we will use what we currently have as a proxy to build the model. This model has lower predictive power (adjusted R squared of `r summary(knownvariablesmodel)$adj.r.squared`), but could be used in a more useful business context.
@@ -1465,7 +1633,6 @@ testwithdirectordata$PG_13 <- factor(testwithdirectordata$PG_13, levels=c("Not P
 ## merge with genre data based on movie_title
 ## column subset 3:26 is to remove duplicating the score and gross columns)
 test <- merge(movies_and_genres_wide[3:26], testwithdirectordata, by="movie_title")
-
 test$us_or_others <- test$country
 test$us_or_others[test$country != "USA"] <- "Non-USA"
 test$english <- factor(test$language == "English", levels = c(TRUE, FALSE), labels = c("English",
@@ -1473,101 +1640,122 @@ test$english <- factor(test$language == "English", levels = c(TRUE, FALSE), labe
 ```
 
 Model including all data:
-```{r echo=FALSE}
-pre2010model <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews + more_than_ten_movies, data=trainwithdirectorandgenredata)
-summary(pre2010model)
-```
-
 ```{r prediction, echo = FALSE, results = TRUE}
 
-predpre <- predict(pre2010model, test)
-rmsepre <- sqrt(mean((predpre - test$gross)^2))
-predFB <- predict(fbmodel, test)
-rmseFB <- sqrt(mean((predFB - test$gross)^2))
+##calculate the prediction and MSE for all 3 models using all data and data post 2010
+fullmodelpre <- predict(fullmodel, test)
+fullmodelmse <- sqrt(mean((fullmodelpre - test$gross)^2))
+fullmodel2010pre <- predict(fullmodel2010, test[test$title_year >= 2010, ])
+fullmodel2010mse <- sqrt(mean((fullmodel2010pre - test$gross[test$title_year >= 2010])^2))
+fbmodelpre <- predict(fbmodel, test)
+fbmodelmse <- sqrt(mean((fbmodelpre - test$gross)^2))
+fbmodel2010pre <- predict(fbmodel2010, test[test$title_year >= 2010, ])
+fbmodel2010mse <- sqrt(mean((fbmodel2010pre - test$gross[test$title_year >= 2010])^2))
+knownvariablesmodelpre <- predict(knownvariablesmodel, test)
+knownvariablesmodelmse <- sqrt(mean((knownvariablesmodelpre - test$gross)^2))
+knownvariablesmodel2010pre <- predict(knownvariablesmodel2010, test[test$title_year >= 2010, ])
+knownvariablesmodel2010mse <- sqrt(mean((knownvariablesmodel2010pre - test$gross[test$title_year >= 2010])^2))
 
-dfpre <- data.frame(y_actual = test$gross, y_predict = predpre)
-ggplot(data = dfpre, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
-    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
-    ylab("Actual Gross Revenue(US$)") + coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
-ggplot(data = dfpre, aes(x = y_predict, y = y_actual - y_predict)) + geom_point(colour = "red") +
-    geom_hline(yintercept = 0, colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
-    ylab("Residual(US$)") + coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
-
-dfFB <- data.frame(y_actual = test$gross, y_predict = predFB)
-ggplot(data = dfFB, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
-    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
-    ylab("Actual Gross Revenue(US$)") + coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
-ggplot(data = dfFB, aes(x = y_predict, y = y_actual - y_predict)) + geom_point(colour = "red") +
-    geom_hline(yintercept = 0, colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
-    ylab("Residual(US$)") + coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
-
-modelperf <- matrix(data = c(rmsepre, rmseFB), nrow = 2)
-rownames(modelperf) <- c("Pre Model", "FaceBook Model")
-colnames(modelperf) <- c("Root-Mean-Square Error (US$)")
-modelperf
-
-predFB2010 <- predict(fbmodel2010, test[test$title_year >= 2010, ])
-rmseFB2010 <- sqrt(mean((predFB2010 - test$gross[test$title_year >= 2010])^2))
-predFull2010 <- predict(fullmodel, test[test$title_year >= 2010, ])
-rmseFull2010 <- sqrt(mean((predFull2010 - test$gross[test$title_year >= 2010])^2))
-predKnown2010 <- predict(knownvariablesmodel, test[test$title_year >= 2010, ])
-rmseKnown2010 <- sqrt(mean((predKnown2010 - test$gross[test$title_year >= 2010])^2))
-
-dfFB2010 <- data.frame(y_actual = test$gross[test$title_year >= 2010], y_predict = predFB2010)
-plot1 <- ggplot(data = dfFB2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
-    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
-    ylab("Actual Gross Revenue(US$)") + 
-    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
-    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) 
-plot2 <-ggplot(data = dfFB2010, aes(x = y_predict, y = y_actual - y_predict)) + 
-    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
-    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
-    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
-    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) 
-
-dfFull2010 <- data.frame(y_actual = test$gross[test$title_year >= 2010], 
-                         y_predict = predFull2010)
-plot3 <- ggplot(data = dfFull2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
-    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
-    ylab("Actual Gross Revenue(US$)") + 
-    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
-    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) 
-plot4 <- ggplot(data = dfFull2010, aes(x = y_predict, y = y_actual - y_predict)) + 
-    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
-    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
-    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
-    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) 
-
-dfKnown2010 <- data.frame(y_actual = test$gross[test$title_year >= 2010], 
-                         y_predict = predKnown2010)
-plot5 <- ggplot(data = dfKnown2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
-    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
-    ylab("Actual Gross Revenue(US$)") + 
-    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
-    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) 
-plot6 <- ggplot(data = dfKnown2010, aes(x = y_predict, y = y_actual - y_predict)) + 
-    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
-    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
-    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
-    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) 
-
-grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6, ncol=2)
+##turn MSE data into a table for display with columns of "all data" and "post 2010", and rows of model type
+msetable <- data.frame(alldata=c(fullmodelmse, fbmodelmse, knownvariablesmodelmse), post2010 = c(fullmodel2010mse, fbmodel2010mse, knownvariablesmodel2010mse))
+rownames(msetable) <- c("Full Model", "Facebook Model", "Known Variables Model")
+colnames(msetable) <- c("Model using all data", "Model using post 2010 data")
+kable(msetable, format="markdown")
 ```
 
-```{r echo=FALSE}
-modelperf2010 <- matrix(data = c(rmseFB2010, rmseFull2010, rmseKnown2010), nrow = 3)
-rownames(modelperf2010) <- c("FaceBook (Post-2010) Model", "Full (Post-2010) Model", 
-                             "Known Variable (Post-2010) Model")
-colnames(modelperf2010) <- c("Root-Mean-Square Error (US$)")
-modelperf2010
 
+```{r echo=FALSE, fig.align="center"}
+
+##Plot the predictions and residuals for full model with all data
+dffullmodel <- data.frame(y_actual = test$gross, y_predict = fullmodelpre)
+plot1 <- ggplot(data = dffullmodel, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("Full Model All Data")
+plot2 <-ggplot(data = dffullmodel, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Full Model All Data")
+##Plot the predictions and residuals for full model post 2010
+dffullmodel2010 <- data.frame(y_actual = test$gross[test$title_year>=2010], y_predict = fullmodel2010pre)
+plot3 <- ggplot(data = dffullmodel2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "blue") + 
+    geom_abline(colour = "red") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("Full Model post 2010")
+plot4 <-ggplot(data = dffullmodel2010, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "blue") + geom_hline(yintercept = 0, colour = "red") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Full Model post 2010")
+grid.arrange(plot1,plot2,plot3,plot4, ncol=2)
 ```
 
-#Dicussion
+```{r echo=FALSE, fig.align="center"}
 
-##Conclusion
+##Plot the predictions and residuals for facebook model with all data
+dffbmodel <- data.frame(y_actual = test$gross, y_predict = fbmodelpre)
+fbmodelplot1 <- ggplot(data = dffbmodel, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("Facebook Model All Data")
+fbmodelplot2 <-ggplot(data = dffbmodel, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Facebook Model All Data")
+##Plot the predictions and residuals for facebook model post 2010
+dffbmodel2010 <- data.frame(y_actual = test$gross[test$title_year>=2010], y_predict = fbmodel2010pre)
+fbmodelplot3 <- ggplot(data = dffbmodel2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "blue") + 
+    geom_abline(colour = "red") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("Facebook Model post 2010")
+fbmodelplot4 <-ggplot(data = dffbmodel2010, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "blue") + geom_hline(yintercept = 0, colour = "red") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Facebook Model post 2010")
+grid.arrange(fbmodelplot1,fbmodelplot2,fbmodelplot3,fbmodelplot4, ncol=2)
+```
 
-##Next Steps
+
+```{r echo=FALSE, fig.align="center"}
+
+##Plot the predictions and residuals for known variables model with all data
+dfknownvariablesmodel <- data.frame(y_actual = test$gross, y_predict = knownvariablesmodelpre)
+knownvariablesmodelplot1 <- ggplot(data = dfknownvariablesmodel, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("Known Variables Model All Data")
+knownvariablesmodelplot2 <-ggplot(data = dfknownvariablesmodel, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Known Variables Model All Data")
+
+##Plot the predictions and residuals for known variables model post 2010
+dfknownvariablesmodel2010 <- data.frame(y_actual = test$gross[test$title_year>=2010], y_predict = knownvariablesmodel2010pre)
+knownvariablesmodelplot3 <- ggplot(data = dfknownvariablesmodel2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "blue") + 
+    geom_abline(colour = "red") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("Facebook Model post 2010")
+knownvariablesmodelplot4 <-ggplot(data = dfknownvariablesmodel2010, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "blue") + geom_hline(yintercept = 0, colour = "red") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Facebook Model post 2010")
+grid.arrange(knownvariablesmodelplot1,knownvariablesmodelplot2,knownvariablesmodelplot3,knownvariablesmodelplot4, ncol=2)
+```
+
+
+
+#Conclusion & Next Steps
 *to be completed after our analysis*
 *need to write something interesting about our data*
 
@@ -1576,6 +1764,27 @@ modelperf2010
 ##Nikhita
 
 ```{r echo=FALSE}
+ggplot(data = counted, aes(x = country, y = freq, fill = country)) + 
+    geom_bar(stat = "identity", colour = "black") +
+    labs(title = "Number of movies by country", x = "", y = "") + 
+    geom_text(aes(label = freq), hjust = -0.2, vjust = 0.4) + 
+    coord_flip() +
+    theme_few() +
+    theme(legend.position = "None") +
+    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank(),
+          axis.title.x = element_blank(), axis.title.y = element_blank()) 
+
+# Plot of imdb score for the top 12 countries
+ggplot(countries, aes(country, score, fill = country)) + 
+    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(title = "IMDB Score of movies by country", x = "", y = "Gross revenue") + 
+    labs(title = "IMDB Score of movies by country", x = "", y = "IMDB Score") + 
+    theme_bw() +
+    theme(legend.position = "None") +
+    theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank()) +
+    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10))
+
+# Looking at the IMDB scores, movies across all ten countries have a mean score between 6 and 7. In India & Japan, at least 40% of the movies scored more than 7, whereas movies in Australia and USA have almost equal numbers scoring between 6 and 7.
+
 ## IMDB Score analysis for top three ratings
 # Boxplot illustration
 ggplot(topratedmovies, aes(contentrating, contentscore, fill = contentrating)) + 
@@ -1586,21 +1795,24 @@ ggplot(topratedmovies, aes(contentrating, contentscore, fill = contentrating)) +
     theme(legend.position = "none", axis.ticks.x = element_blank(), panel.grid.major.x = element_blank())
 
 # Does the mean IMDB Score vary with different ratings?
-t.test(movies$imdb_score[movies$content_rating == "R"], movies$imdb_score[movies$content_rating == "PG-13"])
+imdbscore <- movies$imdb_score
+contentrating <- movies$content_rating
 
-t.test(movies$imdb_score[movies$content_rating == "PG-13"], movies$imdb_score[movies$content_rating == "PG"])
+scoret1 <- t.test(imdbscore[contentrating == "R"], imdbscore[contentrating == "PG-13"])
+pander(scoret1)
 
-t.test(movies$imdb_score[movies$content_rating == "R"], movies$imdb_score[movies$content_rating == "PG"])
+scoret2 <- t.test(imdbscore[contentrating == "PG-13"], imdbscore[contentrating == "PG"])
+pander(scoret2)
+
+scoret3 <- t.test(imdbscore[contentrating == "R"], imdbscore[contentrating == "PG"])
+pander(scoret3)
 ```
 
 ##Steven
 
-Appendix
-```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+```{r, echo = FALSE}
 
-# for all countries and all years
-# remove NA from title_year column first 
-#### should you remove outliers from plot????
+# imdb score vs year
 temp <- movies[!is.na(movies$title_year),]
 ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
   geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
@@ -1609,60 +1821,44 @@ ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_yea
   scale_y_continuous(limits = c(2.5, max(movies$imdb_score)))
 ```
 
+The plot above shows that there might be a downward trend in IMDB scores over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of IMDB scores only years with ten or more entries will be plotted below.
 
-```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
-
-
+```{r, echo = FALSE}
 # subset movies data frame to include all movies from 1980 onwards
 temp <- movies[movies$title_year >= 1980,]
 # plot the range of IMDB scores for all years
 p1 <- ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
   geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
-  labs(title = "IMDB scores against year, for years with >= 10 entries", x = "", y = "IMDB Score") +
-    geom_boxplot(outlier.shape = NA) +
-    theme_bw() +
-    theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5),legend.position = "None") +
-    labs(title = "IMDB scores against year, for years with >= 10 entries", x = "", y = "IMDB Score") +
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10))
+  theme(axis.text.x=element_text(angle = 45, hjust = 0.5, vjust = 0.5),legend.position = "None") +
+  labs(title = "IMDB scores against year, for years with >= 10 entries", x = "", y = "IMDB Score")
 
-lm_model <- lm(imdb_score ~ title_year, data = temp)
 # make a scatter plot that shows trend in IMDB scores
-p2 <- ggplot(temp, aes(x = title_year, y = imdb_score, colour = factor(title_year))) + 
-    geom_jitter(alpha = 0.4) +
-    geom_abline(intercept = lm_model$coefficients[1], slope = lm_model$coefficients[2], size = 1) +
-    theme_bw() +
-    labs(x = "", y = "IMDB Score") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5), legend.position = "None", axis.title.x = element_blank()) +
-    scale_x_continuous(breaks = seq(min(temp$title_year), max(temp$title_year), by = 1), 0.5) +
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) 
+p2 <- ggplot(temp, aes(x = title_year, y = imdb_score)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(x = "", y = "IMDB Score") +
+  theme(axis.text.x=element_text(angle = 45, hjust = 0.5, vjust = 0.5),legend.position = "None") +
+  scale_x_continuous(breaks = seq(min(temp$title_year), max(temp$title_year), by = 1), 0.5)
 
-grid.arrange(p1, p2, ncol=1)
+grid.arrange(p1, p2,ncol=1)
+
 ```
 
+The plots above give a less biased represenation of the development of IMDB scores. The scores now appear more constant over the years. Although minimal, the scatter plot reveals that there is still a slight downward trend in scores.
 
-```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
-# create function that converts years into decades
-convert_decade <- function(year){
-  low <- year - year %% 10
-  high <- year - year %% 10 + 9
-  paste(as.character(low), as.character(high), sep = "-")
-}
-# apply previous function
-movies$decade <- sapply(movies$title_year, FUN = convert_decade)
-```
+```{r, echo=FALSE, fig.width = 10, fig.align = "center", message = FALSE}
+# for all countries by decade
 
-```{r, echo=FALSE, fig.width = 10, fig.align = "center"}
-# For all countries by decade 
 # remove entries with NA-NA
 temp <- movies[!movies$decade == "NA-NA", ]
 ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
   geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
   labs(title = "IMDB scores against decade, all countries", x = "", y = "IMDB Score")
+```
 
 
+```{r, echo=FALSE, fig.width = 10, fig.align = "center", message = FALSE}
 # facetgrid of imdb scores over decade for continents
 temp <- movies[!is.na(movies$continent), ]
 ggplot(temp, aes(y = imdb_score, x = factor(decade), fill = decade)) + 
@@ -1672,83 +1868,51 @@ ggplot(temp, aes(y = imdb_score, x = factor(decade), fill = decade)) +
     theme_bw() + 
     theme(legend.position = "None",axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5)) +
     annotation_logticks(sides = "lr", colour = "gray")
-
-# for Europe
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$continent == "Europe", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, Europe", x = "", y = "IMDB Score")
-
-# for North America
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$continent == "North America", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, North America", x = "", y = "IMDB Score")
-
-# for France
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "France", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5),legend.position = "None") +
-  labs(title = "IMDB scores against decade, France", x = "", y = "IMDB Score")
-
-# for Germany
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "Germany", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, Germany", x = "", y = "IMDB Score")
-
-# for USA
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "USA", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, USA", x = "", y = "IMDB Score")
-
-# for UK
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "UK", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, UK", x = "", y = "IMDB Score")
-
-# for India
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "India", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, India", x = "", y = "IMDB Score")
-
-# for China
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "China", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, China", x = "", y = "IMDB Score")
-
-# for Hong Kong
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "Hong Kong", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, Hong Kong", x = "", y = "IMDB Score")
 ```
 
-The plot above show that there might be a downward trend in IMDB scores over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of IMDB scores only years with ten or more entries will be plotted below.
+```{r, echo=FALSE, fig.width = 10, fig.align = "center", message = FALSE}
+# facetgrid of imdb scores over decade for Europe
+temp <- movies[movies$continent == "Europe", ]
+temp <- temp[!is.na(temp$country), ]
+ggplot(temp, aes(y = imdb_score, x = factor(decade), fill = decade)) + 
+    geom_boxplot() + 
+    labs(title = "IMDB and decades for European Countries", y = "IMDB score", x = "Decade") + 
+    facet_wrap(~ country) +
+    theme_bw() + 
+    theme(legend.position = "None",axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5)) +
+    annotation_logticks(sides = "lr", colour = "gray")
 
-The plots above give a less biased represenation of the development of IMDB scores. The scores now appear more constant over the years. Although minimal, the scatter plot reveals that there is still a slight downward trend in scores.
+```
+
+```{r, echo=FALSE, fig.width = 10, fig.align = "center", message = FALSE}
+# facetgrid of imdb scores over decade for North America
+temp <- movies[movies$continent == "North America", ]
+temp <- temp[!is.na(temp$country), ]
+ggplot(temp, aes(y = imdb_score, x = factor(decade), fill = decade)) + 
+    geom_boxplot() + 
+    labs(title = "IMDB and Decades for North American Countries", y = "IMDB Score", x = "Decade") + 
+    facet_wrap(~ country) +
+    theme_bw() + 
+    theme(legend.position = "None",axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5)) +
+    annotation_logticks(sides = "lr", colour = "gray")
+
+```
+
+
+```{r, echo=FALSE, fig.width = 10, fig.align = "center", message = FALSE}
+# facetgrid of imdb scores over decade for Asia
+temp <- movies[movies$continent == "Asia", ]
+temp <- temp[!is.na(temp$country), ]
+ggplot(temp, aes(y = imdb_score, x = factor(decade), fill = decade)) + 
+    geom_boxplot() + 
+    labs(title = "IMDB and Decades for Asian Countries", y = "IMDB Score", x = "Decade") + 
+    facet_wrap(~ country) +
+    theme_bw() + 
+    theme(legend.position = "None",axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5)) +
+    annotation_logticks(sides = "lr", colour = "gray")
+
+```
+
 
 
 ##Cecilia
