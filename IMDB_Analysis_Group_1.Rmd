@@ -18,6 +18,7 @@ library(countrycode)
 library(GGally)
 library(knitr)
 library(scales)
+library(gridExtra)
 ```
 
 #Executive Summary
@@ -25,10 +26,7 @@ library(scales)
 
 #Introduction
 
-*Introduction to go here (person to fill out TBD)*
-*key purpose/concepts that we are trying to explore are what makes a movie popular (based on the gross revenue), and what makes a movie highly rated by the public (based on the imdb score)*
-
-With the advent of big data and advanced predictive analytics capabilities, very often, producers are trying to determine beforehand what will make a movie successful or fail. Rather than relying on intuition and guesswork, producers such as Netflix are trying figure out what will make a movie a successful one by analysing historical data available in the movie industry and increase their success rates through the use of data analytics. For Netflix, the recent award-winning drama 'House of Cards' was a success story of theirs - descriptive, prescriptive and predictive analytics were crucial in the process of developing the drama, to gauge what content viewers were interested in.
+With the advent of big data and advanced predictive analytics capabilities, very often, producers are trying to determine beforehand what will make a movie successful or fail. Rather than relying on intuition and guesswork, producers such as Netflix are trying to figure out what will make a movie a successful one by analysing historical data available in the movie industry and increase their success rates through the use of data analytics. For Netflix, the recent award-winning drama 'House of Cards' was a success story of theirs - descriptive, prescriptive and predictive analytics were crucial in the process of developing the drama, to gauge what content viewers were interested in.
 
 Similarly, a question which can be posed - whether one can predict the successfulness of a movie before it is released on cinema. To address this question, we have obtained a dataset from Kaggle scraped from the *imdb.com* containing 28 different variables for our analysis. Our key objectives for this report is to determine what makes a movie popular (based on gross revenue), and what makes a movie highly rated by the public (based on IMDB score). Descriptive analyses and influential analyses to look at which of the variables available in the dataset affect user ratings and gross revenue, will be followed by an attempt to develop a predictive model. This predictive model will try to determine which movies will be successful based on the relevant variable identified. 10% of the original data has been set aside to act as the test dataset and the model will be evaluated on its accuracy to predict gross revenue using Mean Squared Error and other success statistics.
 
@@ -39,9 +37,8 @@ Similarly, a question which can be posed - whether one can predict the successfu
 movies <- read.csv(file = "movie_metadata.csv", header = TRUE, stringsAsFactors = FALSE, strip.white = TRUE)
 ```
 
-*Explanation of the data and how it was extracted from IMDB to go here - Steven L*
-
 The dataset used in this report was downloaded from *kaggle.com*, a website for data analysis competitions. The data was scraped from three websites using *Scrapy*, a Python library. The first website, *the-numbers.com*, is a website providing movie industry data. This website was used to scrape 5000 movie names along relevant data such as budget and gross domestic revenue. No pattern could be identified as to how the movie names were chosen. It was therefore assumed that the data represents a random sample. The scraped movie names were then matched with *imdb.com*, a popular resource for movie and TV-show ratings, and celebrity content, in order to get movie scores, direct links to movie pages, and other relevant features. All the movie and actor names were later aggregated and used to extract the number of Facebook likes on their respective official Facebook page. Finally, a face detection algorithm was applied to all movie posters to extract the number of faces in each poster. The dataset contains `r dim(movies)[1]` movies with `r dim(movies)[2]` variables spanning 100 years and 66 countries of origin.    
+
 Although *imdb.com* covers movies from various different countries, the website is only offered in English, which implies certain limitations. The movies included in the dataset are skewed towards an English-speaking audience. This means that movies from North America, the UK, and other English speaking countries are overrepresented. In addition, the dataset includes more movies with release dates after 1980. In fact, multiple release years prior to 1980 include as little as one movie.
    
 Despite these limitations the dataset offers extensive information on movies as well as a large enough number of observations. This will allow the analysis to  reveal interesting insights and answer the report's leading question. The dataset can be retrieved [here](https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset).
@@ -119,16 +116,17 @@ movie_variables$Explanation <- c(actor_1_facebook_likes,
 kable(movie_variables, format = "markdown")
 ```
 
-*also to potentially include as discussed: explanation of each of the columns and what they mean (box office gross or total gross including dvd sales etc.? and budget as final budget or expected budget?*
-
 # Data Cleansing
 
-*As we agreed in the discussion - feel free to let me know if I made any mistakes - Louise to take the code from George/Stephen and add in the steps agreed below*
+An initial review of our dataset identified a few key issues to be addressed before progressing with the analysis:
 
-First we look into the amount of NA variables found in each column our data:
+* The existence of missing values in key variables
+* The inclusion of columns unnecessary to our analysis
+* The inclusion of erroneous special characters that may be an artefact of text format conversion
+* The inclusion of leading and trailing white spaces.
 
 ```{r, echo = FALSE}
-## function to calculate list of NAs within a column
+    ## function to calculate list of NAs within a column
 colNA <- function(dfCol){ sum(is.na(dfCol)) }
 ## To show table of sum of NAs by column
 na_values <- data.frame(colnames(movies), apply(movies, 2, colNA))
@@ -137,31 +135,21 @@ na_values <- na_values[order(na_values[, "Variable Name"]), ]
 kable(na_values, format = "markdown", align = "l", row.names = FALSE)
 ```
 
-The following cleansing process is then applied:
+To resolve these issues, the following cleansing process is applied:
 
-* All rows where the title year is NA are removed - as there are a high number, and this variable is not expected to be key to the analysis.
-* All rows where gross is NA are removed - as there are a high number, and this variable is expected to be one of the output variables
-* All rows where the budget is NA are removed - as there are a high number, and this variable is expected to be key to the analysis.
-* The aspect ratio column is removed - as there are a high number of NAs, and this variable is not expected to be key to the analysis. 
+* All rows where the title year has a missing value are removed - as there are a high number, and this variable is not expected to be key to the analysis.
+* All rows where gross has a missing value are removed - as there are a high number, and this variable is expected to be one of the output variables
+* All rows where the budget has a missing value are removed - as there are a high number, and this variable is expected to be key to the analysis.
+* The aspect ratio column has a missing value removed - as there are a high number of NAs, and this variable is not expected to be key to the analysis. 
 * The IMDB link column is removed - as this variable is not expected to be key to the analysis
-
-After this point there are only a few NAs remaining.
-
 ```{r, echo = FALSE}
 ## To remove rows where NAs are present for any of the applicable columns
 movies <- movies[complete.cases(movies[c("title_year","budget","gross")]),]
 ## To remove aspect ratio and imdb link columns
 movies$aspect_ratio<- NULL
 movies$movie_imdb_link<- NULL
-## To show table of sum of NAs by column
-na_values_2 <- data.frame(colnames(movies), apply(movies, 2, colNA))
-colnames(na_values_2) <- c("Variable Name", "Number of NA values")
-na_values_2 <- na_values_2[order(na_values_2[, "Variable Name"]), ]
-kable(na_values_2, format = "markdown", align = "l", row.names = FALSE)
 ```
-
-* For all other columns where there are NAs, the mean value will be used to replace all NAs within that column. Although this has some drawbacks in terms of accuracy, it allows us to maintain rows of data with other valid information, and is an unbiased approach to handling NAs.
-*Louise comment - I will find some literature on this and explain it better*
+* After this step there are only `r sum(is.na(movies))` remaining missing values within the dataframe. For these missing values, the mean value for that column will be used to replace all misisng values within that column. Although this has some drawbacks in terms of accuracy, it allows us to maintain rows of data with other valid information, and is an unbiased approach.
 ```{r, echo = FALSE}
 ## for loop to replace NAs with means for particular columns
 for (i in c("actor_1_facebook_likes" , "actor_2_facebook_likes" , "actor_3_facebook_likes" , "num_critic_for_reviews" , "duration" , "facenumber_in_poster")){
@@ -185,20 +173,13 @@ movies$movie_title <- sapply(movies$movie_title, FUN = movie_title_processing)
 
 Although some of these steps reduce the sample size for analysis, the rows removed would either cause later analysis to fail, cause the dataset to be inconsistent across various pieces of analysis, or produce misleading results.
 
-This cleansed dataset (of `r nrow(movies)` rows) contains no NA values and is used for the remainder of the analysis.
+This cleansed dataset (of `r nrow(movies)` rows) contains no NA values and is used for the remainder of the analysis. The head of the data frame is printed here:
 
-*Do we need to present this table with no NA values? Maybe we could print the head of our dataframe. --George*
-
-```{r, echo = FALSE}
-na_values_3 <- data.frame(colnames(movies), apply(movies, 2, colNA))
-colnames(na_values_3) <- c("Variable Name", "Number of NA values")
-na_values_3 <- na_values_3[order(na_values_3[, "Variable Name"]), ]
-kable(na_values_3, format = "markdown", align = "l", row.names = FALSE)
-```
-*General note: I plan to tidy up the writing here later but just wanted to get down our discussion :)*
+*\@George, I agree with your comment to include the head, I have also included the scipen option below so that the budget does not show in scientific notation, but please let me know if you think this makes it look messier*
 
 ```{r, echo = FALSE, message = FALSE}
 set.seed(1)
+options(scipen=10000000)
 intrain <- createDataPartition(y = movies[[1]], p = 0.9, list = FALSE)
 train <- movies[intrain, ]
 test <- movies[-intrain, ]
@@ -210,20 +191,69 @@ kable(t(movies[1:3, ]), format = "markdown", row.names = TRUE)
 
 # Descriptive Data Analysis
 
-*For now, each have a section with one (or more) descriptive plot, later we can discuss how this flows into a narrative - we should let everyone in the slack group know what we're doing so that we don't overlap unecessarily**
+An initial correlation plot of all numerical variables displays the relationships between the variables in the dataset:
 
-*different options we discussed are:*
+```{r, echo = FALSE, fig.width = 6, fig.align = "center"}
+##extract only the numerical variables
+moviesnumeric<- movies[c("duration", "title_year", "budget", "imdb_score", "movie_facebook_likes", "actor_1_facebook_likes", "actor_2_facebook_likes", "actor_3_facebook_likes", "cast_total_facebook_likes", "director_facebook_likes", "num_user_for_reviews", "num_critic_for_reviews", "facenumber_in_poster", "gross")]
+## provide meaningful names to variables
+labels_values <- rev(c("Gross", "# of faces in poster", "# of critics for reviews", "# of users for reviews", "Director FB likes",
+                   "Total cast FB likes", "Actor 3 FB likes", "Actor 2 FB likes", "Actor 1 FB likes", "Movie FB likes",
+                   "IMDB Score", "Budget", "Year of title", "Duration"))
+##create correlation matrix
+corrmatrix <- round(cor(moviesnumeric), 2)
+meltedmovies<- melt(corrmatrix)
 
-* *Map diagram with bubbles showing movies by country*
-* *Time analysis - multiple boxplots for each decade (LF note: could also be under inference - if you then want to discuss whether decade is a good predictor of revenue - might get different results if you take decade as a number or a factor)*
-* *imdb score against gross coloured by: actor/director/country*
-* *frequency of movies with different genres/keywords - (George has already done this)*
-* *Ratings broken down by genre (boxplot)*
-* *Top actors in terms of facebook likes*
-* *Analysis of top movies (by score and gross)*
-* *Total number of facebook likes - histogram*
+ggplot(data = meltedmovies, aes(x = Var1, y = Var2, fill = value)) + 
+    geom_tile() + 
+    labs(x = "", y = "", title = "Correlation Matrix") +
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    scale_x_discrete(labels = labels_values) + 
+    scale_y_discrete(labels = labels_values) + 
+    theme(axis.ticks.x = element_blank(), axis.ticks.y = element_blank(), panel.border = element_blank(),
+          axis.title.x = element_blank(), axis.title.y = element_blank())  +
+    scale_fill_gradient2(low = "#ce1254", mid="#1C3A54", high = "#5BB2F5", midpoint = 0, limit = c(-1,1), space = "Lab", name="Pearson\nCorrelation")
+```
 
-### Siow Meng
+A large proportion of the numerical varibles available are relating to the facebook likes of various entities. In theory, these variables are likely to be most relevant to the performance of movies only after the usage of Facebook was widespread for marketing and celebrities. The below correlation matrices show the different interelationship of variables following the facebook area (post 2005), and following the era where facebook was widely used for marketing and celebrities (post 2010):
+
+```{r echo=FALSE, fig.width = 10, fig.align = "center"}
+# Correlation plot for movies after 2005
+corrmatrix2005 <- round(cor(moviesnumeric[moviesnumeric$title_year >= 2005, ], use="pairwise.complete.obs"), 2)
+meltedmovies2005 <- melt(corrmatrix2005)
+
+post2005plot <- ggplot(data = meltedmovies2005, aes(x = Var1, y = Var2, fill = value)) + 
+    geom_tile() + 
+    labs(x = "", y = "", title = "Correlation Matrix\n(Movies after 2005)") +
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+    scale_x_discrete(labels = labels_values) + scale_y_discrete(labels = labels_values) +
+    theme(axis.ticks.x = element_blank(), axis.ticks.y = element_blank(), panel.border = element_blank(),
+          axis.title.x = element_blank(), axis.title.y = element_blank(), legend.position="none") +
+    scale_fill_gradient2(low = "#ce1254", mid="#1C3A54", high = "#5BB2F5", midpoint = 0, limit = c(-1,1), space = "Lab", name="")  
+    
+# Correlation plot for movies after 2010
+corrmatrix2010 <- round(cor(moviesnumeric[moviesnumeric$title_year >= 2010, ], use="pairwise.complete.obs"), 2)
+meltedmovies2010 <- melt(corrmatrix2010)
+
+post2010plot <- ggplot(data = meltedmovies2010, aes(x=Var1, y=Var2, fill=value)) +
+    geom_tile() + 
+    labs(x = "", y = "", title = "Correlation Matrix\n(Movies after 2010)") +
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    scale_x_discrete(labels = labels_values) + scale_y_discrete(labels = labels_values) +
+    theme(axis.ticks.x = element_blank(), axis.ticks.y = element_blank(), panel.border = element_blank(),
+          axis.title.x = element_blank(), axis.title.y = element_blank()) +
+    scale_fill_gradient2(low = "#ce1254", mid="#1C3A54", high = "#5BB2F5", midpoint = 0, limit = c(-1,1), space = "Lab", name="")
+
+##joint plot
+grid.arrange(post2005plot, post2010plot, widths=c(2,2.4), ncol=2)
+```
+
+The descriptive analysis below focuses on individual variables and relationships in turn, drawing both from the above correlations, and from relationships between numerican and non-numerical variables.
+
+### Country and Language 
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 revYear <- ddply(movies, ~ title_year, summarise, meanRev = mean(gross, na.rm = TRUE))
@@ -256,59 +286,6 @@ ggplot(data = revLanguage[revLanguage$language != "English", ], aes(x = title_ye
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10),
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
     annotation_logticks(sides = "lr", colour = "gray") 
-```
-
-```{r, echo = FALSE, fig.width = 6, fig.align = "center"}
-# Correlation plot from Louise
-
-moviesnumeric<- movies[c("duration", "title_year", "budget", "imdb_score", "movie_facebook_likes", "actor_1_facebook_likes", "actor_2_facebook_likes", "actor_3_facebook_likes", "cast_total_facebook_likes", "director_facebook_likes", "num_user_for_reviews", "num_critic_for_reviews", "facenumber_in_poster", "gross")]
-
-
-labels_values <- rev(c("Gross", "# of faces in poster", "# of critics for reviews", "# of users for reviews", "Director FB likes",
-                   "Total cast FB likes", "Actor 3 FB likes", "Actor 2 FB likes", "Actor 1 FB likes", "Movie FB likes",
-                   "IMDB Score", "Budget", "Year of title", "Duration"))
-
-##used pairwise complete obs to handle NAs for fields with a high number of nas
-corrmatrix <- round(cor(moviesnumeric, use="pairwise.complete.obs"), 2)
-meltedmovies<- melt(corrmatrix)
-
-ggplot(data = meltedmovies, aes(x = Var1, y = Var2, fill = value)) + 
-    geom_tile() + 
-    labs(x = "", y = "", title = "Correlation Matrix") +
-    theme_bw() + 
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
-    scale_fill_continuous(guide = guide_legend(title = NULL)) +
-    scale_x_discrete(labels = labels_values) + scale_y_discrete(labels = labels_values) +
-    theme(axis.ticks.x = element_blank(), axis.ticks.y = element_blank(), panel.border = element_blank(),
-          axis.title.x = element_blank(), axis.title.y = element_blank())  
-    
-# Added correlation plot for movies after 2005
-corrmatrix2005 <- round(cor(moviesnumeric[moviesnumeric$title_year >= 2005, ], use="pairwise.complete.obs"), 2)
-meltedmovies2005 <- melt(corrmatrix2005)
-
-ggplot(data = meltedmovies2005, aes(x = Var1, y = Var2, fill = value)) + 
-    geom_tile() + 
-    labs(x = "", y = "", title = "Correlation Matrix (Movies after 2005)") +
-    theme_bw() + 
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
-    scale_fill_continuous(guide = guide_legend(title = NULL)) +
-    scale_x_discrete(labels = labels_values) + scale_y_discrete(labels = labels_values) +
-    theme(axis.ticks.x = element_blank(), axis.ticks.y = element_blank(), panel.border = element_blank(),
-          axis.title.x = element_blank(), axis.title.y = element_blank())  
-    
-# Added correlation plot for movies after 2010
-corrmatrix2010 <- round(cor(moviesnumeric[moviesnumeric$title_year >= 2010, ], use="pairwise.complete.obs"), 2)
-meltedmovies2010 <- melt(corrmatrix2010)
-
-ggplot(data = meltedmovies2010, aes(x=Var1, y=Var2, fill=value)) +
-    geom_tile() + 
-    labs(x = "", y = "", title = "Correlation Matrix (Movies after 2010)") +
-    theme_bw() + 
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
-    scale_fill_continuous(guide = guide_legend(title = NULL)) +
-    scale_x_discrete(labels = labels_values) + scale_y_discrete(labels = labels_values) +
-    theme(axis.ticks.x = element_blank(), axis.ticks.y = element_blank(), panel.border = element_blank(),
-          axis.title.x = element_blank(), axis.title.y = element_blank())  
 ```
 
 *Shall we keep only the one with the logarithmic scale? --George*
@@ -364,12 +341,11 @@ gross <- countries$gross
 
 # Plot of gross revenue for the above countries
 ggplot(countries, aes(country, gross, fill = country)) + 
-    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + coord_flip() + labs(title = "Gross revenue of movies by country", x = "", y = "Gross revenue") + theme_bw() + theme(legend.position = "None") + theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank()) + scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) 
+    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(title = "Gross revenue of movies by country", x = "", y = "Gross revenue") + theme_bw() + theme(legend.position = "None") + theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank()) + scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) 
     
-# Plot of imdb score for the above movies
+# Plot of imdb score for the above countries
 ggplot(countries, aes(country, score, fill = country)) + 
     geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(title = "IMDB Score of movies by country", x = "", y = "Gross revenue") + 
-    coord_flip() +
     labs(title = "IMDB Score of movies by country", x = "", y = "IMDB Score") + 
     theme_bw() +
     theme(legend.position = "None") +
@@ -395,9 +371,9 @@ ggplot(countries, aes(x = score, y = gross, colour = country)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 ```
 
-More than 50% of US, UK and Germany releases are generating high revenues of over 10 million. On the other hand, more than 25% of releases in India, Japan and China respectively are generating revenues of lower than 1 million.
+More than 50% of US, UK and Germany releases are generating high revenues of over 10 million. On the other hand, more than 25% of releases in China and Spain are generating revenues of lower than 1 million.
 
-Looking at the IMDB scores, movies across all ten countries are getting IMDB scores above 6. In Indian & Japan, at least 40% of the movies got more than 7, whereas movies in Australia and USA have almost equal numbers scoring between 6 and 7.
+Looking at the IMDB scores, movies across all ten countries have a mean score between 6 and 7. In India & Japan, at least 40% of the movies scored more than 7, whereas movies in Australia and USA have almost equal numbers scoring between 6 and 7.
 
 Therefore, it can be deduced that revenue and IMDB scores are clearly independent of each other. This can be seen in the scatterplots - UK & US movies seem to be symmetrically about 'y = x'; however, the other countries show no particular relationship between the two variables.
 
@@ -1048,7 +1024,7 @@ Only approximately `r morethantendirpercentage`% directors have more than ten mo
 
 ### Siow Meng
 
-```{r echo = FALSE, fig.width = 10, fig.align = "center"}
+```{r echo = FALSE, results = TRUE, fig.width = 10, fig.align = "center"}
 # boxplot of English & Non-English movies
 temp <- movies
 
@@ -1073,9 +1049,40 @@ var.test(movies$gross[movies$language == "English"], movies$gross[movies$languag
 
 From the above box-and-whisker plots, we can observe a great difference between the revenues achieved by English and non-English movies. More than 75% of the non-English movies achieved gross revenue of US$10 million or lower. In contrast, more than half of the English movies have more than US$25 million revenues.
 
-In addition, the gross revenues of English movies vary greatly (compared to non-English movies).
+In addition, the gross revenues of English movies vary greatly (compared to non-English movies). The t-test and variance-test confirms these findings.
 
 We are confident to say that the English movies in this dataset are generally more popular than non-English movies.
+
+```{r echo = FALSE, results = TRUE, fig.width = 10, fig.align = "center"}
+# boxplot of USA & Non-USA movies
+temp$us_or_others <- temp$country
+temp$us_or_others[temp$country != "USA"] <- "Non-USA"
+
+#temp$english <- factor(temp$language == "English", levels = c(TRUE, FALSE), labels = c("English", "Non-English"))
+
+ggplot(data = temp, aes(x = us_or_others, y = gross)) + geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(title = "Gross Revenue of USA and non-USA Movies", x = "USA or Non-USA Movies", y = "Gross Revenue") + coord_cartesian(ylim = c(0, 1e8))
+
+ggplot(data = temp, aes(x = us_or_others, y = gross, fill = us_or_others)) + 
+    theme_bw() +
+    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
+    labs(title = "Gross Revenue of USA and non-USA Movies", x = "", y = "Gross Revenue") +
+    scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+    annotation_logticks(sides = "lr", colour = "gray") +
+    theme(legend.position = "none", axis.ticks.x = element_blank(), panel.grid.major.x = element_blank(),
+          axis.title.x = element_blank())
+
+t.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater")
+
+var.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater")
+```
+
+Similarly, we did a box-and-whisker plots of revenues achieved by USA and non-USA movies. Movies made in the USA have achieved more than 50 million USD in average revenue while non-USA movies have around 25 million USD
+
+In addition, the gross revenues of USA movies vary greatly (compared to non-USA movies). The t-test and variance-test confirms these findings.
+
+We are confident to say that the USA movies in this dataset are generally more popular than non-USA movies.
+
 
 ### Nikhita
 
@@ -1083,6 +1090,11 @@ Looking at the content rating for the movies
 
 
 ```{r}
+# Replacing M and GP with PG
+movies$content_rating[movies$content_rating == "M"] <- "PG"
+movies$content_rating[movies$content_rating == "GP"] <- "PG"
+
+# Getting the top five ratings
 ratingcounts <- count(movies, 'content_rating')
 ratingsort <- arrange(ratingcounts, desc(freq))
 topratings <- ratingsort[1:5,]
@@ -1091,13 +1103,6 @@ topratedmovies <- subset(movies, content_rating %in% c("PG-13", "R", "PG"))
 contentrating <- topratedmovies$content_rating
 contentscore <- topratedmovies$imdb_score
 contentgross <- topratedmovies$gross
-
-ggplot(topratedmovies, aes(contentrating, contentscore, fill = contentrating)) + 
-    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-    labs(title = "IMDB Score of movies by rating", x = "Content Rating", y = "IMDB Score") + 
-    theme_bw() +
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
-    theme(legend.position = "none", axis.ticks.x = element_blank(), panel.grid.major.x = element_blank())
 
 ggplot(topratedmovies, aes(contentrating, contentgross, fill = contentrating)) + 
     geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
@@ -1108,13 +1113,6 @@ ggplot(topratedmovies, aes(contentrating, contentgross, fill = contentrating)) +
     theme(legend.position = "none", axis.ticks.x = element_blank(), panel.grid.major.x = element_blank()) +
     annotation_logticks(sides = "lr", colour = "gray") 
 
-# Does the overall IMDB Score vary with different ratings?
-t.test(movies$imdb_score[movies$content_rating == "R"], movies$imdb_score[movies$content_rating == "PG-13"])
-
-t.test(movies$imdb_score[movies$content_rating == "PG-13"], movies$imdb_score[movies$content_rating == "PG"])
-
-t.test(movies$imdb_score[movies$content_rating == "R"], movies$imdb_score[movies$content_rating == "PG"])
-
 # Does the gross revenue vary with different ratings?
 t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG-13"])
 
@@ -1123,9 +1121,9 @@ t.test(movies$gross[movies$content_rating == "PG-13"], movies$gross[movies$conte
 t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG"])
 ```
 
-PG, PG-13 and R are the most common ratings observed in our datatset. Looking the boxplots, there is no major difference in gross revenues or IMDB scores for the three categories. However, R movies tend to on average have higher IMDB scores and lower revenues than G or PG-13 rated movies. 
+PG, PG-13 and R are the most common ratings observed in our datatset. Looking the boxplots, R movies tend to on average have higher IMDB scores and lower revenues than PG or PG-13 rated movies. 
 
-This is consistent with the t-test results. There is no difference in the mean scores for PG and PG-13 movies whereas p-values lower than 5% support the alternative hypothesis that the difference in mean scores for R and P/PG-13 movies is not equal to 0.
+This is consistent with the t-test results. There is no difference in the gross revenue for PG and PG-13 movies whereas p-values lower than 5% support the alternative hypothesis that the difference in gross revenue for R and P/PG-13 movies is not equal to 0.
 
 ### Cecilia
 
@@ -1466,7 +1464,6 @@ These correlation tests do infer that there is a slight positive correlation bet
 
 If we look at the categorical variable of whether or not a director has directed >10 movies, then we can see these distributions look slightly different:
 
-<<<<<<< HEAD
 ```{r echo=FALSE}
 ggplot(movieswithdirectordata, aes(x=1, y = gross, fill = more_than_ten_movies)) + geom_boxplot() + facet_grid(. ~ more_than_ten_movies) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(x="", title="Gross revenue distribution by \n number of movies per director") + scale_y_continuous(label=human_num) + theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -1580,96 +1577,127 @@ To build a model to predict revenue of movies that have not yet been released, w
 
 *We discussed potentially including a new variable into the model, or to build a dual model that has different inputs for movies before 2010, and after 2010, which is the cutover point at which facebook likes for a movie became a meaningful indicator*
 
-```{r echo=FALSE}
+```{r linearmodel, echo=FALSE}
 
-sort(names(train))
+trainwithdirectorandgenredata$us_or_others <- trainwithdirectorandgenredata$country
+trainwithdirectorandgenredata$us_or_others[trainwithdirectorandgenredata$country != "USA"] <- "Non-USA"
+trainwithdirectorandgenredata$english <- factor(trainwithdirectorandgenredata$language == "English", levels = c(TRUE, FALSE), labels = c("English", "Non-English"))
+fbmodel <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes 
+              + imdb_score + PG_13 + Action + Adventure + Fantasy + Family + Western + Drama + Crime 
+              + Biography + Documentary + us_or_others + english, 
+              data = trainwithdirectorandgenredata)
+summary(fbmodel)
 
-model1 <- lm(gross ~ budget, data = train)
-summary(model1)
-ggplot(data = train, aes(x = budget, y = gross)) + geom_point() + geom_smooth(method = "lm") + coord_cartesian(xlim = c(0, 3e8))
-
-#adjusted R-squared value: 0.04956
-
-model2 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score + country, data = train)
-summary(model2)
-
-#adjusted R-squared value: 0.2415
-
-model3 <- lm(gross ~ budget, data = train[train$title_year >= 2010, ])
-summary(model3)
-ggplot(data = train[train$title_year >= 2010, ], aes(x = budget, y = gross)) + geom_point() + geom_smooth(method = "lm") + coord_cartesian(xlim = c(0, 3e8))
-
-#adjusted R-squared value: 0.4451
-
-
-model4 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score + country, data = train[train$title_year >= 2010, ])
-summary(model4)
-
-#adjusted R-squared value: 0.5616
-```
-
-```{r echo=FALSE}
-# Models to predict IMDB score
-
-model5a <- lm(gross ~ country + movie_facebook_likes + language + num_user_for_reviews + num_critic_for_reviews + num_voted_users + content_rating, data = train)
-summary(model5a)
-
-#adjusted R-squared value = 0.5043
-
-model5b <- lm(gross ~ country + movie_facebook_likes + language + num_user_for_reviews + num_critic_for_reviews + content_rating, data = train[train$title_year >= 2010, ])
-summary(model5b)
-
-#adjusted R-squared value = 0.4976
-
-model6a <- lm(gross ~ country + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + language + content_rating, data = train)
-summary(model6a)
-
-#adjusted R-squared value = 0.2592
-
-model6b <- lm(gross ~ country + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes + language + content_rating, data = train[train$title_year >= 2010, ])
-summary(model6b)
-
-#adjusted R-squared value = 0.4443
+fbmodel2010 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes 
+              + director_facebook_likes + imdb_score + PG_13 + Action + Adventure + Fantasy + Family 
+              + Western + Drama + Crime + Biography + Documentary + us_or_others + english, 
+              data = trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >= 2010, ])
+summary(fbmodel2010)
 
 ```
-
-```{r echo =FALSE}
-model6 <- lm(imdb_score ~ genres + language + content_rating + country + title_year + movie_facebook_likes + cast_total_facebook_likes, data = train[train$title_year >= 2010, ])
-summary(model6)
-
-#adjusted R-squared value = 0.4204
-
-```
-
-
-## Models to predict gross
-
-```{r echo=FALSE}
-model8 <- lm(gross ~ budget + content_rating + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + cast_total_facebook_likes + director_facebook_likes + imdb_score, data = train)
-summary(model8)
-
-#adjusted R-squared value: 0.2859
-
-model9 <- lm(gross ~ director_facebook_likes + cast_total_facebook_likes + imdb_score + country + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + content_rating, data = train[train$title_year >= 2010, ])
-summary(model8)
-
-#adjusted R-squared value: 0.3668
-
-
-model10 <- lm(gross ~ director_facebook_likes + cast_total_facebook_likes + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + content_rating + budget, data = train[train$title_year >= 2010, ])
-
-model9 <- lm(gross ~ director_facebook_likes + actor_1_facebook_likes + actor_2_facebook_likes + actor_3_facebook_likes + content_rating + budget, data = train[train$title_year >= 2010, ])
-
-summary(model9)
-
-#adjusted R-squared value: 0.4941
-
-```
-
-
 
 ###Model Performance
 *we will then test this model using the test dataset, make a plot of the predictions against the actual values, and calculate the MSE/other success statistics*
+
+```{r conditiontestdata, echo=FALSE}
+##Data Preparation for model building
+
+##create a summary for directors with count of instances in the sample
+testdirectorsummary <- ddply(test, ~ director_name,summarise, number_of_movies=length(director_name))
+##add a categorical variable for ten movies or more
+testdirectorsummary$more_than_ten_movies <- rep("Fewer than 10", nrow(testdirectorsummary))
+testdirectorsummary$more_than_ten_movies[testdirectorsummary$number_of_movies>10] <- "10+"
+testwithdirectordata <- merge(test, testdirectorsummary[,c("director_name","more_than_ten_movies")], by="director_name")
+##set factors so that Fewer than Ten is the default variable, and 10+ will show in the model
+testwithdirectordata$more_than_ten_movies <- factor(testwithdirectordata$more_than_ten_movies, levels=c("Fewer than 10", "10+"))
+testwithdirectordata$PG_13 <- "Not PG-13"
+testwithdirectordata$PG_13[testwithdirectordata$content_rating=="PG-13"] <- "PG-13"
+testwithdirectordata$PG_13 <- factor(testwithdirectordata$PG_13, levels=c("Not PG-13", "PG-13"))
+## merge with genre data based on title_year
+## column subset 3:26 is to remove duplicating the score and gross columns)
+test <- merge(movies_and_genres_wide[3:26], testwithdirectordata, by="movie_title")
+
+test$us_or_others <- test$country
+test$us_or_others[test$country != "USA"] <- "Non-USA"
+test$english <- factor(test$language == "English", levels = c(TRUE, FALSE), labels = c("English",
+                                                                                       "Non-English"))
+```
+
+
+```{r prediction, echo = FALSE, results = TRUE}
+
+predpre <- predict(pre2010model, test)
+rmsepre <- sqrt(mean((predpre - test$gross)^2))
+predFB <- predict(fbmodel, test)
+rmseFB <- sqrt(mean((predFB - test$gross)^2))
+
+dfpre <- data.frame(y_actual = test$gross, y_predict = predpre)
+ggplot(data = dfpre, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
+ggplot(data = dfpre, aes(x = y_predict, y = y_actual - y_predict)) + geom_point(colour = "red") +
+    geom_hline(yintercept = 0, colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Residual(US$)") + coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
+
+dfFB <- data.frame(y_actual = test$gross, y_predict = predFB)
+ggplot(data = dfFB, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
+ggplot(data = dfFB, aes(x = y_predict, y = y_actual - y_predict)) + geom_point(colour = "red") +
+    geom_hline(yintercept = 0, colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Residual(US$)") + coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
+
+modelperf <- matrix(data = c(rmsepre, rmseFB), nrow = 2)
+rownames(modelperf) <- c("Pre Model", "FaceBook Model")
+colnames(modelperf) <- c("Root-Mean-Square Error (US$)")
+modelperf
+
+predFB2010 <- predict(fbmodel2010, test[test$title_year >= 2010, ])
+rmseFB2010 <- sqrt(mean((predFB2010 - test$gross[test$title_year >= 2010])^2))
+predFull2010 <- predict(fullmodel, test[test$title_year >= 2010, ])
+rmseFull2010 <- sqrt(mean((predFull2010 - test$gross[test$title_year >= 2010])^2))
+predKnown2010 <- predict(knownvariablesmodel, test[test$title_year >= 2010, ])
+rmseKnown2010 <- sqrt(mean((predKnown2010 - test$gross[test$title_year >= 2010])^2))
+
+dfFB2010 <- data.frame(y_actual = test$gross[test$title_year >= 2010], y_predict = predFB2010)
+ggplot(data = dfFB2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
+ggplot(data = dfFB2010, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
+
+dfFull2010 <- data.frame(y_actual = test$gross[test$title_year >= 2010], 
+                         y_predict = predFull2010)
+ggplot(data = dfFull2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
+ggplot(data = dfFull2010, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
+
+dfKnown2010 <- data.frame(y_actual = test$gross[test$title_year >= 2010], 
+                         y_predict = predKnown2010)
+ggplot(data = dfKnown2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
+ggplot(data = dfKnown2010, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
+
+modelperf2010 <- matrix(data = c(rmseFB2010, rmseFull2010, rmseKnown2010), nrow = 3)
+rownames(modelperf2010) <- c("FaceBook (Post-2010) Model", "Full (Post-2010) Model", 
+                             "Known Variable (Post-2010) Model")
+colnames(modelperf2010) <- c("Root-Mean-Square Error (US$)")
+modelperf2010
+
+```
 
 #Conclusion & Next Steps
 *to be completed after our analysis*
@@ -1678,6 +1706,24 @@ summary(model9)
 #Appendix
 
 ##Nikhita
+
+```{r}
+## IMDB Score analysis for top three ratings
+# Boxplot illustration
+ggplot(topratedmovies, aes(contentrating, contentscore, fill = contentrating)) + 
+    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
+    labs(title = "IMDB Score of movies by rating", x = "Content Rating", y = "IMDB Score") + 
+    theme_bw() +
+    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
+    theme(legend.position = "none", axis.ticks.x = element_blank(), panel.grid.major.x = element_blank())
+
+# Does the mean IMDB Score vary with different ratings?
+t.test(movies$imdb_score[movies$content_rating == "R"], movies$imdb_score[movies$content_rating == "PG-13"])
+
+t.test(movies$imdb_score[movies$content_rating == "PG-13"], movies$imdb_score[movies$content_rating == "PG"])
+
+t.test(movies$imdb_score[movies$content_rating == "R"], movies$imdb_score[movies$content_rating == "PG"])
+```
 
 ##Steven
 
