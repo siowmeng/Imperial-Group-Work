@@ -453,7 +453,7 @@ for (ins in movies$genres){
     }
 }
 # Create a dataframe with logical values which 
-# indiacte the categories of each movie
+# indicate the categories of each movie
 movies$genres <- strsplit(movies$genres, "[|]")
 genres_idx <- movies[, c("movie_title", "genres")]
 i = 1
