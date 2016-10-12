@@ -1554,26 +1554,6 @@ Also, the opposite of the initial intuition appears to be the case for variance,
 
 Multiple models were created to predict gross revenue based on input parameters. Two "full" models were build using all data available, to determine which was the most effective when tested on the test set, and one "known" model was built based on variables that would normally be available *before* a movie is released.
 
-### First Full Model
-
-```{r linearmodel, echo=FALSE}
-
-trainwithdirectorandgenredata$us_or_others <- trainwithdirectorandgenredata$country
-trainwithdirectorandgenredata$us_or_others[trainwithdirectorandgenredata$country != "USA"] <- "Non-USA"
-trainwithdirectorandgenredata$english <- factor(trainwithdirectorandgenredata$language == "English", levels = c(TRUE, FALSE), labels = c("English", "Non-English"))
-fbmodel <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes 
-              + imdb_score + PG_13 + Action + Adventure + Fantasy + Family + Western + Drama + Crime 
-              + Biography + Documentary + us_or_others + english, 
-              data = trainwithdirectorandgenredata)
-summary(fbmodel)
-
-fbmodel2010 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes 
-              + director_facebook_likes + imdb_score + PG_13 + Action + Adventure + Fantasy + Family 
-              + Western + Drama + Crime + Biography + Documentary + us_or_others + english, 
-              data = trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >= 2010, ])
-summary(fbmodel2010)
-
-```
 
 ### Second full model
 
@@ -1630,6 +1610,28 @@ ggplot(movies, aes(x=color)) + geom_bar() + xlab("")
 * IMDB score as discussed above.
 * The number of users for review has been included as it is statistically significant and may be correlated due to the two possible mechanisms that reviews may encourage more people to watch the movie, or the more people that see the movie, the more reviews are left.
 * Director number of movies, although significant individually, when other variables are taken into account loses its statistical significance, so is omitted from the model.
+
+### First Full Model
+
+```{r linearmodel, echo=FALSE}
+
+trainwithdirectorandgenredata$us_or_others <- trainwithdirectorandgenredata$country
+trainwithdirectorandgenredata$us_or_others[trainwithdirectorandgenredata$country != "USA"] <- "Non-USA"
+trainwithdirectorandgenredata$english <- factor(trainwithdirectorandgenredata$language == "English", levels = c(TRUE, FALSE), labels = c("English", "Non-English"))
+fbmodel <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes 
+              + imdb_score + PG_13 + Action + Adventure + Fantasy + Family + Western + Drama + Crime 
+              + Biography + Documentary + us_or_others + english, 
+              data = trainwithdirectorandgenredata)
+summary(fbmodel)
+
+fbmodel2010 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes 
+              + director_facebook_likes + imdb_score + PG_13 + Action + Adventure + Fantasy + Family 
+              + Western + Drama + Crime + Biography + Documentary + us_or_others + english, 
+              data = trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >= 2010, ])
+summary(fbmodel2010)
+
+```
+
 
 ####Third Model, with only pre-known variables
 
