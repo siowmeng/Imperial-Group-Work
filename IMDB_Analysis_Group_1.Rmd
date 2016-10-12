@@ -644,162 +644,7 @@ ggplot(movies_and_keywords, aes(x = score, y = gross, colour = keywords)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 ```
 
-### Decades
-Boxplot gross against year, decade
-```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
-
-# code to create continent column
-movies$continent <- countrycode(as.character(movies$country), "country.name", "continent")
-
-# divide "Americas" into "North Americas" and "South America"
-south_America = c("Brazil", "Argentina", "Chile", "Colombia", "Peru")
-
-for (i in 1:nrow(movies)) {
-  if (is.na(movies$continent[i])) {
-    next
-  } else if ((movies$continent[i] == "Americas") & (movies$country[i] %in% south_America)) {
-    movies$continent[i] <- "South America"
-  } else if ((movies$continent[i] == "Americas") & (!(movies$country[i] %in% south_America))) {
-    movies$continent[i] <- "North America"
-  } 
-}
-
-# for all countries and all years
-# remove NA from title_year column first 
-#### should you remove outliers from plot????
-temp <- movies[!is.na(movies$title_year),]
-ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
-  labs(title = "IMDB scores against year", x = "", y = "IMDB Score") +
-  scale_y_continuous(limits = c(2.5, max(movies$imdb_score)))
-```
-
-
-```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
-
-
-# subset movies data frame to include all movies from 1980 onwards
-temp <- movies[movies$title_year >= 1980,]
-# plot the range of IMDB scores for all years
-p1 <- ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
-  labs(title = "IMDB scores against year, for years with >= 10 entries", x = "", y = "IMDB Score") +
-    geom_boxplot(outlier.shape = NA) +
-    theme_bw() +
-    theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5),legend.position = "None") +
-    labs(title = "IMDB scores against year, for years with >= 10 entries", x = "", y = "IMDB Score") +
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10))
-
-lm_model <- lm(imdb_score ~ title_year, data = temp)
-# make a scatter plot that shows trend in IMDB scores
-p2 <- ggplot(temp, aes(x = title_year, y = imdb_score, colour = factor(title_year))) + 
-    geom_jitter(alpha = 0.4) +
-    geom_abline(intercept = lm_model$coefficients[1], slope = lm_model$coefficients[2], size = 1) +
-    theme_bw() +
-    labs(x = "", y = "IMDB Score") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5), legend.position = "None", axis.title.x = element_blank()) +
-    scale_x_continuous(breaks = seq(min(temp$title_year), max(temp$title_year), by = 1), 0.5) +
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) 
-
-grid.arrange(p1, p2, ncol=1)
-```
-
-
-```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
-# create function that converts years into decades
-convert_decade <- function(year){
-  low <- year - year %% 10
-  high <- year - year %% 10 + 9
-  paste(as.character(low), as.character(high), sep = "-")
-}
-# apply previous function
-movies$decade <- sapply(movies$title_year, FUN = convert_decade)
-```
-
-```{r echo=FALSE}
-# For all countries by decade 
-# remove entries with NA-NA
-temp <- movies[!movies$decade == "NA-NA", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, all countries", x = "", y = "IMDB Score")
-
-# for Europe
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$continent == "Europe", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, Europe", x = "", y = "IMDB Score")
-
-# for North America
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$continent == "North America", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, North America", x = "", y = "IMDB Score")
-
-# for France
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "France", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5),legend.position = "None") +
-  labs(title = "IMDB scores against decade, France", x = "", y = "IMDB Score")
-
-# for Germany
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "Germany", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, Germany", x = "", y = "IMDB Score")
-
-# for USA
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "USA", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, USA", x = "", y = "IMDB Score")
-
-# for UK
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "UK", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, UK", x = "", y = "IMDB Score")
-
-# for India
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "India", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, India", x = "", y = "IMDB Score")
-
-# for China
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "China", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, China", x = "", y = "IMDB Score")
-
-# for Hong Kong
-temp <- movies[!movies$decade == "NA-NA", ]
-temp <- temp[temp$country == "Hong Kong", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, Hong Kong", x = "", y = "IMDB Score")
-```
+### Gross revenue over time
 
 This section will analyze the evolution of revenues over time.
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
@@ -817,13 +662,12 @@ ggplot(temp, aes(x = factor(title_year), y = gross, fill = factor(title_year))) 
 
 ```
 
-The above plot shows that there might be a slight upward trend in gross revenue over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of gross revenues over time the foloowing two plots will only include years which have a minimum of ten entries.
+The above plot shows that there might be a slight upward trend in gross revenue over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of gross revenues over time the following two plots will only include years which have a minimum of ten entries.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # plot all years that have at least ten movies
 # table(movies$title_year)  
 # shows that from 1980 onwards all the years have at least ten entries
-
 # subset movies data frame to include all movies from 1980 onwards
 temp <- movies[movies$title_year >= 1980, ]
 # plot the range of IMDB scores for all years
@@ -837,7 +681,9 @@ p1 <- ggplot(temp, aes(x = factor(title_year), y = gross, fill = factor(title_ye
    annotation_logticks(sides = "lr", colour = "gray") 
 
 lm_model2 <- lm(log10(gross) ~ title_year, data = temp)
+
 # make a scatter plot that shows trend in IMDB scores
+
 p2 <- ggplot(temp, aes(x = title_year, y = gross, colour = factor(title_year))) + 
     geom_jitter(alpha = 0.4) +
     geom_abline(intercept = lm_model2$coefficients[1], slope = lm_model2$coefficients[2], size = 1) +
@@ -1399,6 +1245,23 @@ This section tests whether North American movies have a higher mean IMDB score t
 H0 -> Europe and North America get equal scores
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+
+# code to create continent column
+movies$continent <- countrycode(as.character(movies$country), "country.name", "continent")
+
+# divide "Americas" into "North Americas" and "South America"
+south_America = c("Brazil", "Argentina", "Chile", "Colombia", "Peru")
+
+for (i in 1:nrow(movies)) {
+  if (is.na(movies$continent[i])) {
+    next
+  } else if ((movies$continent[i] == "Americas") & (movies$country[i] %in% south_America)) {
+    movies$continent[i] <- "South America"
+  } else if ((movies$continent[i] == "Americas") & (!(movies$country[i] %in% south_America))) {
+    movies$continent[i] <- "North America"
+  } 
+}
+
 # make dataframes for North America and Europe
 North_America <- movies[movies$continent == "North America",]
 Europe <- movies[movies$continent == "Europe",]
@@ -1759,9 +1622,12 @@ t.test(movies$imdb_score[movies$content_rating == "R"], movies$imdb_score[movies
 
 ##Steven
 
-```{r, echo = FALSE}
+Appendix
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 
-# imdb score vs year
+# for all countries and all years
+# remove NA from title_year column first 
+#### should you remove outliers from plot????
 temp <- movies[!is.na(movies$title_year),]
 ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
   geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
@@ -1769,39 +1635,70 @@ ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_yea
   labs(title = "IMDB scores against year", x = "", y = "IMDB Score") +
   scale_y_continuous(limits = c(2.5, max(movies$imdb_score)))
 ```
-The plot above show that there might be a downward trend in IMDB scores over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of IMDB scores only years with ten or more entries will be plotted below.
 
-```{r, echo = FALSE}
+
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+
+
 # subset movies data frame to include all movies from 1980 onwards
 temp <- movies[movies$title_year >= 1980,]
-# plot the range of IMDB scores for all years with more than 10 entries
+# plot the range of IMDB scores for all years
 p1 <- ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
   geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle = 45, hjust = 0.5, vjust = 0.5),legend.position = "None") +
-  labs(title = "IMDB scores against year, for years with >= 10 entries", x = "", y = "IMDB Score")
+  theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
+  labs(title = "IMDB scores against year, for years with >= 10 entries", x = "", y = "IMDB Score") +
+    geom_boxplot(outlier.shape = NA) +
+    theme_bw() +
+    theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank(),
+          axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5),legend.position = "None") +
+    labs(title = "IMDB scores against year, for years with >= 10 entries", x = "", y = "IMDB Score") +
+    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10))
 
+lm_model <- lm(imdb_score ~ title_year, data = temp)
 # make a scatter plot that shows trend in IMDB scores
-p2 <- ggplot(temp, aes(x = title_year, y = imdb_score)) + 
-  geom_point() +
-  geom_smooth(method = "lm") +
-  labs(x = "", y = "IMDB Score") +
-  theme(axis.text.x=element_text(angle = 45, hjust = 0.5, vjust = 0.5),legend.position = "None") +
-  scale_x_continuous(breaks = seq(min(temp$title_year), max(temp$title_year), by = 1), 0.5)
+p2 <- ggplot(temp, aes(x = title_year, y = imdb_score, colour = factor(title_year))) + 
+    geom_jitter(alpha = 0.4) +
+    geom_abline(intercept = lm_model$coefficients[1], slope = lm_model$coefficients[2], size = 1) +
+    theme_bw() +
+    labs(x = "", y = "IMDB Score") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5), legend.position = "None", axis.title.x = element_blank()) +
+    scale_x_continuous(breaks = seq(min(temp$title_year), max(temp$title_year), by = 1), 0.5) +
+    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) 
 
 grid.arrange(p1, p2, ncol=1)
-
 ```
 
-The plots above give a less biased represenation of the development of IMDB scores. The scores now appear more constant over the years. Although minimal, the scatter plot reveals that there is still a slight downward trend in scores.
 
-```{r echo=FALSE}
-# for all countries by decade
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+# create function that converts years into decades
+convert_decade <- function(year){
+  low <- year - year %% 10
+  high <- year - year %% 10 + 9
+  paste(as.character(low), as.character(high), sep = "-")
+}
+# apply previous function
+movies$decade <- sapply(movies$title_year, FUN = convert_decade)
+```
+
+```{r, echo=FALSE, fig.width = 10, fig.align = "center"}
+# For all countries by decade 
 # remove entries with NA-NA
 temp <- movies[!movies$decade == "NA-NA", ]
 ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
   geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
   labs(title = "IMDB scores against decade, all countries", x = "", y = "IMDB Score")
+
+
+# facetgrid of imdb scores over decade for continents
+temp <- movies[!is.na(movies$continent), ]
+ggplot(temp, aes(y = imdb_score, x = factor(decade), fill = decade)) + 
+    geom_boxplot() + 
+    labs(title = "IMDB and decades for continents", y = "IMDB score", x = "Decade") + 
+    facet_wrap(~ continent) +
+    theme_bw() + 
+    theme(legend.position = "None",axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5)) +
+    annotation_logticks(sides = "lr", colour = "gray")
 
 # for Europe
 temp <- movies[!movies$decade == "NA-NA", ]
@@ -1875,6 +1772,11 @@ ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
   theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
   labs(title = "IMDB scores against decade, Hong Kong", x = "", y = "IMDB Score")
 ```
+
+The plot above show that there might be a downward trend in IMDB scores over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of IMDB scores only years with ten or more entries will be plotted below.
+
+The plots above give a less biased represenation of the development of IMDB scores. The scores now appear more constant over the years. Although minimal, the scatter plot reveals that there is still a slight downward trend in scores.
+
 
 ##Cecilia
 
