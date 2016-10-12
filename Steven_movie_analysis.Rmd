@@ -2,7 +2,7 @@
 title: "Steven_movie_analysis"
 author: "Steven Locorotondo"
 date: "09/26/2016"
-output: html_document
+output: pdf_document
 ---
 
 ```{r echo = FALSE}
@@ -52,13 +52,13 @@ aspect_ratio <- "Aspect ratio the movie was shot in."
 budget <- "Budget in USD. All budget's are estimates based on press reports."
 cast_total_facebook_likes <- "Total number of likes of all actor Facebook pages."
 color <- "Describes whether the movie was shot in color or black and white"
-content_rating <- ""
+content_rating <- "Rating of suitability of movie for audience."
 country <- "Country the movie was shot in. If the movie was shot in more than one country only the first country appearing was chosen. Throughout the analysis this variable will serve as proxy for the country of origin."
 director_facebook_likes <- "Number of likes on director's Facebook page."
 director_name <- "Name of director."
 duration <- "Movie length in minutes."
 facenumber_in_poster <- "Number of faces on movie poster."
-genres <- ""
+genres <- "Movie genre."
 gross <- "Latest domestic gross revenue reported on the-number.com, in USD."
 imdb_score <- "Score voted by IMDB users, from 1 to 10 (highest)."
 language <- "Language in which movie was shot."
@@ -68,7 +68,7 @@ movie_title <- "Movie name."
 num_critic_for_reviews <- "Number of critics that wrote a review."
 num_user_for_reviews <- "Number of imdb users that wrote a review."
 num_voted_users <- "Number of imdb users that gave a rating."
-plot_keywords <- ""
+plot_keywords <- "Keywords describing the movie plot."
 title_year <- "Movie release year."
 
 # initiate new column for explanations
@@ -410,8 +410,20 @@ my_fn2 <- function(data, mapping){
 }
 
 ggpairs(num_movies, columns = cols, lower = list(continuous = my_fn1), diag = list(continious = my_fn2))
-
 ```
+
+```{r, echo = FALSE}
+mdl_imdb <- lm(imdb_score ~ budget + cast_total_facebook_likes + director_facebook_likes + duration, data = movies[movies$title_year >= 2010, ])
+
+summary(mdl_imdb)
+```
+
+```{r, echo = FALSE}
+mdl_gross <- lm(gross ~ budget + cast_total_facebook_likes + director_facebook_likes + duration, data = movies[movies$title_year >= 1980, ])
+
+summary(mdl_gross)
+```
+
 ## Notes
 
 * check if US makes more violent movies than other top countries (chi^2-test)
@@ -419,3 +431,7 @@ ggpairs(num_movies, columns = cols, lower = list(continuous = my_fn1), diag = li
 * check if there are duplicates and remove them
 * compare IMDB scores of two years
 * movies per capita
+
+| hello || World|
+|--------||-----|
+|data||data|
