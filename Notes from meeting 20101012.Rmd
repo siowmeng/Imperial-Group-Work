@@ -1,0 +1,16 @@
+---
+title: "Notes from meeting 20161012"
+output: html_document
+---
+
+* Update introduction to remove the reference to imdb ratings - CC
+* Include justification for the model - SM
+* Will change the axes from log to regular - SM
+* T-test output to be prettier - GP
+* Remove Name + add in some introduction and commentary - All
+* Change pre model to be same as post model - LF
+* Predictive model wording - SM
+* Theory + Conclusion - LF
+* Exec summary - CC
+
+* Remove the items from the table that have 0s - LF(Done)
