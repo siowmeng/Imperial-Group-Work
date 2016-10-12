@@ -1,6 +1,6 @@
 ---
 title: "Analysis of IMDB Movie Dataset"
-output: pdf_document
+output: html_document
 date: "16 October 2016"
 ---
 
