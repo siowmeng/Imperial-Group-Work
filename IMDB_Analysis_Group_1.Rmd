@@ -1461,7 +1461,7 @@ When we actually make predictions based on a linear model for categorical data, 
 
 ### Steven
 
-This section tests whether North American movies have a higher mean IMDB score than European ones. Intuitively, one would assume that North American movies score higher than European ones. This intuition stems from the prevalence of North American movies in media. 
+This section tests whether North American movies have a higher mean IMDB score than European ones. Intuitively, one would assume that North American movies score higher than European ones. This intuition stems from the prevalence of North American movies in media and the proven positive effect of media on sales.
 
 H0 -> Europe and North America get equal scores
 
