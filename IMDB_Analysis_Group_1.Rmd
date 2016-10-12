@@ -1668,6 +1668,11 @@ test$english <- factor(test$language == "English", levels = c(TRUE, FALSE), labe
                                                                                        "Non-English"))
 ```
 
+Model including all data:
+```{r echo=FALSE}
+pre2010model <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews + more_than_ten_movies, data=trainwithdirectorandgenredata)
+summary(pre2010model)
+```
 
 ```{r prediction, echo = FALSE, results = TRUE}
 
@@ -1705,37 +1710,47 @@ predKnown2010 <- predict(knownvariablesmodel, test[test$title_year >= 2010, ])
 rmseKnown2010 <- sqrt(mean((predKnown2010 - test$gross[test$title_year >= 2010])^2))
 
 dfFB2010 <- data.frame(y_actual = test$gross[test$title_year >= 2010], y_predict = predFB2010)
-ggplot(data = dfFB2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+plot1 <- ggplot(data = dfFB2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
     geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
     ylab("Actual Gross Revenue(US$)") + 
-    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
-ggplot(data = dfFB2010, aes(x = y_predict, y = y_actual - y_predict)) + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) 
+plot2 <-ggplot(data = dfFB2010, aes(x = y_predict, y = y_actual - y_predict)) + 
     geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
     xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
-    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) 
 
 dfFull2010 <- data.frame(y_actual = test$gross[test$title_year >= 2010], 
                          y_predict = predFull2010)
-ggplot(data = dfFull2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+plot3 <- ggplot(data = dfFull2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
     geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
     ylab("Actual Gross Revenue(US$)") + 
-    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
-ggplot(data = dfFull2010, aes(x = y_predict, y = y_actual - y_predict)) + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) 
+plot4 <- ggplot(data = dfFull2010, aes(x = y_predict, y = y_actual - y_predict)) + 
     geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
     xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
-    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) 
 
 dfKnown2010 <- data.frame(y_actual = test$gross[test$title_year >= 2010], 
                          y_predict = predKnown2010)
-ggplot(data = dfKnown2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+plot5 <- ggplot(data = dfKnown2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
     geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
     ylab("Actual Gross Revenue(US$)") + 
-    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
-ggplot(data = dfKnown2010, aes(x = y_predict, y = y_actual - y_predict)) + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) 
+plot6 <- ggplot(data = dfKnown2010, aes(x = y_predict, y = y_actual - y_predict)) + 
     geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
     xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
-    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) 
 
+grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6, ncol=2)
+```
+
+```{r echo=FALSE}
 modelperf2010 <- matrix(data = c(rmseFB2010, rmseFull2010, rmseKnown2010), nrow = 3)
 rownames(modelperf2010) <- c("FaceBook (Post-2010) Model", "Full (Post-2010) Model", 
                              "Known Variable (Post-2010) Model")
