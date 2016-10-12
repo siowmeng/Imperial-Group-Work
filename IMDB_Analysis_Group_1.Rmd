@@ -1101,7 +1101,7 @@ Only approximately `r morethantendirpercentage`% directors have more than ten mo
 
 ### Siow Meng
 
-```{r echo = FALSE, fig.width = 10, fig.align = "center"}
+```{r echo = FALSE, results = TRUE, fig.width = 10, fig.align = "center"}
 # boxplot of English & Non-English movies
 temp <- movies
 
@@ -1126,9 +1126,40 @@ var.test(movies$gross[movies$language == "English"], movies$gross[movies$languag
 
 From the above box-and-whisker plots, we can observe a great difference between the revenues achieved by English and non-English movies. More than 75% of the non-English movies achieved gross revenue of US$10 million or lower. In contrast, more than half of the English movies have more than US$25 million revenues.
 
-In addition, the gross revenues of English movies vary greatly (compared to non-English movies).
+In addition, the gross revenues of English movies vary greatly (compared to non-English movies). The t-test and variance-test confirms these findings.
 
 We are confident to say that the English movies in this dataset are generally more popular than non-English movies.
+
+```{r echo = FALSE, results = TRUE, fig.width = 10, fig.align = "center"}
+# boxplot of USA & Non-USA movies
+temp$us_or_others <- temp$country
+temp$us_or_others[temp$country != "USA"] <- "Non-USA"
+
+#temp$english <- factor(temp$language == "English", levels = c(TRUE, FALSE), labels = c("English", "Non-English"))
+
+ggplot(data = temp, aes(x = us_or_others, y = gross)) + geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(title = "Gross Revenue of USA and non-USA Movies", x = "USA or Non-USA Movies", y = "Gross Revenue") + coord_cartesian(ylim = c(0, 1e8))
+
+ggplot(data = temp, aes(x = us_or_others, y = gross, fill = us_or_others)) + 
+    theme_bw() +
+    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
+    labs(title = "Gross Revenue of USA and non-USA Movies", x = "", y = "Gross Revenue") +
+    scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+    annotation_logticks(sides = "lr", colour = "gray") +
+    theme(legend.position = "none", axis.ticks.x = element_blank(), panel.grid.major.x = element_blank(),
+          axis.title.x = element_blank())
+
+t.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater")
+
+var.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater")
+```
+
+Similarly, we did a box-and-whisker plots of revenues achieved by USA and non-USA movies. Movies made in the USA have achieved more than 50 million USD in average revenue while non-USA movies have around 25 million USD
+
+In addition, the gross revenues of USA movies vary greatly (compared to non-USA movies). The t-test and variance-test confirms these findings.
+
+We are confident to say that the USA movies in this dataset are generally more popular than non-USA movies.
+
 
 ### Nikhita
 
@@ -1623,16 +1654,14 @@ To build a model to predict revenue of movies that have not yet been released, w
 
 *We discussed potentially including a new variable into the model, or to build a dual model that has different inputs for movies before 2010, and after 2010, which is the cutover point at which facebook likes for a movie became a meaningful indicator*
 
-```{r echo=FALSE}
+```{r linearmodel, echo=FALSE}
 
 trainwithdirectorandgenredata$us_or_others <- trainwithdirectorandgenredata$country
 trainwithdirectorandgenredata$us_or_others[trainwithdirectorandgenredata$country != "USA"] <- "Non-USA"
-trainwithdirectorandgenredata$english <- factor(trainwithdirectorandgenredata$language == "English", 
-                                                levels = c(TRUE, FALSE), labels = c("English", 
-                                                                                    "Non-English"))
-fbmodel <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes 
-              + director_facebook_likes + imdb_score + PG_13 + Action + Adventure + Fantasy + Family 
-              + Western + Drama + Crime + Biography + Documentary + us_or_others + english, 
+trainwithdirectorandgenredata$english <- factor(trainwithdirectorandgenredata$language == "English", levels = c(TRUE, FALSE), labels = c("English", "Non-English"))
+fbmodel <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes 
+              + imdb_score + PG_13 + Action + Adventure + Fantasy + Family + Western + Drama + Crime 
+              + Biography + Documentary + us_or_others + english, 
               data = trainwithdirectorandgenredata)
 summary(fbmodel)
 
@@ -1672,18 +1701,33 @@ test$english <- factor(test$language == "English", levels = c(TRUE, FALSE), labe
 ```
 
 
-```{r prediction, echo = TRUE}
+```{r prediction, echo = FALSE, results = TRUE}
 
 predpre <- predict(pre2010model, test)
 rmsepre <- sqrt(mean((predpre - test$gross)^2))
 predFB <- predict(fbmodel, test)
 rmseFB <- sqrt(mean((predFB - test$gross)^2))
 
+dfpre <- data.frame(y_actual = test$gross, y_predict = predpre)
+ggplot(data = dfpre, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
+ggplot(data = dfpre, aes(x = y_predict, y = y_actual - y_predict)) + geom_point(colour = "red") +
+    geom_hline(yintercept = 0, colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Residual(US$)") + coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
+
+dfFB <- data.frame(y_actual = test$gross, y_predict = predFB)
+ggplot(data = dfFB, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
+ggplot(data = dfFB, aes(x = y_predict, y = y_actual - y_predict)) + geom_point(colour = "red") +
+    geom_hline(yintercept = 0, colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Residual(US$)") + coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
+
 modelperf <- matrix(data = c(rmsepre, rmseFB), nrow = 2)
 rownames(modelperf) <- c("Pre Model", "FaceBook Model")
-colnames(modelperf) <- c("Root-Mean-Square Error")
+colnames(modelperf) <- c("Root-Mean-Square Error (US$)")
 modelperf
-
 
 predFB2010 <- predict(fbmodel2010, test[test$title_year >= 2010, ])
 rmseFB2010 <- sqrt(mean((predFB2010 - test$gross[test$title_year >= 2010])^2))
@@ -1692,10 +1736,42 @@ rmseFull2010 <- sqrt(mean((predFull2010 - test$gross[test$title_year >= 2010])^2
 predKnown2010 <- predict(knownvariablesmodel, test[test$title_year >= 2010, ])
 rmseKnown2010 <- sqrt(mean((predKnown2010 - test$gross[test$title_year >= 2010])^2))
 
+dfFB2010 <- data.frame(y_actual = test$gross[test$title_year >= 2010], y_predict = predFB2010)
+ggplot(data = dfFB2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
+ggplot(data = dfFB2010, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
+
+dfFull2010 <- data.frame(y_actual = test$gross[test$title_year >= 2010], 
+                         y_predict = predFull2010)
+ggplot(data = dfFull2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
+ggplot(data = dfFull2010, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
+
+dfKnown2010 <- data.frame(y_actual = test$gross[test$title_year >= 2010], 
+                         y_predict = predKnown2010)
+ggplot(data = dfKnown2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
+ggplot(data = dfKnown2010, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
+
 modelperf2010 <- matrix(data = c(rmseFB2010, rmseFull2010, rmseKnown2010), nrow = 3)
 rownames(modelperf2010) <- c("FaceBook (Post-2010) Model", "Full (Post-2010) Model", 
                              "Known Variable (Post-2010) Model")
-colnames(modelperf2010) <- c("Root-Mean-Square Error")
+colnames(modelperf2010) <- c("Root-Mean-Square Error (US$)")
 modelperf2010
 
 ```
