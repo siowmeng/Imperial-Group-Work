@@ -125,6 +125,10 @@ An initial review of our dataset identified a few key issues to be addressed bef
 * The inclusion of erroneous special characters that may be an artefact of text format conversion
 * The inclusion of leading and trailing white spaces.
 
+The below table shows the number of missing values found in each column:
+
+*LF comment - can we make this smaller/into more rows so that it takes up less page space?*
+
 ```{r, echo = FALSE}
     ## function to calculate list of NAs within a column
 colNA <- function(dfCol){ sum(is.na(dfCol)) }
@@ -253,7 +257,7 @@ grid.arrange(post2005plot, post2010plot, widths=c(2,2.4), ncol=2)
 
 The descriptive analysis below focuses on individual variables and relationships in turn, drawing both from the above correlations, and from relationships between numerican and non-numerical variables.
 
-### Country and Language 
+### Language 
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 revYear <- ddply(movies, ~ title_year, summarise, meanRev = mean(gross, na.rm = TRUE))
@@ -321,7 +325,7 @@ ggplot(data = temp, aes(x = imdb_score, y = gross, colour = us_or_others)) +
     annotation_logticks(sides = "lr", colour = "gray")
 ```
 
-### Nikhita
+### Country
 
 Descriptive analysis on the country
 
@@ -377,7 +381,7 @@ Looking at the IMDB scores, movies across all ten countries have a mean score be
 
 Therefore, it can be deduced that revenue and IMDB scores are clearly independent of each other. This can be seen in the scatterplots - UK & US movies seem to be symmetrically about 'y = x'; however, the other countries show no particular relationship between the two variables.
 
-### Cecilia
+### Budget
 
 Descriptive analysis on the budget
 
@@ -437,9 +441,7 @@ From the histogram with count of movies across different budgets, we can see mos
 
 From the boxplots, we can see that the average budget on the films across different countries is similar, around a ballpark range of 10 million to 100 million. India, Mexico and Italy appears to have a lower average (???) for film budget than the rest of ther other countries.
 
-### George
-
-Will do an analysis on *Gross revenue* and *IMDB score* based on *Genres* and *Plot Keywords*. :)
+### Genres and Plot Keywords
 
 ##### Genres
 
@@ -637,7 +639,7 @@ ggplot(movies_and_keywords, aes(x = score, y = gross, colour = keywords)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 ```
 
-### Steven
+### Decades
 Boxplot gross against year, decade
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 
@@ -747,7 +749,7 @@ convert_decade <- function(year){
 }
 # apply previous function
 movies$decade <- sapply(movies$title_year, FUN = convert_decade)
-```
+
 
 # For all countries by decade 
 # remove entries with NA-NA
@@ -828,6 +830,7 @@ ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
   geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
   labs(title = "IMDB scores against decade, Hong Kong", x = "", y = "IMDB Score")
+```
 
 This section will analyze the evolution of revenues over time.
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
@@ -932,9 +935,9 @@ convert_decade <- function(year){
 movies$decade <- sapply(movies$title_year, FUN = convert_decade)
 ```
 
-###Louise
+###Directors
 
-```{r echo = FALSE, message = FALSE, fig.width = 10, fig.align = "center"}
+```{r echo = FALSE, message = FALSE}
 ##create summary statistics for average imdb score & number of movies for each director
 directorssummary <- ddply(movies, ~ director_name,summarise,score_average=round(mean(imdb_score),2), gross_average=round(mean(gross),2), number_of_movies=length(director_name))
 ##sort by # of movies then imdb average score
@@ -943,15 +946,14 @@ sorteddirectorsummary <- arrange(directorssummary,desc(number_of_movies), desc(s
 sorteddirectorsummary$director_name <- factor(sorteddirectorsummary$director_name, levels = sorteddirectorsummary$director_name[order(sorteddirectorsummary$number_of_movies)])
 ```
 
-There are `r nrow(sorteddirectorsummary)` distinct directors in the data sample.The density of movies per director is as below:
 
-```{r echo=FALSE, fig.width = 10, fig.align = "center"}
+```{r in-text-fig, echo=FALSE,  fig.width = 3, fig.height=3, out.extra='style="float:right"'}
 ##Histogram for number of moveies per director
 ggplot(sorteddirectorsummary, aes(x = number_of_movies)) + 
     geom_histogram(binwidth = 1, fill = "darkblue") + 
     theme_bw() +
-    labs(x = "Number of movies", y = "Number of directors who have directed that number of movies",
-         title = "Density of number of movies per director") +
+    labs(x = "Number of movies\nper director", y = "Number of directors",
+         title = "Density of number of \nmovies per director") +
     scale_x_continuous(breaks = c(0, 5, 10, 15, 20, 25, 30), limits = c(0, 30)) 
 ```
 
@@ -964,17 +966,19 @@ dirpercentage <- round(100 * length(sorteddirectorsummary$number_of_movies[sorte
                        / length(sorteddirectorsummary$number_of_movies), 2)
 ```
 
+\
+Before looking into the relationship with the key output variable, gross revenue, descriptive statistics of the director data are explored. There are `r nrow(sorteddirectorsummary)` distinct directors in the data sample, the density of movies per director is shown on the figure on the right.
+
 This is clearly positively skewed, with many directors having only 1 movie in the dataset, and only a few having significantly more. In fact, approximately  `r dirpercentage` of those directors have only 1 movie in the top 5000, leaving `r 100-dirpercentage` that have more than 1.
 
-An initial look at the relationship between # of movies that the director has in the dataset, and gross revenue does not show a clearly defined correlation:
-
-```{r echo=FALSE, fig.width = 10, fig.align = "center"}
+```{r echo=FALSE}
 ##add # of movies per director to the main dataset.
 movieswithdirectordata <- merge(movies, sorteddirectorsummary, by = "director_name")
 movieswithdirectordata <- rename(movieswithdirectordata, c('number_of_movies'='dir_number_of_movies'))
 ```
 
-```{r echo=FALSE, fig.width = 10, fig.align = "center"}
+
+```{r echo=FALSE}
 ##function to create human readable axis labels.
 ##code taken from publically available github to give human readable axis labels. (https://github.com/fdryan/R/blob/master/ggplot2_formatter.r)
 human_numbers <- function(x = NULL, smbl =""){
@@ -1011,55 +1015,31 @@ human_num <- function(x){human_numbers(x, smbl = "")}
 human_usd <- function(x){human_numbers(x, smbl = "$")}
 ```
 
-*Shall I convert the y-axis of the following graphs into log scale? I also set the limits of x-axis to [0, 30] and we miss 1 observation with x value >100. --George*
 
-```{r echo = FALSE, message = FALSE, fig.width = 10, fig.align = "center"}
+```{r echo = FALSE, message = FALSE, fig.width = 3, fig.height = 2.5, fig.align = "center", out.extra='style="float:left"'}
 ##plot for gross revenue vs number of directors in sample
 ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross)) + 
     geom_jitter(alpha = 0.1, width = 1) +
     theme_bw() +
-    labs(x = "Number of movies by director in sample", y = "Average Gross Revenue") + 
-    scale_y_continuous(label = human_usd) + 
-    scale_x_continuous(breaks = c(0, 5, 10, 15, 20, 25, 30), limits = c(0, 30))
-```
-
-To check against one potential confounder, we plot the # of movies per director against budget:
-
-```{r echo = FALSE, message = FALSE, fig.width = 10, fig.align = "center"}
-##plot for budget vs number of directors in sample
-ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = budget)) + 
-    geom_jitter(alpha = 0.1, width = 1) +
-    theme_bw() + 
-    labs(x = "Number of movies by director in sample", y = "Budget") + 
-    scale_y_continuous(label = human_usd) + 
-    scale_x_continuous(breaks = c(0, 5, 10, 15, 20, 25, 30), limits = c(0, 30))
-
-cor.test(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget)
-```
-
-Even though this correlation is statistically significant, it is quite small (`r round(cor(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget),3)`%), so the analysis of movies by director sample on gross revenue can be continued without an obvious confounder of budget.
-
-If we then split this out by decades, we can see the below:
-```{r echo = FALSE}
-##add the decades in as per Steven's code (note: potentially change into a function?)
-movieswithdirectordata$decade <- sapply(movieswithdirectordata$title_year, FUN = convert_decade)
-```
-
-```{r echo = FALSE, fig.width = 10, fig.align = "center", warning = FALSE, message = FALSE}
-ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross, colour = decade)) + 
-    geom_jitter(alpha = 0.1) + 
+    labs(x = "Number of movies\nper director", y = "Gross Revenue") + 
     scale_y_continuous(label = human_usd) + 
     scale_x_continuous(breaks = c(0, 5, 10, 15, 20, 25, 30), limits = c(0, 30)) +
-    theme_bw() +
-    labs(title = "Gross Revenue and # of director movies for different decades", x = "# of Movies by Director", y = "Gross Revenue") + 
-    facet_wrap(~ decade, nrow = 4) + 
-    theme(legend.position = "None") + 
-    geom_smooth(color="#000000")
+    geom_smooth()
+##*Shall I convert the y-axis of the following graphs into log scale? I also set the limits of x-axis to [0, 30] and we miss 1 observation with x value >100. --George*##
 ```
 
-As the number of data elements in the sample grows for each decade, a geomtrical pattern also seems to emerge, which is an upwards trend of gross revenue by movies per director up to about 10 movies per director, andthen a less clear trend for movies for movies with 10+ movies per director.
+An initial look at the relationship between the number of movies that the director has in the dataset, and the gross revenue of those movies does not show a clearly defined correlation, which can be seen in the figure on the left.
 
-Similarly for genres:
+
+To check against one potential confounder for the relationship that number of movies per director has with gross, the correlation between movies per director and budget is calculated.
+
+```{r echo=FALSE}
+c <- cor.test(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget)
+```
+
+Even though this correlation was found to be statistically significant, with a p-value of `r c$p.value`, it is quite small (`r round(cor(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget),3)`%), so the analysis of movies by director sample on gross revenue can be continued without an obvious confounder of budget.
+
+Focusing on the relationship between gross revenue and number of movies per director with the additional dimension of genres, there is an approximate pattern of a positive correlation up to 10 movies by director, and then a less predictable path for those with directors with higher numbers of movies.
 
 ```{r echo = FALSE}
 movies_and_genres_withdirectordata <- merge(movies_and_genres, movieswithdirectordata[,c("movie_title","dir_number_of_movies")], by="movie_title")
@@ -1076,23 +1056,21 @@ ggplot(movies_and_genres_withdirectordata, aes(x = dir_number_of_movies, y = gro
     theme(legend.position = "None") + geom_smooth(color="#000000")
 ```
 
-Most of the genres also seem to approximately follow the pattern of a positive correlation up to 10 movies by director, and then a less predictable path for those with directors with higher numbers of movies.
+
 
 ```{r echo = FALSE, fig.width = 10, fig.align = "center"}
 ##add a categorical variable for ten movies or more
 sorteddirectorsummary$more_than_ten_movies <- rep("Fewer than 10", nrow(sorteddirectorsummary))
 sorteddirectorsummary$more_than_ten_movies[sorteddirectorsummary$number_of_movies>10] <- "10+"
-##calculate the percentage of directors with exactly one movie
-morethantendirpercentage <- round(100*length(sorteddirectorsummary$number_of_movies[sorteddirectorsummary$more_than_ten_movies==1])/length(sorteddirectorsummary$number_of_movies),2)
-
+##calculate the percentage of directors with  more than 10 movies
+morethantendirpercentage <- round(100*length(sorteddirectorsummary$number_of_movies[sorteddirectorsummary$more_than_ten_movies=="10+"])/length(sorteddirectorsummary$number_of_movies),2)
+##merge movie data with director data
 movieswithdirectordata <- merge(movieswithdirectordata, sorteddirectorsummary[,c("director_name","more_than_ten_movies")], by="director_name")
-
+##refactor so that fewer than 10 is before 10+
 movieswithdirectordata$more_than_ten_movies <- factor(movieswithdirectordata$more_than_ten_movies, levels=c("Fewer than 10", "10+"))
-
-morethantenmovpercentage <- round(100*length(movieswithdirectordata$more_than_ten_movies[movieswithdirectordata$more_than_ten_movies==1])/length(movieswithdirectordata$more_than_ten_movies),2)
-
+##calculate the percentage of movies where the director has more than ten movies
+morethantenmovpercentage <- round(100*length(movieswithdirectordata$more_than_ten_movies[movieswithdirectordata$more_than_ten_movies=="10+"])/length(movieswithdirectordata$more_than_ten_movies),2)
 ```
-
 Only approximately `r morethantendirpercentage`% directors have more than ten movies, which, when considering movies, constitutes approximately `r morethantenmovpercentage`% of movies in our sample.
 
 # Inferential Data Analysis
@@ -1970,6 +1948,36 @@ ggplot(data = budgetcountry) + geom_jitter(aes(x = budget, y = gross, color=coun
 ##George
 
 ##Louise
+
+```{r echo = FALSE, message = FALSE, fig.width = 3, fig.height=3, fig.align = "center" }
+##plot for budget vs number of directors in sample
+ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = budget)) + 
+    geom_jitter(alpha = 0.1, width = 1) +
+    theme_bw() + 
+    labs(x = "Number of movies by director in sample", y = "Budget") + 
+    scale_y_continuous(label = human_usd) + 
+    scale_x_continuous(breaks = c(0, 5, 10, 15, 20, 25, 30), limits = c(0, 30))
+```
+
+If we then split this out by decades, we can see the below:
+```{r echo = FALSE}
+##add the decades in as per Steven's code (note: potentially change into a function?)
+movieswithdirectordata$decade <- sapply(movieswithdirectordata$title_year, FUN = convert_decade)
+```
+
+```{r echo = FALSE, fig.width = 10, fig.align = "center", warning = FALSE, message = FALSE}
+ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross, colour = decade)) + 
+    geom_jitter(alpha = 0.1) + 
+    scale_y_continuous(label = human_usd) + 
+    scale_x_continuous(breaks = c(0, 5, 10, 15, 20, 25, 30), limits = c(0, 30)) +
+    theme_bw() +
+    labs(title = "Gross Revenue by\n number of movies per director\n by decades", x = "Number of movies\nper director", y = "Gross Revenue") + 
+    facet_wrap(~ decade, nrow = 4) + 
+    theme(legend.position = "None") + 
+    geom_smooth(color="#000000")
+```
+
+As the number of data elements in the sample grows for each decade, a geomtrical pattern also seems to emerge, which is an upwards trend of gross revenue by movies per director up to about 10 movies per director, andthen a less clear trend for movies for movies with 10+ movies per director.
 
 #To be removed- Notes and comments:
 
