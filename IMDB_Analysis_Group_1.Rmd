@@ -848,48 +848,7 @@ The above plot shows that there might be a slight upward trend in gross revenue 
 # plot all years that have at least ten movies
 # table(movies$title_year)  
 # shows that from 1980 onwards all the years have at least ten entries
-<<<<<<< HEAD
-=======
 
-# function to plot multiple plots at in one grid (from r-cookbook)
-
-multiplot <- function(..., plotlist = NULL, file, cols = 1, layout = NULL) {
-  library(grid)
-  
-  # Make a list from the ... arguments and plotlist
-  plots <- c(list(...), plotlist)
-  
-  numPlots = length(plots)
-  
-  # If layout is NULL, then use 'cols' to determine layout
-  if (is.null(layout)) {
-    # Make the panel
-    # ncol: Number of columns of plots
-    # nrow: Number of rows needed, calculated from # of cols
-    layout <- matrix(seq(1, cols * ceiling(numPlots / cols)),
-                     ncol = cols, nrow = ceiling(numPlots / cols))
-  }
-  
-  if (numPlots == 1) {
-    print(plots[[1]])
-    
-  } else {
-    # Set up the page
-    grid.newpage()
-    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-    
-    # Make each plot, in the correct location
-    for (i in 1:numPlots) {
-      # Get the i,j matrix positions of the regions that contain this subplot
-      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-      
-      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
-                                      layout.pos.col = matchidx$col))
-    }
-  }
-}
-
->>>>>>> 9e1d909da34ed65e5c7cbdb35dbb66c91a462fac
 # subset movies data frame to include all movies from 1980 onwards
 temp <- movies[movies$title_year >= 1980, ]
 # plot the range of IMDB scores for all years
@@ -917,7 +876,7 @@ p2 <- ggplot(temp, aes(x = title_year, y = gross, colour = factor(title_year))) 
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 
-multiplot(p1, p2)
+grid.arrange(p1, p2, ncol=1)
 ```
 
 The plots above give a less biased represenation of the development of gross revenues over time. The revenues now appear more constant. The trendline on the second plot indicates that there is a slight upward trend. Even though the 2000s have more extreme oultliers than the 1990s and 1980s these do not seem to have a substantial affect the median (mean) gross revenues.
@@ -1875,7 +1834,7 @@ p2 <- ggplot(temp, aes(x = title_year, y = imdb_score)) +
   theme(axis.text.x=element_text(angle = 45, hjust = 0.5, vjust = 0.5),legend.position = "None") +
   scale_x_continuous(breaks = seq(min(temp$title_year), max(temp$title_year), by = 1), 0.5)
 
-multiplot(p1, p2)
+grid.arrange(p1, p2,ncol=1)
 
 ```
 
