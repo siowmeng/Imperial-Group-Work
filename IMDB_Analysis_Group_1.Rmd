@@ -824,44 +824,6 @@ The above plot shows that there might be a slight upward trend in gross revenue 
 # table(movies$title_year)  
 # shows that from 1980 onwards all the years have at least ten entries
 
-# function to plot multiple plots at in one grid (from r-cookbook)
-
-multiplot <- function(..., plotlist = NULL, file, cols = 1, layout = NULL) {
-  library(grid)
-  
-  # Make a list from the ... arguments and plotlist
-  plots <- c(list(...), plotlist)
-  
-  numPlots = length(plots)
-  
-  # If layout is NULL, then use 'cols' to determine layout
-  if (is.null(layout)) {
-    # Make the panel
-    # ncol: Number of columns of plots
-    # nrow: Number of rows needed, calculated from # of cols
-    layout <- matrix(seq(1, cols * ceiling(numPlots / cols)),
-                     ncol = cols, nrow = ceiling(numPlots / cols))
-  }
-  
-  if (numPlots == 1) {
-    print(plots[[1]])
-    
-  } else {
-    # Set up the page
-    grid.newpage()
-    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-    
-    # Make each plot, in the correct location
-    for (i in 1:numPlots) {
-      # Get the i,j matrix positions of the regions that contain this subplot
-      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-      
-      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
-                                      layout.pos.col = matchidx$col))
-    }
-  }
-}
-
 # subset movies data frame to include all movies from 1980 onwards
 temp <- movies[movies$title_year >= 1980, ]
 # plot the range of IMDB scores for all years
@@ -887,7 +849,7 @@ p2 <- ggplot(temp, aes(x = title_year, y = gross, colour = factor(title_year))) 
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 
-multiplot(p1, p2)
+grid.arrange(p1, p2, ncol=1)
 ```
 
 The plots above give a less biased represenation of the development of gross revenues over time. The revenues now appear more constant. The trendline on the second plot indicates that there is a slight upward trend. Even though the 2000s have more extreme oultliers than the 1990s and 1980s these do not seem to have a substantial affect the median (mean) gross revenues.
@@ -1527,7 +1489,7 @@ Also, the opposite of the initial intuition appears to be the case for variance,
 Multiple models were created to predict gross revenue based on input parameters. Two "full" models were build using all data available, to determine which was the most effective when tested on the test set, and one "known" model was built based on variables that would normally be available *before* a movie is released.
 
 
-### Second full model
+### First full model
 
 ```{r echo=FALSE}
 ##Data Preparation for model building
@@ -1547,10 +1509,14 @@ trainwithdirectordata$PG_13 <- factor(trainwithdirectordata$PG_13, levels=c("Not
 ## column subset 3:26 is to remove duplicating the score and gross columns)
 trainwithdirectorandgenredata <- merge(movies_and_genres_wide[3:26], trainwithdirectordata, by="movie_title")
 ```
+
 _Model summary_
 ```{r echo=FALSE}
-fullmodel <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews,  data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >=2010,])
+fullmodel <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews,  data=trainwithdirectorandgenredata)
 summary(fullmodel)
+
+fullmodel2010 <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews,  data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >=2010,])
+summary(fullmodel2010)
 ```
 
 ####Justification
@@ -1583,13 +1549,15 @@ ggplot(movies, aes(x=color)) + geom_bar() + xlab("")
 * The number of users for review has been included as it is statistically significant and may be correlated due to the two possible mechanisms that reviews may encourage more people to watch the movie, or the more people that see the movie, the more reviews are left.
 * Director number of movies, although significant individually, when other variables are taken into account loses its statistical significance, so is omitted from the model.
 
-### First Full Model
+### Second Full Model
 
 ```{r linearmodel, echo=FALSE}
-
+##Data preparation
 trainwithdirectorandgenredata$us_or_others <- trainwithdirectorandgenredata$country
 trainwithdirectorandgenredata$us_or_others[trainwithdirectorandgenredata$country != "USA"] <- "Non-USA"
 trainwithdirectorandgenredata$english <- factor(trainwithdirectorandgenredata$language == "English", levels = c(TRUE, FALSE), labels = c("English", "Non-English"))
+
+##Linear model
 fbmodel <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes 
               + imdb_score + PG_13 + Action + Adventure + Fantasy + Family + Western + Drama + Crime 
               + Biography + Documentary + us_or_others + english, 
@@ -1608,8 +1576,11 @@ summary(fbmodel2010)
 ####Third Model, with only pre-known variables
 
 ```{r echo=FALSE}
-knownvariablesmodel <- lm(gross ~ budget + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + more_than_ten_movies, data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year>=2010,])
+knownvariablesmodel <- lm(gross ~ budget + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + more_than_ten_movies, data=trainwithdirectorandgenredata)
 summary(knownvariablesmodel)
+
+knownvariablesmodel2010 <- lm(gross ~ budget + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + more_than_ten_movies, data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year>=2010,])
+summary(knownvariablesmodel2010)
 ```
 
 To build a model to predict revenue of movies that have not yet been released, we include only variables that are known before the time of release. Our dataset provided us with number of facebook likes at a specific point in time, and to use this as part of our predictive model we would need to analyse number of facebook likes before the movie was released, however we will use what we currently have as a proxy to build the model. This model has lower predictive power (adjusted R squared of `r summary(knownvariablesmodel)$adj.r.squared`), but could be used in a more useful business context.
@@ -1634,7 +1605,6 @@ testwithdirectordata$PG_13 <- factor(testwithdirectordata$PG_13, levels=c("Not P
 ## merge with genre data based on movie_title
 ## column subset 3:26 is to remove duplicating the score and gross columns)
 test <- merge(movies_and_genres_wide[3:26], testwithdirectordata, by="movie_title")
-
 test$us_or_others <- test$country
 test$us_or_others[test$country != "USA"] <- "Non-USA"
 test$english <- factor(test$language == "English", levels = c(TRUE, FALSE), labels = c("English",
@@ -1642,95 +1612,120 @@ test$english <- factor(test$language == "English", levels = c(TRUE, FALSE), labe
 ```
 
 Model including all data:
-```{r echo=FALSE}
-pre2010model <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews + more_than_ten_movies, data=trainwithdirectorandgenredata)
-summary(pre2010model)
-```
-
 ```{r prediction, echo = FALSE, results = TRUE}
 
-predpre <- predict(pre2010model, test)
-rmsepre <- sqrt(mean((predpre - test$gross)^2))
-predFB <- predict(fbmodel, test)
-rmseFB <- sqrt(mean((predFB - test$gross)^2))
+##calculate the prediction and MSE for all 3 models using all data and data post 2010
+fullmodelpre <- predict(fullmodel, test)
+fullmodelmse <- sqrt(mean((fullmodelpre - test$gross)^2))
+fullmodel2010pre <- predict(fullmodel2010, test[test$title_year >= 2010, ])
+fullmodel2010mse <- sqrt(mean((fullmodel2010pre - test$gross[test$title_year >= 2010])^2))
+fbmodelpre <- predict(fbmodel, test)
+fbmodelmse <- sqrt(mean((fbmodelpre - test$gross)^2))
+fbmodel2010pre <- predict(fbmodel2010, test[test$title_year >= 2010, ])
+fbmodel2010mse <- sqrt(mean((fbmodel2010pre - test$gross[test$title_year >= 2010])^2))
+knownvariablesmodelpre <- predict(knownvariablesmodel, test)
+knownvariablesmodelmse <- sqrt(mean((knownvariablesmodelpre - test$gross)^2))
+knownvariablesmodel2010pre <- predict(knownvariablesmodel2010, test[test$title_year >= 2010, ])
+knownvariablesmodel2010mse <- sqrt(mean((knownvariablesmodel2010pre - test$gross[test$title_year >= 2010])^2))
 
-dfpre <- data.frame(y_actual = test$gross, y_predict = predpre)
-ggplot(data = dfpre, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
-    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
-    ylab("Actual Gross Revenue(US$)") + coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
-ggplot(data = dfpre, aes(x = y_predict, y = y_actual - y_predict)) + geom_point(colour = "red") +
-    geom_hline(yintercept = 0, colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
-    ylab("Residual(US$)") + coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
-
-dfFB <- data.frame(y_actual = test$gross, y_predict = predFB)
-ggplot(data = dfFB, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
-    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
-    ylab("Actual Gross Revenue(US$)") + coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
-ggplot(data = dfFB, aes(x = y_predict, y = y_actual - y_predict)) + geom_point(colour = "red") +
-    geom_hline(yintercept = 0, colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
-    ylab("Residual(US$)") + coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
-
-modelperf <- matrix(data = c(rmsepre, rmseFB), nrow = 2)
-rownames(modelperf) <- c("Pre Model", "FaceBook Model")
-colnames(modelperf) <- c("Root-Mean-Square Error (US$)")
-modelperf
-
-predFB2010 <- predict(fbmodel2010, test[test$title_year >= 2010, ])
-rmseFB2010 <- sqrt(mean((predFB2010 - test$gross[test$title_year >= 2010])^2))
-predFull2010 <- predict(fullmodel, test[test$title_year >= 2010, ])
-rmseFull2010 <- sqrt(mean((predFull2010 - test$gross[test$title_year >= 2010])^2))
-predKnown2010 <- predict(knownvariablesmodel, test[test$title_year >= 2010, ])
-rmseKnown2010 <- sqrt(mean((predKnown2010 - test$gross[test$title_year >= 2010])^2))
-
-dfFB2010 <- data.frame(y_actual = test$gross[test$title_year >= 2010], y_predict = predFB2010)
-plot1 <- ggplot(data = dfFB2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
-    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
-    ylab("Actual Gross Revenue(US$)") + 
-    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
-    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) 
-plot2 <-ggplot(data = dfFB2010, aes(x = y_predict, y = y_actual - y_predict)) + 
-    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
-    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
-    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
-    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) 
-
-dfFull2010 <- data.frame(y_actual = test$gross[test$title_year >= 2010], 
-                         y_predict = predFull2010)
-plot3 <- ggplot(data = dfFull2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
-    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
-    ylab("Actual Gross Revenue(US$)") + 
-    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
-    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) 
-plot4 <- ggplot(data = dfFull2010, aes(x = y_predict, y = y_actual - y_predict)) + 
-    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
-    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
-    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
-    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) 
-
-dfKnown2010 <- data.frame(y_actual = test$gross[test$title_year >= 2010], 
-                         y_predict = predKnown2010)
-plot5 <- ggplot(data = dfKnown2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
-    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
-    ylab("Actual Gross Revenue(US$)") + 
-    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
-    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) 
-plot6 <- ggplot(data = dfKnown2010, aes(x = y_predict, y = y_actual - y_predict)) + 
-    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
-    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
-    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
-    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) 
-
-grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6, ncol=2)
+##turn MSE data into a table for display with columns of "all data" and "post 2010", and rows of model type
+msetable <- data.frame(alldata=c(fullmodelmse, fbmodelmse, knownvariablesmodelmse), post2010 = c(fullmodel2010mse, fbmodel2010mse, knownvariablesmodel2010mse))
+rownames(msetable) <- c("Full Model", "Facebook Model", "Known Variables Model")
+colnames(msetable) <- c("Model using all data", "Model using post 2010 data")
+kable(msetable, format="markdown")
 ```
 
-```{r echo=FALSE}
-modelperf2010 <- matrix(data = c(rmseFB2010, rmseFull2010, rmseKnown2010), nrow = 3)
-rownames(modelperf2010) <- c("FaceBook (Post-2010) Model", "Full (Post-2010) Model", 
-                             "Known Variable (Post-2010) Model")
-colnames(modelperf2010) <- c("Root-Mean-Square Error (US$)")
-modelperf2010
 
+```{r echo=FALSE, fig.align="center"}
+
+##Plot the predictions and residuals for full model with all data
+dffullmodel <- data.frame(y_actual = test$gross, y_predict = fullmodelpre)
+plot1 <- ggplot(data = dffullmodel, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("Full Model All Data")
+plot2 <-ggplot(data = dffullmodel, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Full Model All Data")
+##Plot the predictions and residuals for full model post 2010
+dffullmodel2010 <- data.frame(y_actual = test$gross[test$title_year>=2010], y_predict = fullmodel2010pre)
+plot3 <- ggplot(data = dffullmodel2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "blue") + 
+    geom_abline(colour = "red") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("Full Model post 2010")
+plot4 <-ggplot(data = dffullmodel2010, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "blue") + geom_hline(yintercept = 0, colour = "red") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Full Model post 2010")
+grid.arrange(plot1,plot2,plot3,plot4, ncol=2)
 ```
+
+```{r echo=FALSE, fig.align="center"}
+
+##Plot the predictions and residuals for facebook model with all data
+dffbmodel <- data.frame(y_actual = test$gross, y_predict = fbmodelpre)
+fbmodelplot1 <- ggplot(data = dffbmodel, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("Facebook Model All Data")
+fbmodelplot2 <-ggplot(data = dffbmodel, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Facebook Model All Data")
+##Plot the predictions and residuals for facebook model post 2010
+dffbmodel2010 <- data.frame(y_actual = test$gross[test$title_year>=2010], y_predict = fbmodel2010pre)
+fbmodelplot3 <- ggplot(data = dffbmodel2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "blue") + 
+    geom_abline(colour = "red") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("Facebook Model post 2010")
+fbmodelplot4 <-ggplot(data = dffbmodel2010, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "blue") + geom_hline(yintercept = 0, colour = "red") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Facebook Model post 2010")
+grid.arrange(fbmodelplot1,fbmodelplot2,fbmodelplot3,fbmodelplot4, ncol=2)
+```
+
+
+```{r echo=FALSE, fig.align="center"}
+
+##Plot the predictions and residuals for known variables model with all data
+dfknownvariablesmodel <- data.frame(y_actual = test$gross, y_predict = knownvariablesmodelpre)
+knownvariablesmodelplot1 <- ggplot(data = dfknownvariablesmodel, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("Known Variables Model All Data")
+knownvariablesmodelplot2 <-ggplot(data = dfknownvariablesmodel, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Known Variables Model All Data")
+
+##Plot the predictions and residuals for known variables model post 2010
+dfknownvariablesmodel2010 <- data.frame(y_actual = test$gross[test$title_year>=2010], y_predict = knownvariablesmodel2010pre)
+knownvariablesmodelplot3 <- ggplot(data = dfknownvariablesmodel2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "blue") + 
+    geom_abline(colour = "red") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("Facebook Model post 2010")
+knownvariablesmodelplot4 <-ggplot(data = dfknownvariablesmodel2010, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "blue") + geom_hline(yintercept = 0, colour = "red") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Facebook Model post 2010")
+grid.arrange(knownvariablesmodelplot1,knownvariablesmodelplot2,knownvariablesmodelplot3,knownvariablesmodelplot4, ncol=2)
+```
+
+
 
 #Dicussion
 
@@ -1793,7 +1788,7 @@ p2 <- ggplot(temp, aes(x = title_year, y = imdb_score)) +
   theme(axis.text.x=element_text(angle = 45, hjust = 0.5, vjust = 0.5),legend.position = "None") +
   scale_x_continuous(breaks = seq(min(temp$title_year), max(temp$title_year), by = 1), 0.5)
 
-multiplot(p1, p2)
+grid.arrange(p1, p2, ncol=1)
 
 ```
 
