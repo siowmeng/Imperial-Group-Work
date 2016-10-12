@@ -19,6 +19,7 @@ library(GGally)
 library(knitr)
 library(scales)
 library(gridExtra)
+library(pander)
 ```
 
 #Executive Summary
@@ -1172,11 +1173,14 @@ ggplot(topratedmovies, aes(contentrating, contentgross, fill = contentrating)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 
 # Does the gross revenue vary with different ratings?
-t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG-13"])
+RvsPG13 <- t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG-13"])
+pander(RvsPG13)
 
-t.test(movies$gross[movies$content_rating == "PG-13"], movies$gross[movies$content_rating == "PG"])
+PG13vsPG <- t.test(movies$gross[movies$content_rating == "PG-13"], movies$gross[movies$content_rating == "PG"])
+pander(PG13vsPG)
 
-t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG"])
+RvsPG <- t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG"])
+pander(RvsPG)
 ```
 
 PG, PG-13 and R are the most common ratings observed in our datatset. Looking the boxplots, R movies tend to on average have higher IMDB scores and lower revenues than PG or PG-13 rated movies. 
