@@ -128,16 +128,15 @@ An initial review of our dataset identified a few key issues to be addressed bef
 * The inclusion of erroneous special characters that may be an artefact of text format conversion
 * The inclusion of leading and trailing white spaces.
 
-The below table shows the number of missing values found in each column:
-
-*LF comment - can we make this smaller/into more rows so that it takes up less page space?*
+The below table shows the columns with missing values:
 
 ```{r, echo = FALSE}
     ## function to calculate list of NAs within a column
 colNA <- function(dfCol){ sum(is.na(dfCol)) }
 ## To show table of sum of NAs by column
 na_values <- data.frame(colnames(movies), apply(movies, 2, colNA))
-colnames(na_values) <- c("Variable Name", "Number of NA values")
+na_values <- na_values[na_values$apply.movies..2..colNA.>0,]
+colnames(na_values) <- c("Variable Name", "Number of missing values")
 na_values <- na_values[order(na_values[, "Variable Name"]), ]
 kable(na_values, format = "markdown", align = "l", row.names = FALSE)
 ```
