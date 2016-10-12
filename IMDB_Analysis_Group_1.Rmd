@@ -1648,7 +1648,7 @@ convert_decade <- function(year){
 movies$decade <- sapply(movies$title_year, FUN = convert_decade)
 ```
 
-```{r echo=FALSE}
+```{r, echo=FALSE, fig.width = 10, fig.align = "center"}
 # For all countries by decade 
 # remove entries with NA-NA
 temp <- movies[!movies$decade == "NA-NA", ]
@@ -1656,6 +1656,17 @@ ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
   geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
   labs(title = "IMDB scores against decade, all countries", x = "", y = "IMDB Score")
+
+
+# facetgrid of imdb scores over decade for continents
+temp <- movies[!is.na(movies$continent), ]
+ggplot(temp, aes(y = imdb_score, x = factor(decade), fill = decade)) + 
+    geom_boxplot() + 
+    labs(title = "IMDB and decades for continents", y = "IMDB score", x = "Decade") + 
+    facet_wrap(~ continent) +
+    theme_bw() + 
+    theme(legend.position = "None",axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5)) +
+    annotation_logticks(sides = "lr", colour = "gray")
 
 # for Europe
 temp <- movies[!movies$decade == "NA-NA", ]
