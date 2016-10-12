@@ -19,7 +19,6 @@ library(GGally)
 library(knitr)
 library(scales)
 library(gridExtra)
-library(pander)
 ```
 
 #Executive Summary
@@ -30,7 +29,6 @@ library(pander)
 With the advent of big data and advanced predictive analytics capabilities, very often, producers are trying to determine beforehand what will make a movie successful or fail. Rather than relying on intuition and guesswork, producers such as Netflix are trying to figure out what will make a movie a successful one by analysing historical data available in the movie industry and increase their success rates through the use of data analytics. For Netflix, the recent award-winning drama 'House of Cards' was a success story of theirs - descriptive, prescriptive and predictive analytics were crucial in the process of developing the drama, to gauge what content viewers were interested in.
 
 Similarly, a question which can be posed - whether one can predict the successfulness of a movie before it is released on cinema. To address this question, we have obtained a dataset from Kaggle scraped from the *imdb.com* containing 28 different variables for our analysis. Our key objectives for this report is to determine what makes a movie popular (based on gross revenue), and what makes a movie highly rated by the public (based on IMDB score). Descriptive analyses and influential analyses to look at which of the variables available in the dataset affect user ratings and gross revenue, will be followed by an attempt to develop a predictive model. This predictive model will try to determine which movies will be successful based on the relevant variable identified. 10% of the original data has been set aside to act as the test dataset and the model will be evaluated on its accuracy to predict gross revenue using Mean Squared Error and other success statistics.
-
 
 #Data
 
@@ -668,6 +666,43 @@ ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_yea
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 
+# function to plot multiple plots at in one grid (from r-cookbook)
+
+multiplot <- function(..., plotlist = NULL, file, cols = 1, layout = NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots / cols)),
+                     ncol = cols, nrow = ceiling(numPlots / cols))
+  }
+  
+  if (numPlots == 1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
 
 # subset movies data frame to include all movies from 1980 onwards
 temp <- movies[movies$title_year >= 1980,]
@@ -694,7 +729,7 @@ p2 <- ggplot(temp, aes(x = title_year, y = imdb_score, colour = factor(title_yea
     scale_x_continuous(breaks = seq(min(temp$title_year), max(temp$title_year), by = 1), 0.5) +
     scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) 
 
-grid.arrange(p1, p2, ncol=1)
+multiplot(p1, p2)
 ```
 
 
@@ -1129,14 +1164,11 @@ ggplot(topratedmovies, aes(contentrating, contentgross, fill = contentrating)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 
 # Does the gross revenue vary with different ratings?
-RvsPG13 <- t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG-13"])
-pander(RvsPG13)
+t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG-13"])
 
-PG13vsPG <- t.test(movies$gross[movies$content_rating == "PG-13"], movies$gross[movies$content_rating == "PG"])
-pander(PG13vsPG)
+t.test(movies$gross[movies$content_rating == "PG-13"], movies$gross[movies$content_rating == "PG"])
 
-RvsPG <- t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG"])
-pander(RvsPG)
+t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG"])
 ```
 
 PG, PG-13 and R are the most common ratings observed in our datatset. Looking the boxplots, R movies tend to on average have higher IMDB scores and lower revenues than PG or PG-13 rated movies. 
@@ -1421,7 +1453,7 @@ When we actually make predictions based on a linear model for categorical data, 
 
 ### Steven
 
-This section tests whether North American movies have a higher mean IMDB score than European ones. Intuitively, one would assume that North American movies score higher than European ones. This intuition stems from the prevalence of North American movies in media and the proven positive effect of media on sales.
+This section tests whether North American movies have a higher mean IMDB score than European ones. Intuitively, one would assume that North American movies score higher than European ones. This intuition stems from the prevalence of North American movies in media. 
 
 H0 -> Europe and North America get equal scores
 
