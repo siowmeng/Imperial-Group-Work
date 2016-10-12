@@ -1767,7 +1767,7 @@ The plot above show that there might be a downward trend in IMDB scores over the
 ```{r, echo = FALSE}
 # subset movies data frame to include all movies from 1980 onwards
 temp <- movies[movies$title_year >= 1980,]
-# plot the range of IMDB scores for all years
+# plot the range of IMDB scores for all years with more than 10 entries
 p1 <- ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
   geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle = 45, hjust = 0.5, vjust = 0.5),legend.position = "None") +
