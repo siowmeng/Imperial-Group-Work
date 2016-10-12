@@ -20,10 +20,8 @@ library(knitr)
 library(scales)
 library(gridExtra)
 library(pander)
-<<<<<<< HEAD
-=======
 library(stargazer)
->>>>>>> 7d52fa3a5132eb2e55499976528ce5178c6a39b8
+
 ```
 
 #Executive Summary
@@ -47,7 +45,7 @@ With the advent of big data and advanced predictive analytics capabilities, very
 
 Similarly, a question can be posed - whether one can predict the successfulness of a movie before it is released on cinema. Our key objective for this report is to determine what makes a movie popular (based on gross revenue). Descriptive analyses and influential analyses to look at which of the variables available in the dataset affect user ratings and gross revenue, will be followed by an attempt to develop a predictive model. This predictive model will try to determine which movies will be successful based on the relevant variable identified. 10% of the original data has been set aside to act as the test dataset and the model will be evaluated on its accuracy to predict gross revenue using Mean Squared Error and other success statistics.
 
-<<<<<<< HEAD
+
 #Data
 
 
@@ -412,9 +410,6 @@ Lastly, when we look at the scatterplots, we see that UK & US movies seem to be 
 
 For movie budget, it has been remarked by IMDB that the reported figures on the website are the 'negative costs' of a movie, so purely the production costs and excluding advertising and promotion costs. IMDB has also remarked that the budget costs are not very accurate and may actually be a estimate ballpark, as they can be very difficult to calculate and reported budgets may increase over time.
 
-1. Budget of movies
-
-2. Budget of films in the top 13 countries (with 10 or more movies in the data set, the rest have been omitted)
 
 ```{r, echo = FALSE, message = FALSE, fig.width = 10, fig.align = "center"}
 ##Histogram for movie budget
@@ -1098,48 +1093,9 @@ This is consistent with the t-test results. There is no difference in the gross 
 
 ### Cecilia
 
-<<<<<<< HEAD
+
 Intuitively, the higher the budget of a movie, the better it should be and hence should attract more people to watch it, resulting in a higher gross revenue. 
-=======
-We would like to investigate whether the imdb score of movie is affected by the budget for the particular movie.
 
-```{r echo = FALSE, fig.width = 10, fig.align = "center"}
-#scatter plot for budget vs imdb score
-ggplot(data = movies, aes(y = budget, x = imdb_score)) + 
-    geom_jitter(alpha = 0.4, colour = "#FF9999") + 
-    theme_bw() +
-    labs(y = "Budget", x = "IMDB Score", title = "Budget versus IMDB Score") + 
-    scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10))+
-    scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
-    annotation_logticks(sides = "lr", colour = "gray") 
-
-#covariance test
-cov(movies$budget, movies$imdb_score)
-
-#correlation test
-pander(cor.test(movies$budget, movies$imdb_score))
-```
-
-The covariance value of 5.3x10^7 suggests that there is an upward trend - as budget increases, imdb score increases. The Pearson's correlation test between budget and IMDB score gives a p-value of 0.047, which suggests that there isn't a high correlation between budget of the movie and rating on IMDB. 
-
-Even if we dig deeper to look at the effect of budget on IMDB score for movies from different countries, it appears to be that there is not much of a trend.
-
-```{r echo = FALSE, fig.width = 10, fig.align = "center"}
-ggplot(budgetcountry, aes(y = budget, x = imdb_score, colour = country)) + 
-    geom_jitter(alpha = 0.2) + 
-    labs(title = "Budget and IMDB score for different countries", y = "Budget", x = "IMDB Score") + 
-    scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
-    scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
-    facet_wrap(~ country) +
-    theme_bw() + 
-    theme(legend.position = "None") +
-    annotation_logticks(sides = "lr", colour = "gray") 
-```
-
-Next, we want to look to see whether the budget has an influence on gross revenue.
->>>>>>> 7d52fa3a5132eb2e55499976528ce5178c6a39b8
 
 ```{r echo = FALSE, fig.width = 10, fig.align = "center"}
 #scatter plot for budget vs gross
@@ -1178,45 +1134,6 @@ ggplot(budgetcountry, aes(x = budget, y = gross, colour = country)) +
     theme(legend.position = "None")
 ```
 
-<<<<<<< HEAD
-=======
-As both variables are indicators of a movie's popularity, we can conclude from the above analysis that budget does not have a huge influence on how 'popular' a movie is.
-
-Does budget affect gross profit margin?
-
-```{r echo = FALSE, fig.width = 10, fig.align = "center"}
-#create grossprofit column
-movieswprofit <- data.frame(movies)
-movieswprofit$grossprofitmargin <- (movieswprofit$gross - movieswprofit$budget)/movieswprofit$gross * 100
-
-#scatter plot for budget vs gross profit margin 
-ggplot(data = movieswprofit, aes(x = budget, y = grossprofitmargin)) + 
-    geom_point(alpha = 0.4, colour = "#FF9999") + 
-    theme_bw() +
-    scale_x_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) + 
-    scale_y_continuous(limits = c(-1000, 100)) + 
-    labs(x = "Budget in USD", y = "Gross Profit Margin as %") +
-    annotation_logticks(sides = "tb", colour = "gray") 
-
-#covariance test
-cov(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.obs")
-
-#correlation test
-pander(cor.test(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.obs"))
-```
-
-Finally, we would also like to look at the effect of gross vs on gross profit margin, whether the an increase in budget would make a better movie, and hence a higher gross profit margin. Gross profit margin can be used as an indictor of profitability of movie. Based on the data, it appears that there is a negative correlation (-0.31) between budget and profit. Although it is not very strong, it still suggests that an increase in budget has a slight negative impact on gross profit margin.
-
-From the plot, we can see that a lot of movies are not profitable. Around half of the movies are profitable (count = 1988), half are not (count = 1801).
-
-```{r echo = FALSE, fig.width = 10, fig.align = "center"}
-movieswprofit$profitable <- ifelse(movieswprofit$grossprofitmargin >= 0, "yes", "no")
-
-pander(table(movieswprofit$profitable))
-```
-From the analysis above, we can conclude there is a positive correlation between budget and imdb score, as well as gross revenue, though the correlation themselves are not strong.
->>>>>>> 7d52fa3a5132eb2e55499976528ce5178c6a39b8
 
 ### George
 
@@ -2078,41 +1995,6 @@ ggplot(budgetcountry, aes(x = budget, y = imdb_score, colour = country)) +
   theme_bw() + 
   theme(legend.position = "None")
 
-```
-
-
-Does budget affect gross profit margin?
-
-```{r echo = FALSE, fig.width = 10, fig.align = "center"}
-#create grossprofit column
-movieswprofit <- data.frame(movies)
-movieswprofit$grossprofitmargin <- (movieswprofit$gross - movieswprofit$budget)/movieswprofit$gross * 100
-
-#scatter plot for budget vs gross profit margin 
-ggplot(data = movieswprofit, aes(x = budget, y = grossprofitmargin)) + 
-    geom_point(alpha = 0.4, colour = "#FF9999") + 
-    theme_bw() +
-    scale_x_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) + 
-    scale_y_continuous(limits = c(-1000, 100)) + 
-    labs(x = "Budget in USD", y = "Gross Profit Margin as %") +
-    annotation_logticks(sides = "tb", colour = "gray") 
-
-#covariance test
-cov(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.obs") 
-
-#correlation test
-cor.test(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.obs")
-```
-
-Finally, we would also like to look at the effect of gross vs on gross profit margin, whether the an increase in budget would make a better movie, and hence a higher gross profit margin. Gross profit margin can be used as an indictor of profitability of movie. Based on the data, it appears that there is a negative correlation (-0.31) between budget and profit. Although it is not very strong, it still suggests that an increase in budget has a slight negative impact on gross profit margin.
-
-From the plot, we can see that a lot of movies are not profitable. Around half of the movies are profitable (count = 1988), half are not (count = 1801).
-
-```{r echo = FALSE, fig.width = 10, fig.align = "center"}
-movieswprofit$profitable <- ifelse(movieswprofit$grossprofitmargin >= 0, "yes", "no")
-
-table(movieswprofit$profitable)
 ```
 
 ##Siow Meng
