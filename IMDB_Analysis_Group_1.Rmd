@@ -148,6 +148,7 @@ To resolve these issues, the following cleansing process is applied:
 * All rows where the budget has a missing value are removed - as there are a high number, and this variable is expected to be key to the analysis.
 * The aspect ratio column has a missing value removed - as there are a high number of NAs, and this variable is not expected to be key to the analysis. 
 * The IMDB link column is removed - as this variable is not expected to be key to the analysis
+
 ```{r, echo = FALSE}
 ## To remove rows where NAs are present for any of the applicable columns
 movies <- movies[complete.cases(movies[c("title_year","budget","gross")]),]
@@ -155,7 +156,9 @@ movies <- movies[complete.cases(movies[c("title_year","budget","gross")]),]
 movies$aspect_ratio<- NULL
 movies$movie_imdb_link<- NULL
 ```
+
 * After this step there are only `r sum(is.na(movies))` remaining missing values within the dataframe. For these missing values, the mean value for that column will be used to replace all misisng values within that column. Although this has some drawbacks in terms of accuracy, it allows us to maintain rows of data with other valid information, and is an unbiased approach.
+
 ```{r, echo = FALSE}
 ## for loop to replace NAs with means for particular columns
 for (i in c("actor_1_facebook_likes" , "actor_2_facebook_likes" , "actor_3_facebook_likes" , "num_critic_for_reviews" , "duration" , "facenumber_in_poster")){
@@ -857,7 +860,9 @@ Only approximately `r morethantendirpercentage`% directors have more than ten mo
 
 *It is expected that these will be related to how inputs are correlated with the two outcome variables (gross and imdb_score)*
 
-### Siow Meng
+### Siow Meng  
+
+*The boxplots below are drawn on normal scale since we'll want to visualize the huge variance difference between English and non-English movies. The coord_cartesian is used to set the y range while not discarding the values outside of this range.*
 
 ```{r echo = FALSE, results = TRUE, fig.width = 10, fig.align = "center"}
 # boxplot of English & Non-English movies
@@ -865,17 +870,18 @@ temp <- movies
 
 temp$english <- factor(temp$language == "English", levels = c(TRUE, FALSE), labels = c("English", "Non-English"))
 
-ggplot(data = temp, aes(x = english, y = gross)) + geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(title = "Gross Revenue of English and non-English Movies", x = "English or Non-English Movies", y = "Gross Revenue") + coord_cartesian(ylim = c(0, 1e8))
-
 ggplot(data = temp, aes(x = english, y = gross, fill = english)) + 
-    theme_bw() +
-    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-    labs(title = "Gross Revenue of English and non-English Movies", x = "", y = "Gross Revenue") +
-    scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
-    annotation_logticks(sides = "lr", colour = "gray") +
-    theme(legend.position = "none", axis.ticks.x = element_blank(), panel.grid.major.x = element_blank(),
-          axis.title.x = element_blank())
+    theme_bw() + 
+    geom_boxplot() + 
+    stat_summary(fun.y=mean, colour="red", geom="point", size=3, show.legend = FALSE) + 
+    labs(title = "Gross Revenue of English and non-English Movies", 
+         x = "", y = "Gross Revenue") + 
+    scale_y_continuous(breaks = c(0, 15e+06, 30e+06, 45e+06, 60e+06, 75e+06), 
+                       labels = c("0", "15 millions", "30 millions", "45 millions", 
+                                  "60 millions", "75 millions")) + 
+    coord_cartesian(ylim = c(0, 80e6)) + 
+    theme(legend.position = "none", axis.ticks.x = element_blank(), 
+          panel.grid.major.x = element_blank(), axis.title.x = element_blank())
 
 t.test(movies$gross[movies$language == "English"], movies$gross[movies$language != "English"], alternative = "greater")
 
@@ -893,19 +899,18 @@ We are confident to say that the English movies in this dataset are generally mo
 temp$us_or_others <- temp$country
 temp$us_or_others[temp$country != "USA"] <- "Non-USA"
 
-#temp$english <- factor(temp$language == "English", levels = c(TRUE, FALSE), labels = c("English", "Non-English"))
-
-ggplot(data = temp, aes(x = us_or_others, y = gross)) + geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(title = "Gross Revenue of USA and non-USA Movies", x = "USA or Non-USA Movies", y = "Gross Revenue") + coord_cartesian(ylim = c(0, 1e8))
-
 ggplot(data = temp, aes(x = us_or_others, y = gross, fill = us_or_others)) + 
-    theme_bw() +
-    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-    labs(title = "Gross Revenue of USA and non-USA Movies", x = "", y = "Gross Revenue") +
-    scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
-    annotation_logticks(sides = "lr", colour = "gray") +
-    theme(legend.position = "none", axis.ticks.x = element_blank(), panel.grid.major.x = element_blank(),
-          axis.title.x = element_blank())
+    theme_bw() + 
+    geom_boxplot() + 
+    stat_summary(fun.y=mean, colour="red", geom="point", size=3, show.legend = FALSE) + 
+    labs(title = "Gross Revenue of USA and non-USA Movies", 
+         x = "", y = "Gross Revenue") + 
+    scale_y_continuous(breaks = c(0, 15e+06, 30e+06, 45e+06, 60e+06, 75e+06), 
+                       labels = c("0", "15 millions", "30 millions", "45 millions", 
+                                  "60 millions", "75 millions")) + 
+    coord_cartesian(ylim = c(0, 80e6)) + 
+    theme(legend.position = "none", axis.ticks.x = element_blank(), 
+          panel.grid.major.x = element_blank(), axis.title.x = element_blank())
 
 t.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater")
 
