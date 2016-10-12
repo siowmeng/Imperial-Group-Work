@@ -20,10 +20,7 @@ library(knitr)
 library(scales)
 library(gridExtra)
 library(pander)
-<<<<<<< HEAD
-=======
 library(stargazer)
->>>>>>> 7d52fa3a5132eb2e55499976528ce5178c6a39b8
 ```
 
 #Executive Summary
@@ -47,7 +44,6 @@ With the advent of big data and advanced predictive analytics capabilities, very
 
 Similarly, a question can be posed - whether one can predict the successfulness of a movie before it is released on cinema. Our key objective for this report is to determine what makes a movie popular (based on gross revenue). Descriptive analyses and influential analyses to look at which of the variables available in the dataset affect user ratings and gross revenue, will be followed by an attempt to develop a predictive model. This predictive model will try to determine which movies will be successful based on the relevant variable identified. 10% of the original data has been set aside to act as the test dataset and the model will be evaluated on its accuracy to predict gross revenue using Mean Squared Error and other success statistics.
 
-<<<<<<< HEAD
 #Data
 
 
@@ -657,9 +653,7 @@ ggplot(movies_and_keywords, aes(x = score, y = gross, colour = keywords)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 ```
 
-<<<<<<< HEAD
 ### Gross revenue over time
-=======
 ### Decades
 Boxplot gross against year, decade
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
@@ -769,7 +763,6 @@ convert_decade <- function(year){
 # apply previous function
 movies$decade <- sapply(movies$title_year, FUN = convert_decade)
 ```
->>>>>>> 7d52fa3a5132eb2e55499976528ce5178c6a39b8
 
 This section will analyze the evolution of revenues over time.
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
@@ -1074,22 +1067,11 @@ ggplot(topratedmovies, aes(contentrating, contentgross, fill = contentrating)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 
 # Does the gross revenue vary with different ratings?
-<<<<<<< HEAD
-RvsPG13 <- t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG-13"])
-pander(RvsPG13)
-
-PG13vsPG <- t.test(movies$gross[movies$content_rating == "PG-13"], movies$gross[movies$content_rating == "PG"])
-pander(PG13vsPG)
-
-RvsPG <- t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG"])
-pander(RvsPG)
-=======
 pander(t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG-13"]))
 
 pander(t.test(movies$gross[movies$content_rating == "PG-13"], movies$gross[movies$content_rating == "PG"]))
 
 pander(t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG"]))
->>>>>>> 7d52fa3a5132eb2e55499976528ce5178c6a39b8
 ```
 
 PG, PG-13 and R are the most common ratings observed in our datatset. Looking the boxplots, R movies tend to on average have higher IMDB scores and lower revenues than PG or PG-13 rated movies. 
@@ -1098,9 +1080,7 @@ This is consistent with the t-test results. There is no difference in the gross 
 
 ### Cecilia
 
-<<<<<<< HEAD
 Intuitively, the higher the budget of a movie, the better it should be and hence should attract more people to watch it, resulting in a higher gross revenue. 
-=======
 We would like to investigate whether the imdb score of movie is affected by the budget for the particular movie.
 
 ```{r echo = FALSE, fig.width = 10, fig.align = "center"}
@@ -1139,7 +1119,6 @@ ggplot(budgetcountry, aes(y = budget, x = imdb_score, colour = country)) +
 ```
 
 Next, we want to look to see whether the budget has an influence on gross revenue.
->>>>>>> 7d52fa3a5132eb2e55499976528ce5178c6a39b8
 
 ```{r echo = FALSE, fig.width = 10, fig.align = "center"}
 #scatter plot for budget vs gross
@@ -1178,8 +1157,6 @@ ggplot(budgetcountry, aes(x = budget, y = gross, colour = country)) +
     theme(legend.position = "None")
 ```
 
-<<<<<<< HEAD
-=======
 As both variables are indicators of a movie's popularity, we can conclude from the above analysis that budget does not have a huge influence on how 'popular' a movie is.
 
 Does budget affect gross profit margin?
@@ -1216,7 +1193,6 @@ movieswprofit$profitable <- ifelse(movieswprofit$grossprofitmargin >= 0, "yes", 
 pander(table(movieswprofit$profitable))
 ```
 From the analysis above, we can conclude there is a positive correlation between budget and imdb score, as well as gross revenue, though the correlation themselves are not strong.
->>>>>>> 7d52fa3a5132eb2e55499976528ce5178c6a39b8
 
 ### George
 
@@ -1307,7 +1283,6 @@ This section tests whether North American movies have a higher mean IMDB score t
 
 H0 -> Europe and North America get equal scores
 
-<<<<<<< HEAD
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 
 # code to create continent column
@@ -1325,10 +1300,9 @@ for (i in 1:nrow(movies)) {
     movies$continent[i] <- "North America"
   } 
 }
+```
 
-=======
 ```{r, echo = FALSE, message = FALSE, fig.width = 10, fig.align = "center"}
->>>>>>> 7d52fa3a5132eb2e55499976528ce5178c6a39b8
 # make dataframes for North America and Europe
 North_America <- movies[movies$continent == "North America",]
 Europe <- movies[movies$continent == "Europe",]
@@ -1509,7 +1483,6 @@ stargazer(list(fbmodel, fbmodel2010), type = "html", align = TRUE, column.labels
 
 ####Third Model, with only pre-known variables
 
-<<<<<<< HEAD
 ```{r echo=FALSE}
 knownvariablesmodel <- lm(gross ~ budget + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + more_than_ten_movies, data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year>=2010,])
 summary(knownvariablesmodel)
@@ -1521,7 +1494,6 @@ knownvariablesmodel <- lm(gross ~ budget + PG_13 + duration + cast_total_faceboo
 knownvariablesmodel2010 <- lm(gross ~ budget + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + more_than_ten_movies, data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year>=2010,])
 
 stargazer(list(knownvariablesmodel, knownvariablesmodel2010), type = "html", align = TRUE, dep.var.labels = "Gross revenue", no.space = TRUE, title = "Linear Regression results")
->>>>>>> 05f5f66cfb26160eb848740c2d3fbed5f5d2eec4
 ```
 </center>
 
@@ -1673,7 +1645,6 @@ pander(msetable, format="markdown")
 ##Plot the predictions and residuals for full model with all data
 dffullmodel <- data.frame(y_actual = test$gross, y_predict = fullmodelpre)
 plot1 <- ggplot(data = dffullmodel, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
->>>>>>> 05f5f66cfb26160eb848740c2d3fbed5f5d2eec4
     geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
     ylab("Actual Gross Revenue(US$)") + 
     coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
@@ -1722,13 +1693,11 @@ modelperf2010
 
 ```
 
-<<<<<<< HEAD
 #Dicussion
 
 ##Conclusion
 
 ##Next Steps
-=======
 <center>
 ```{r echo=FALSE, results="asis"}
 modelperf2010 <- data.frame(matrix(data = c(rmseFB2010, rmseFull2010, rmseKnown2010), nrow = 3))
@@ -1739,10 +1708,8 @@ colnames(modelperf2010) <- c("Root-Mean-Square Error (US$)")
 pander(modelperf2010, type = "html")
 ```
 </center>
->>>>>>> 05f5f66cfb26160eb848740c2d3fbed5f5d2eec4
 
 #Conclusion & Next Steps
->>>>>>> 7d52fa3a5132eb2e55499976528ce5178c6a39b8
 *to be completed after our analysis*
 *need to write something interesting about our data*
 
@@ -1810,11 +1777,9 @@ ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_yea
   labs(title = "IMDB scores against year", x = "", y = "IMDB Score") +
   scale_y_continuous(limits = c(2.5, max(movies$imdb_score)))
 ```
-<<<<<<< HEAD
-=======
+
 
 The plot above shows that there might be a downward trend in IMDB scores over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of IMDB scores only years with ten or more entries will be plotted below.
->>>>>>> 7d52fa3a5132eb2e55499976528ce5178c6a39b8
 
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
@@ -1848,8 +1813,6 @@ p2 <- ggplot(temp, aes(x = title_year, y = imdb_score, colour = factor(title_yea
 grid.arrange(p1, p2, ncol=1)
 ```
 
-
-<<<<<<< HEAD
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # create function that converts years into decades
 convert_decade <- function(year){
@@ -1863,10 +1826,8 @@ movies$decade <- sapply(movies$title_year, FUN = convert_decade)
 
 ```{r, echo=FALSE, fig.width = 10, fig.align = "center"}
 # For all countries by decade 
-=======
 ```{r, echo=FALSE, fig.width = 10, fig.align = "center", message = FALSE}
 # for all countries by decade
->>>>>>> 7d52fa3a5132eb2e55499976528ce5178c6a39b8
 # remove entries with NA-NA
 temp <- movies[!movies$decade == "NA-NA", ]
 ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
