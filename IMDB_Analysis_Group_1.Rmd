@@ -19,6 +19,8 @@ library(GGally)
 library(knitr)
 library(scales)
 library(gridExtra)
+library(pander)
+library(stargazer)
 ```
 
 #Executive Summary
@@ -145,6 +147,7 @@ To resolve these issues, the following cleansing process is applied:
 * All rows where the budget has a missing value are removed - as there are a high number, and this variable is expected to be key to the analysis.
 * The aspect ratio column has a missing value removed - as there are a high number of NAs, and this variable is not expected to be key to the analysis. 
 * The IMDB link column is removed - as this variable is not expected to be key to the analysis
+
 ```{r, echo = FALSE}
 ## To remove rows where NAs are present for any of the applicable columns
 movies <- movies[complete.cases(movies[c("title_year","budget","gross")]),]
@@ -152,7 +155,9 @@ movies <- movies[complete.cases(movies[c("title_year","budget","gross")]),]
 movies$aspect_ratio<- NULL
 movies$movie_imdb_link<- NULL
 ```
+
 * After this step there are only `r sum(is.na(movies))` remaining missing values within the dataframe. For these missing values, the mean value for that column will be used to replace all misisng values within that column. Although this has some drawbacks in terms of accuracy, it allows us to maintain rows of data with other valid information, and is an unbiased approach.
+
 ```{r, echo = FALSE}
 ## for loop to replace NAs with means for particular columns
 for (i in c("actor_1_facebook_likes" , "actor_2_facebook_likes" , "actor_3_facebook_likes" , "num_critic_for_reviews" , "duration" , "facenumber_in_poster")){
@@ -180,13 +185,14 @@ This cleansed dataset (of `r nrow(movies)` rows) contains no NA values and is us
 
 *\@George, I agree with your comment to include the head, I have also included the scipen option below so that the budget does not show in scientific notation, but please let me know if you think this makes it look messier*
 
-```{r, echo = FALSE, message = FALSE}
+```{r, echo = FALSE, message = FALSE, results = "asis"}
 set.seed(1)
-options(scipen=10000000)
+options(scipen = 10000000)
 intrain <- createDataPartition(y = movies[[1]], p = 0.9, list = FALSE)
 train <- movies[intrain, ]
 test <- movies[-intrain, ]
-kable(t(movies[1:3, ]), format = "markdown", row.names = TRUE)
+
+kable(t(movies[1:3, ]), format = "markdown")
 ```
 
 10% of the cleansed dataset (`r nrow(test)`) is then set aside to be the "test" dataset, leaving the remaining 90%  of our dataset (`r nrow(movies)`) as the training dataset. The training dataset alone will be used for all descriptive, inferential and predictive analysis, including model building. The "test" dataset will be used at a later stage to check the accuracy of the predicted model.
@@ -635,7 +641,6 @@ ggplot(movies_and_keywords, aes(x = score, y = gross, colour = keywords)) +
 ### Decades
 Boxplot gross against year, decade
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
-
 # code to create continent column
 movies$continent <- countrycode(as.character(movies$country), "country.name", "continent")
 
@@ -662,7 +667,6 @@ ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_yea
   labs(title = "IMDB scores against year", x = "", y = "IMDB Score") +
   scale_y_continuous(limits = c(2.5, max(movies$imdb_score)))
 ```
-
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 
@@ -1028,6 +1032,7 @@ To check against one potential confounder for the relationship that number of mo
 
 ```{r echo=FALSE}
 c <- cor.test(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget)
+pander(c)
 ```
 
 Even though this correlation was found to be statistically significant, with a p-value of `r c$p.value`, it is quite small (`r round(cor(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget),3)`%), so the analysis of movies by director sample on gross revenue can be continued without an obvious confounder of budget.
@@ -1072,7 +1077,9 @@ Only approximately `r morethantendirpercentage`% directors have more than ten mo
 
 *It is expected that these will be related to how inputs are correlated with the two outcome variables (gross and imdb_score)*
 
-### Siow Meng
+### Siow Meng  
+
+*The boxplots below are drawn on normal scale since we'll want to visualize the huge variance difference between English and non-English movies. The coord_cartesian is used to set the y range while not discarding the values outside of this range.*
 
 ```{r echo = FALSE, results = TRUE, fig.width = 10, fig.align = "center"}
 # boxplot of English & Non-English movies
@@ -1080,21 +1087,22 @@ temp <- movies
 
 temp$english <- factor(temp$language == "English", levels = c(TRUE, FALSE), labels = c("English", "Non-English"))
 
-ggplot(data = temp, aes(x = english, y = gross)) + geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(title = "Gross Revenue of English and non-English Movies", x = "English or Non-English Movies", y = "Gross Revenue") + coord_cartesian(ylim = c(0, 1e8))
-
 ggplot(data = temp, aes(x = english, y = gross, fill = english)) + 
-    theme_bw() +
-    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-    labs(title = "Gross Revenue of English and non-English Movies", x = "", y = "Gross Revenue") +
-    scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
-    annotation_logticks(sides = "lr", colour = "gray") +
-    theme(legend.position = "none", axis.ticks.x = element_blank(), panel.grid.major.x = element_blank(),
-          axis.title.x = element_blank())
+    theme_bw() + 
+    geom_boxplot() + 
+    stat_summary(fun.y=mean, colour="red", geom="point", size=3, show.legend = FALSE) + 
+    labs(title = "Gross Revenue of English and non-English Movies", 
+         x = "", y = "Gross Revenue") + 
+    scale_y_continuous(breaks = c(0, 15e+06, 30e+06, 45e+06, 60e+06, 75e+06), 
+                       labels = c("0", "15 millions", "30 millions", "45 millions", 
+                                  "60 millions", "75 millions")) + 
+    coord_cartesian(ylim = c(0, 80e6)) + 
+    theme(legend.position = "none", axis.ticks.x = element_blank(), 
+          panel.grid.major.x = element_blank(), axis.title.x = element_blank())
 
-t.test(movies$gross[movies$language == "English"], movies$gross[movies$language != "English"], alternative = "greater")
+pander(t.test(movies$gross[movies$language == "English"], movies$gross[movies$language != "English"], alternative = "greater"))
 
-var.test(movies$gross[movies$language == "English"], movies$gross[movies$language != "English"], alternative = "greater")
+pander(var.test(movies$gross[movies$language == "English"], movies$gross[movies$language != "English"], alternative = "greater"))
 ```
 
 From the above box-and-whisker plots, we can observe a great difference between the revenues achieved by English and non-English movies. More than 75% of the non-English movies achieved gross revenue of US$10 million or lower. In contrast, more than half of the English movies have more than US$25 million revenues.
@@ -1108,23 +1116,22 @@ We are confident to say that the English movies in this dataset are generally mo
 temp$us_or_others <- temp$country
 temp$us_or_others[temp$country != "USA"] <- "Non-USA"
 
-#temp$english <- factor(temp$language == "English", levels = c(TRUE, FALSE), labels = c("English", "Non-English"))
-
-ggplot(data = temp, aes(x = us_or_others, y = gross)) + geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(title = "Gross Revenue of USA and non-USA Movies", x = "USA or Non-USA Movies", y = "Gross Revenue") + coord_cartesian(ylim = c(0, 1e8))
-
 ggplot(data = temp, aes(x = us_or_others, y = gross, fill = us_or_others)) + 
-    theme_bw() +
-    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-    labs(title = "Gross Revenue of USA and non-USA Movies", x = "", y = "Gross Revenue") +
-    scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
-    annotation_logticks(sides = "lr", colour = "gray") +
-    theme(legend.position = "none", axis.ticks.x = element_blank(), panel.grid.major.x = element_blank(),
-          axis.title.x = element_blank())
+    theme_bw() + 
+    geom_boxplot() + 
+    stat_summary(fun.y=mean, colour="red", geom="point", size=3, show.legend = FALSE) + 
+    labs(title = "Gross Revenue of USA and non-USA Movies", 
+         x = "", y = "Gross Revenue") + 
+    scale_y_continuous(breaks = c(0, 15e+06, 30e+06, 45e+06, 60e+06, 75e+06), 
+                       labels = c("0", "15 millions", "30 millions", "45 millions", 
+                                  "60 millions", "75 millions")) + 
+    coord_cartesian(ylim = c(0, 80e6)) + 
+    theme(legend.position = "none", axis.ticks.x = element_blank(), 
+          panel.grid.major.x = element_blank(), axis.title.x = element_blank())
 
-t.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater")
+pander(t.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater"))
 
-var.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater")
+pander(var.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater"))
 ```
 
 Similarly, we did a box-and-whisker plots of revenues achieved by USA and non-USA movies. Movies made in the USA have achieved more than 50 million USD in average revenue while non-USA movies have around 25 million USD
@@ -1133,11 +1140,9 @@ In addition, the gross revenues of USA movies vary greatly (compared to non-USA 
 
 We are confident to say that the USA movies in this dataset are generally more popular than non-USA movies.
 
-
 ### Nikhita
 
 Looking at the content rating for the movies
-
 
 ```{r echo=FALSE}
 # Replacing M and GP with PG
@@ -1164,11 +1169,11 @@ ggplot(topratedmovies, aes(contentrating, contentgross, fill = contentrating)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 
 # Does the gross revenue vary with different ratings?
-t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG-13"])
+pander(t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG-13"]))
 
-t.test(movies$gross[movies$content_rating == "PG-13"], movies$gross[movies$content_rating == "PG"])
+pander(t.test(movies$gross[movies$content_rating == "PG-13"], movies$gross[movies$content_rating == "PG"]))
 
-t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG"])
+pander(t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG"]))
 ```
 
 PG, PG-13 and R are the most common ratings observed in our datatset. Looking the boxplots, R movies tend to on average have higher IMDB scores and lower revenues than PG or PG-13 rated movies. 
@@ -1194,7 +1199,7 @@ ggplot(data = movies, aes(y = budget, x = imdb_score)) +
 cov(movies$budget, movies$imdb_score)
 
 #correlation test
-cor.test(movies$budget, movies$imdb_score)
+pander(cor.test(movies$budget, movies$imdb_score))
 ```
 
 The covariance value of 5.3x10^7 suggests that there is an upward trend - as budget increases, imdb score increases. The Pearson's correlation test between budget and IMDB score gives a p-value of 0.047, which suggests that there isn't a high correlation between budget of the movie and rating on IMDB. 
@@ -1214,17 +1219,6 @@ ggplot(budgetcountry, aes(y = budget, x = imdb_score, colour = country)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 ```
 
-```{r echo=FALSE}
-
-ggplot(budgetcountry, aes(x = budget, y = imdb_score, colour = country)) + 
-  geom_jitter() + scale_x_log10()+ labs(title = "Budget and IMDB score for different countries", x = "Budget", y = "IMDB Score") + scale_x_log10(breaks = c(1e+03, 1e+05, 1e+07, 1e+09), labels = c("1000", "100,000", "10 million", "1000 million")) +
-  facet_wrap(~ country) +
-  theme_bw() + 
-  theme(legend.position = "None")
-
-```
-
-
 Next, we want to look to see whether the budget has an influence on gross revenue.
 
 ```{r echo = FALSE, fig.width = 10, fig.align = "center"}
@@ -1243,7 +1237,7 @@ ggplot(data = movies, aes(x = budget, y = gross)) +
 cov(movies$budget, movies$gross)
 
 #correlation test
-cor.test(movies$budget, movies$gross)
+pander(cor.test(movies$budget, movies$gross))
 ```
 
 The covariance value of 1.6 x 10^15 suggests that there is an upward trend, as budget increases, revenue from the movie increases. The Pearson's correlation test between budget and gross gives us a value of 0.22, which suggests that there isn't a high correlation between budget of the movie and gross revenue, but higher than the correlation between budget and imdb score.
@@ -1284,10 +1278,10 @@ ggplot(data = movieswprofit, aes(x = budget, y = grossprofitmargin)) +
     annotation_logticks(sides = "tb", colour = "gray") 
 
 #covariance test
-cov(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.obs") 
+cov(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.obs")
 
 #correlation test
-cor.test(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.obs")
+pander(cor.test(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.obs"))
 ```
 
 Finally, we would also like to look at the effect of gross vs on gross profit margin, whether the an increase in budget would make a better movie, and hence a higher gross profit margin. Gross profit margin can be used as an indictor of profitability of movie. Based on the data, it appears that there is a negative correlation (-0.31) between budget and profit. Although it is not very strong, it still suggests that an increase in budget has a slight negative impact on gross profit margin.
@@ -1297,7 +1291,7 @@ From the plot, we can see that a lot of movies are not profitable. Around half o
 ```{r echo = FALSE, fig.width = 10, fig.align = "center"}
 movieswprofit$profitable <- ifelse(movieswprofit$grossprofitmargin >= 0, "yes", "no")
 
-table(movieswprofit$profitable)
+pander(table(movieswprofit$profitable))
 ```
 From the analysis above, we can conclude there is a positive correlation between budget and imdb score, as well as gross revenue, though the correlation themselves are not strong.
 
@@ -1311,7 +1305,7 @@ For gross revenue prediction.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 genres_model_gross <- lm(gross ~ genre, data = movies_and_genres)
-summary(genres_model_gross)
+#summary(genres_model_gross)
 intercept1 <- lm(movies_and_genres$gross ~ genres_model_gross$fitted)$coefficients[[1]]
 
 movies_and_genres_full <- data.frame(movies_and_genres[,c("gross","score","genre")], predicted_gross = genres_model_gross$fitted)
@@ -1326,54 +1320,21 @@ ggplot() +
     geom_point(aes(x = avg_gross$predicted_gross, y = avg_gross$predicted_gross, colour = avg_gross$genre), 
                size = 2, shape = 21, stroke = 2) + 
     geom_text(aes(x = avg_gross[seq(1, dim(avg_gross)[1], 2), ]$predicted_gross, 
-                   y = avg_gross[seq(1, dim(avg_gross)[1], 2), ]$predicted_gross, 
-                   label = avg_gross[seq(1, dim(avg_gross)[1], 2), ]$genre), 
-               check_overlap = F, nudge_y = -0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
+                  y = avg_gross[seq(1, dim(avg_gross)[1], 2), ]$predicted_gross, 
+                  label = avg_gross[seq(1, dim(avg_gross)[1], 2), ]$genre), 
+                  check_overlap = F, nudge_y = -0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
     geom_text(aes(x = avg_gross[seq(2, dim(avg_gross)[1], 2), ]$predicted_gross, 
-                   y = avg_gross[seq(2, dim(avg_gross)[1], 2), ]$predicted_gross, 
-                   label = avg_gross[seq(2, dim(avg_gross)[1], 2), ]$genre), 
-               check_overlap = F, nudge_y = 0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
-    scale_x_log10(breaks = c(2e+07, 4e+07, 6e+07, 8e+07, 1e+08), 
+                  y = avg_gross[seq(2, dim(avg_gross)[1], 2), ]$predicted_gross, 
+                  label = avg_gross[seq(2, dim(avg_gross)[1], 2), ]$genre), 
+                  check_overlap = F, nudge_y = 0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
+    scale_x_continuous(breaks = c(2e+07, 4e+07, 6e+07, 8e+07, 1e+08), 
                   labels = c("20 millions", "40 millions", "60 millions", "80 millions", "100 millions")) + 
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) + 
     labs(title = "Gross Revenue for different genres", x = "Predicted Gross Revenue", y = "Observed Gross Revenue") +
     theme_bw() + 
     theme(legend.position = "None") +
-    annotation_logticks(sides = "tlbr", colour = "gray") 
-```
-
-For IMDB score prediction.
-
-```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
-genres_model_score <- lm(score ~ genre, data = movies_and_genres)
-summary(genres_model_score)
-intercept2 <- lm(movies_and_genres$score ~ genres_model_score$fitted)$coefficients[[1]]
-
-movies_and_genres_full <- data.frame(movies_and_genres[,c("gross","score","genre")], predicted_score = genres_model_score$fitted)
-avg_score <- movies_and_genres_full[, 3:4]
-avg_score <- avg_score[!duplicated(avg_score$genre), ]
-avg_score <- avg_score[order(avg_score$predicted_score), ]
-rownames(avg_score) <- 1:dim(avg_score)[1]
-
-ggplot() + 
-    geom_jitter(aes(x = movies_and_genres_full$predicted_score, y = movies_and_genres_full$score, colour = movies_and_genres_full$genre), alpha = 0.1) + 
-    geom_abline(intercept = intercept2) + 
-    geom_point(aes(x = avg_score$predicted_score, y = avg_score$predicted_score, colour = avg_score$genre), 
-               size = 2, shape = 21, stroke = 2) + 
-    geom_text(aes(x = avg_score[seq(1, dim(avg_score)[1], 2), ]$predicted_score, 
-                   y = avg_score[seq(1, dim(avg_score)[1], 2), ]$predicted_score, 
-                   label = avg_score[seq(1, dim(avg_score)[1], 2), ]$genre), 
-               check_overlap = F, nudge_y = -0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
-    geom_text(aes(x = avg_score[seq(2, dim(avg_score)[1], 2), ]$predicted_score, 
-                   y = avg_score[seq(2, dim(avg_score)[1], 2), ]$predicted_score, 
-                   label = avg_score[seq(2, dim(avg_score)[1], 2), ]$genre), 
-               check_overlap = F, nudge_y = 0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9)) +
-    scale_x_continuous(breaks = c(6, 6.5, 7)) +
-    labs(title = "IMDB Score for different genres", x = "Predicted IMDB Score", y = "Observed IMDB Score") +
-    theme_bw() + 
-    theme(legend.position = "None")
+    annotation_logticks(sides = "lr", colour = "gray") 
 ```
 
 *Keywords analysis*
@@ -1382,7 +1343,7 @@ For gross revenue prediction.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 keywords_model_gross <- lm(gross ~ keywords, data = movies_and_keywords)
-summary(keywords_model_gross)
+#summary(keywords_model_gross)
 intercept3 <- lm(movies_and_keywords$gross ~ keywords_model_gross$fitted)$coefficients[[1]]
 
 movies_and_keywords_full <- data.frame(movies_and_keywords, predicted_gross = keywords_model_gross$fitted)
@@ -1398,55 +1359,21 @@ ggplot() +
     geom_point(aes(x = avg_gross$predicted_gross, y = avg_gross$predicted_gross, colour = avg_gross$keywords), 
                size = 2, shape = 21, stroke = 2) + 
     geom_text(aes(x = avg_gross[seq(1, dim(avg_gross)[1], 2), ]$predicted_gross, 
-                   y = avg_gross[seq(1, dim(avg_gross)[1], 2), ]$predicted_gross, 
-                   label = avg_gross[seq(1, dim(avg_gross)[1], 2), ]$keywords), 
-               check_overlap = F, nudge_y = -0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
+                  y = avg_gross[seq(1, dim(avg_gross)[1], 2), ]$predicted_gross, 
+                  label = avg_gross[seq(1, dim(avg_gross)[1], 2), ]$keywords), 
+                  check_overlap = F, nudge_y = -0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
     geom_text(aes(x = avg_gross[seq(2, dim(avg_gross)[1], 2), ]$predicted_gross, 
-                   y = avg_gross[seq(2, dim(avg_gross)[1], 2), ]$predicted_gross, 
-                   label = avg_gross[seq(2, dim(avg_gross)[1], 2), ]$keywords), 
-               check_overlap = F, nudge_y = 0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
+                  y = avg_gross[seq(2, dim(avg_gross)[1], 2), ]$predicted_gross, 
+                  label = avg_gross[seq(2, dim(avg_gross)[1], 2), ]$keywords), 
+                  check_overlap = F, nudge_y = 0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) + 
-    scale_x_log10(breaks = c(0.3e+08, 0.4e+08, 0.5e+08, 0.6e+08, 0.7e+08), 
-                labels = c("30 millions", "40 millions", "50 millions", "60 millions", "70 millions")) +
+    scale_x_continuous(breaks = c(0.3e+08, 0.4e+08, 0.5e+08, 0.6e+08, 0.7e+08), 
+                  labels = c("30 millions", "40 millions", "50 millions", "60 millions", "70 millions")) +
     labs(title = "Gross Revenue for different keywords", x = "Predicted Gross Revenue", y = "Observed Gross Revenue") +
     theme_bw() + 
     theme(legend.position = "None") +
-    annotation_logticks(sides = "tlbr", colour = "gray") 
-```
-
-For IMDB score prediction.
-
-```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
-keywords_model_score <- lm(score ~ keywords, data = movies_and_keywords)
-summary(keywords_model_score)
-intercept4 <- lm(movies_and_keywords$score ~ keywords_model_score$fitted)$coefficients[[1]]
-
-movies_and_keywords_full <- data.frame(movies_and_keywords, predicted_score = keywords_model_score$fitted)
-avg_score <- movies_and_keywords_full[, 3:4]
-avg_score <- avg_score[!duplicated(avg_score$keywords), ]
-avg_score <- avg_score[order(avg_score$predicted_score), ]
-rownames(avg_score) <- 1:dim(avg_score)[1]
-
-ggplot() + 
-    geom_jitter(aes(x = movies_and_keywords_full$predicted_score, y = movies_and_keywords_full$score, 
-                    colour = movies_and_keywords_full$keywords), alpha = 0.1) + 
-    geom_abline(intercept = intercept4) + 
-    geom_point(aes(x = avg_score$predicted_score, y = avg_score$predicted_score, colour = avg_score$keywords), 
-               size = 2, shape = 21, stroke = 2) + 
-    geom_text(aes(x = avg_score[seq(1, dim(avg_score)[1], 2), ]$predicted_score, 
-                   y = avg_score[seq(1, dim(avg_score)[1], 2), ]$predicted_score, 
-                   label = avg_score[seq(1, dim(avg_score)[1], 2), ]$keywords), 
-               check_overlap = F, nudge_y = -0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
-    geom_text(aes(x = avg_score[seq(2, dim(avg_score)[1], 2), ]$predicted_score, 
-                   y = avg_score[seq(2, dim(avg_score)[1], 2), ]$predicted_score, 
-                   label = avg_score[seq(2, dim(avg_score)[1], 2), ]$keywords), 
-               check_overlap = F, nudge_y = 0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9)) +
-    scale_x_continuous(breaks = c(6.1, 6.3, 6.5, 6.7)) +
-    labs(title = "IMDB Score for different keywords", x = "Predicted IMDB Score", y = "Observed IMDB Score") +
-    theme_bw() + 
-    theme(legend.position = "None")
+    annotation_logticks(sides = "lr", colour = "gray") 
 ```
 
 When we actually make predictions based on a linear model for categorical data, the predicted value is equal to the mean of all observations for each categorical value. So, for each genre or keyword, the predicted value of the gross revenue is equal to the mean value of gross revenues of all the movies of that genre or of that keyword, e.g. the predicted gross revenue for a "Drama" movie is equal to the mean of gross revenues of all the observed "Drama" movies.
@@ -1457,7 +1384,7 @@ This section tests whether North American movies have a higher mean IMDB score t
 
 H0 -> Europe and North America get equal scores
 
-```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+```{r, echo = FALSE, message = FALSE, fig.width = 10, fig.align = "center"}
 # make dataframes for North America and Europe
 North_America <- movies[movies$continent == "North America",]
 Europe <- movies[movies$continent == "Europe",]
@@ -1466,7 +1393,7 @@ Europe <- movies[movies$continent == "Europe",]
 North_America <- North_America[, c("imdb_score", "continent")]
 Europe <- Europe[, c("imdb_score", "continent")]
 
-t.test(Europe$imdb_score, North_America$imdb_score)
+pander(t.test(Europe$imdb_score, North_America$imdb_score))
 
 # combine two data frames
 comb <- rbind(Europe, North_America)
@@ -1503,10 +1430,10 @@ ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = imdb_score)) +
 
 ```{r echo=FALSE}
 ##cor test for imdb rating vs # of movies
-cor.test(movieswithdirectordata$imdb_score,movieswithdirectordata$dir_number_of_movies)
+pander(cor.test(movieswithdirectordata$imdb_score, movieswithdirectordata$dir_number_of_movies))
 ##does seem like very loosely positively correlated and is probably because of the correlation with budget- more analysis to come.
 ##cor test for gross score vs # of movies
-cor.test(movieswithdirectordata$gross,movieswithdirectordata$dir_number_of_movies)
+pander(cor.test(movieswithdirectordata$gross, movieswithdirectordata$dir_number_of_movies))
 ##does seem like somewhat positively correlated - although we can see from the graph that this doesn't seem linear.
 ```
 
@@ -1514,24 +1441,21 @@ These correlation tests do infer that there is a slight positive correlation bet
 
 If we look at the categorical variable of whether or not a director has directed >10 movies, then we can see these distributions look slightly different:
 
-```{r echo=FALSE}
-ggplot(movieswithdirectordata, aes(x=1, y = gross, fill = more_than_ten_movies)) + geom_boxplot() + facet_grid(. ~ more_than_ten_movies) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(x="", title="Gross revenue distribution by \n number of movies per director") + scale_y_continuous(label=human_num) + theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        legend.position = "None") 
-
+```{r echo=FALSE,  message=FALSE, fig.width = 10, fig.align = "center"}
 ggplot(movieswithdirectordata, aes(x = factor(more_than_ten_movies), y = gross, fill = factor(more_than_ten_movies))) + 
     geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
     theme_bw() +
     labs(x = "", y = "Gross", title = "Gross revenue distribution by \n number of movies per director") +
     scale_y_continuous(label = human_num) + 
     theme(axis.title.x = element_blank(), axis.ticks.x = element_blank(), legend.position = "None", panel.grid.major.x = element_blank()) +
-    scale_x_discrete(labels = c("More than 10", "Fewer than 10"))
+    scale_x_discrete(labels = c("Fewer than 10", "More than 10"))
 ```
 
 The plots seem to suggest that the movies where the director has 10+ movies in the sample have a higher mean and a lower variance of gross revenue. However, this may be largely explained by the number of observations in each sample. To determine whether the change is statistically significant we run a t test and an f test.
 
-```{r echo = FALSE}
+*Can't format the 2 following tests, otherwise my knitting i halted :( --George*
+
+```{r echo = FALSE,  message=FALSE, fig.width = 10, fig.align = "center"}
 t.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="10+"], movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="Fewer than 10"], alternative="greater")
 
 var.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="10+"], movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="Fewer than 10"], alternative="greater")
@@ -1547,8 +1471,8 @@ Also, the opposite of the initial intuition appears to be the case for variance,
 
 Multiple models were created to predict gross revenue based on input parameters. Two "full" models were build using all data available, to determine which was the most effective when tested on the test set, and one "known" model was built based on variables that would normally be available *before* a movie is released.
 
-
 ### Second full model
+### First full model
 
 ```{r echo=FALSE}
 ##Data Preparation for model building
@@ -1568,11 +1492,22 @@ trainwithdirectordata$PG_13 <- factor(trainwithdirectordata$PG_13, levels=c("Not
 ## column subset 3:26 is to remove duplicating the score and gross columns)
 trainwithdirectorandgenredata <- merge(movies_and_genres_wide[3:26], trainwithdirectordata, by="movie_title")
 ```
+
 _Model summary_
 ```{r echo=FALSE}
 fullmodel <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews,  data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >=2010,])
 summary(fullmodel)
 ```
+
+<center>
+```{r echo = FALSE, results = "asis"}
+fullmodel <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews,  data=trainwithdirectorandgenredata)
+
+fullmodel2010 <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews,  data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >=2010,])
+
+stargazer(list(fullmodel), type = "html", align = TRUE, dep.var.labels = "Gross revenue", no.space = TRUE, title = "Linear Regression results")
+```
+</center>
 
 ####Justification
 
@@ -1606,8 +1541,10 @@ ggplot(movies, aes(x=color)) + geom_bar() + xlab("")
 
 ### First Full Model
 
-```{r linearmodel, echo=FALSE}
+<center>
 
+```{r linearmodel, echo=FALSE, results="asis"}
+##Data preparation
 trainwithdirectorandgenredata$us_or_others <- trainwithdirectorandgenredata$country
 trainwithdirectorandgenredata$us_or_others[trainwithdirectorandgenredata$country != "USA"] <- "Non-USA"
 trainwithdirectorandgenredata$english <- factor(trainwithdirectorandgenredata$language == "English", levels = c(TRUE, FALSE), labels = c("English", "Non-English"))
@@ -1615,23 +1552,34 @@ fbmodel <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes 
               + imdb_score + PG_13 + Action + Adventure + Fantasy + Family + Western + Drama + Crime 
               + Biography + Documentary + us_or_others + english, 
               data = trainwithdirectorandgenredata)
-summary(fbmodel)
 
 fbmodel2010 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes 
               + director_facebook_likes + imdb_score + PG_13 + Action + Adventure + Fantasy + Family 
               + Western + Drama + Crime + Biography + Documentary + us_or_others + english, 
               data = trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >= 2010, ])
-summary(fbmodel2010)
 
+stargazer(list(fbmodel, fbmodel2010), type = "html", align = TRUE, column.labels=c("For all years", "For 2010 onwards"),
+          dep.var.labels = "Gross revenue", no.space = TRUE, title = "Linear Regression results")
 ```
-
+</center>
 
 ####Third Model, with only pre-known variables
 
+<<<<<<< HEAD
 ```{r echo=FALSE}
 knownvariablesmodel <- lm(gross ~ budget + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + more_than_ten_movies, data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year>=2010,])
 summary(knownvariablesmodel)
+=======
+<center>
+```{r echo=FALSE, results = "asis"}
+knownvariablesmodel <- lm(gross ~ budget + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + more_than_ten_movies, data=trainwithdirectorandgenredata)
+
+knownvariablesmodel2010 <- lm(gross ~ budget + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + more_than_ten_movies, data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year>=2010,])
+
+stargazer(list(knownvariablesmodel, knownvariablesmodel2010), type = "html", align = TRUE, dep.var.labels = "Gross revenue", no.space = TRUE, title = "Linear Regression results")
+>>>>>>> 05f5f66cfb26160eb848740c2d3fbed5f5d2eec4
 ```
+</center>
 
 To build a model to predict revenue of movies that have not yet been released, we include only variables that are known before the time of release. Our dataset provided us with number of facebook likes at a specific point in time, and to use this as part of our predictive model we would need to analyse number of facebook likes before the movie was released, however we will use what we currently have as a proxy to build the model. This model has lower predictive power (adjusted R squared of `r summary(knownvariablesmodel)$adj.r.squared`), but could be used in a more useful business context.
 
@@ -1658,8 +1606,7 @@ test <- merge(movies_and_genres_wide[3:26], testwithdirectordata, by="movie_titl
 
 test$us_or_others <- test$country
 test$us_or_others[test$country != "USA"] <- "Non-USA"
-test$english <- factor(test$language == "English", levels = c(TRUE, FALSE), labels = c("English",
-                                                                                       "Non-English"))
+test$english <- factor(test$language == "English", levels = c(TRUE, FALSE), labels = c("English", "Non-English"))
 ```
 
 Model including all data:
@@ -1705,6 +1652,84 @@ rmseKnown2010 <- sqrt(mean((predKnown2010 - test$gross[test$title_year >= 2010])
 
 dfFB2010 <- data.frame(y_actual = test$gross[test$title_year >= 2010], y_predict = predFB2010)
 plot1 <- ggplot(data = dfFB2010, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+=======
+<center>
+```{r echo=FALSE, results="asis"}
+pre2010model <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews + more_than_ten_movies, data=trainwithdirectorandgenredata)
+
+stargazer(pre2010model, type = "html", align = TRUE, dep.var.labels = "Gross revenue", no.space = TRUE, title = "Linear Regression results")
+```
+</center>
+
+```{r prediction, echo = FALSE, results = "asis"}
+
+predpre <- predict(pre2010model, test)
+rmsepre <- sqrt(mean((predpre - test$gross)^2))
+predFB <- predict(fbmodel, test)
+rmseFB <- sqrt(mean((predFB - test$gross)^2))
+
+dfpre <- data.frame(y_actual = test$gross, y_predict = predpre)
+ggplot(data = dfpre, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
+ggplot(data = dfpre, aes(x = y_predict, y = y_actual - y_predict)) + geom_point(colour = "red") +
+    geom_hline(yintercept = 0, colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Residual(US$)") + coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
+
+dfFB <- data.frame(y_actual = test$gross, y_predict = predFB)
+ggplot(data = dfFB, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8))
+ggplot(data = dfFB, aes(x = y_predict, y = y_actual - y_predict)) + geom_point(colour = "red") +
+    geom_hline(yintercept = 0, colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Residual(US$)") + coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8))
+
+```
+
+<center>
+```{r, echo = FALSE, results = "asis"}
+modelperf <- data.frame(matrix(data = c(rmsepre, rmseFB), nrow = 2))
+rownames(modelperf) <- c("Pre Model", "FaceBook Model")
+colnames(modelperf) <- c("Root-Mean-Square Error (US$)")
+pander(modelperf, type = "html")
+```
+
+```{r, echo = FALSE, results = "asis"}
+predFB2010 <- predict(fbmodel2010, test[test$title_year >= 2010, ])
+rmseFB2010 <- sqrt(mean((predFB2010 - test$gross[test$title_year >= 2010])^2))
+predFull2010 <- predict(fullmodel, test[test$title_year >= 2010, ])
+rmseFull2010 <- sqrt(mean((predFull2010 - test$gross[test$title_year >= 2010])^2))
+predKnown2010 <- predict(knownvariablesmodel, test[test$title_year >= 2010, ])
+rmseKnown2010 <- sqrt(mean((predKnown2010 - test$gross[test$title_year >= 2010])^2))
+
+##calculate the prediction and MSE for all 3 models using all data and data post 2010
+fullmodelpre <- predict(fullmodel, test)
+fullmodelmse <- sqrt(mean((fullmodelpre - test$gross)^2))
+fullmodel2010pre <- predict(fullmodel2010, test[test$title_year >= 2010, ])
+fullmodel2010mse <- sqrt(mean((fullmodel2010pre - test$gross[test$title_year >= 2010])^2))
+fbmodelpre <- predict(fbmodel, test)
+fbmodelmse <- sqrt(mean((fbmodelpre - test$gross)^2))
+fbmodel2010pre <- predict(fbmodel2010, test[test$title_year >= 2010, ])
+fbmodel2010mse <- sqrt(mean((fbmodel2010pre - test$gross[test$title_year >= 2010])^2))
+knownvariablesmodelpre <- predict(knownvariablesmodel, test)
+knownvariablesmodelmse <- sqrt(mean((knownvariablesmodelpre - test$gross)^2))
+knownvariablesmodel2010pre <- predict(knownvariablesmodel2010, test[test$title_year >= 2010, ])
+knownvariablesmodel2010mse <- sqrt(mean((knownvariablesmodel2010pre - test$gross[test$title_year >= 2010])^2))
+
+##turn MSE data into a table for display with columns of "all data" and "post 2010", and rows of model type
+msetable <- data.frame(alldata=c(fullmodelmse, fbmodelmse, knownvariablesmodelmse), post2010 = c(fullmodel2010mse, fbmodel2010mse, knownvariablesmodel2010mse))
+rownames(msetable) <- c("Full Model", "Facebook Model", "Known Variables Model")
+colnames(msetable) <- c("Model using all data", "Model using post 2010 data")
+pander(msetable, format="markdown")
+```
+</center>
+
+```{r echo=FALSE, fig.align="center"}
+
+##Plot the predictions and residuals for full model with all data
+dffullmodel <- data.frame(y_actual = test$gross, y_predict = fullmodelpre)
+plot1 <- ggplot(data = dffullmodel, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+>>>>>>> 05f5f66cfb26160eb848740c2d3fbed5f5d2eec4
     geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
     ylab("Actual Gross Revenue(US$)") + 
     coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
@@ -1752,6 +1777,18 @@ colnames(modelperf2010) <- c("Root-Mean-Square Error (US$)")
 modelperf2010
 
 ```
+
+<center>
+```{r echo=FALSE, results="asis"}
+modelperf2010 <- data.frame(matrix(data = c(rmseFB2010, rmseFull2010, rmseKnown2010), nrow = 3))
+rownames(modelperf2010) <- c("FaceBook (Post-2010) Model", "Full (Post-2010) Model", 
+                             "Known Variable (Post-2010) Model")
+colnames(modelperf2010) <- c("Root-Mean-Square Error (US$)")
+
+pander(modelperf2010, type = "html")
+```
+</center>
+>>>>>>> 05f5f66cfb26160eb848740c2d3fbed5f5d2eec4
 
 #Conclusion & Next Steps
 *to be completed after our analysis*
@@ -1818,7 +1855,8 @@ ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_yea
   labs(title = "IMDB scores against year", x = "", y = "IMDB Score") +
   scale_y_continuous(limits = c(2.5, max(movies$imdb_score)))
 ```
-The plot above show that there might be a downward trend in IMDB scores over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of IMDB scores only years with ten or more entries will be plotted below.
+
+The plot above shows that there might be a downward trend in IMDB scores over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of IMDB scores only years with ten or more entries will be plotted below.
 
 ```{r, echo = FALSE}
 # subset movies data frame to include all movies from 1980 onwards
@@ -1843,7 +1881,7 @@ multiplot(p1, p2)
 
 The plots above give a less biased represenation of the development of IMDB scores. The scores now appear more constant over the years. Although minimal, the scatter plot reveals that there is still a slight downward trend in scores.
 
-```{r echo=FALSE}
+```{r, echo=FALSE, fig.width = 10, fig.align = "center", message = FALSE}
 # for all countries by decade
 # remove entries with NA-NA
 temp <- movies[!movies$decade == "NA-NA", ]
@@ -1867,6 +1905,34 @@ ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
   geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
   labs(title = "IMDB scores against decade, North America", x = "", y = "IMDB Score")
+```
+
+
+```{r, echo=FALSE, fig.width = 10, fig.align = "center", message = FALSE}
+# facetgrid of imdb scores over decade for continents
+temp <- movies[!is.na(movies$continent), ]
+ggplot(temp, aes(y = imdb_score, x = factor(decade), fill = decade)) + 
+    geom_boxplot() + 
+    labs(title = "IMDB and decades for continents", y = "IMDB score", x = "Decade") + 
+    facet_wrap(~ continent) +
+    theme_bw() + 
+    theme(legend.position = "None",axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5)) +
+    annotation_logticks(sides = "lr", colour = "gray")
+```
+
+```{r, echo=FALSE, fig.width = 10, fig.align = "center", message = FALSE}
+# facetgrid of imdb scores over decade for Europe
+temp <- movies[movies$continent == "Europe", ]
+temp <- temp[!is.na(temp$country), ]
+ggplot(temp, aes(y = imdb_score, x = factor(decade), fill = decade)) + 
+    geom_boxplot() + 
+    labs(title = "IMDB and decades for European Countries", y = "IMDB score", x = "Decade") + 
+    facet_wrap(~ country) +
+    theme_bw() + 
+    theme(legend.position = "None",axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5)) +
+    annotation_logticks(sides = "lr", colour = "gray")
+
+```
 
 # for France
 temp <- movies[!movies$decade == "NA-NA", ]
@@ -1923,7 +1989,7 @@ ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
   geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
   labs(title = "IMDB scores against decade, Hong Kong", x = "", y = "IMDB Score")
-```
+
 
 ##Cecilia
 
@@ -1970,6 +2036,77 @@ ggplot(data = budgetcountry) + geom_jitter(aes(x = budget, y = gross, color=coun
 ##Siow Meng
 
 ##George
+
+
+For IMDB score prediction.
+
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+keywords_model_score <- lm(score ~ keywords, data = movies_and_keywords)
+#summary(keywords_model_score)
+intercept4 <- lm(movies_and_keywords$score ~ keywords_model_score$fitted)$coefficients[[1]]
+
+movies_and_keywords_full <- data.frame(movies_and_keywords, predicted_score = keywords_model_score$fitted)
+avg_score <- movies_and_keywords_full[, 3:4]
+avg_score <- avg_score[!duplicated(avg_score$keywords), ]
+avg_score <- avg_score[order(avg_score$predicted_score), ]
+rownames(avg_score) <- 1:dim(avg_score)[1]
+
+ggplot() + 
+    geom_jitter(aes(x = movies_and_keywords_full$predicted_score, y = movies_and_keywords_full$score, 
+                    colour = movies_and_keywords_full$keywords), alpha = 0.1) + 
+    geom_abline(intercept = intercept4) + 
+    geom_point(aes(x = avg_score$predicted_score, y = avg_score$predicted_score, colour = avg_score$keywords), 
+               size = 2, shape = 21, stroke = 2) + 
+    geom_text(aes(x = avg_score[seq(1, dim(avg_score)[1], 2), ]$predicted_score, 
+                   y = avg_score[seq(1, dim(avg_score)[1], 2), ]$predicted_score, 
+                   label = avg_score[seq(1, dim(avg_score)[1], 2), ]$keywords), 
+               check_overlap = F, nudge_y = -0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
+    geom_text(aes(x = avg_score[seq(2, dim(avg_score)[1], 2), ]$predicted_score, 
+                   y = avg_score[seq(2, dim(avg_score)[1], 2), ]$predicted_score, 
+                   label = avg_score[seq(2, dim(avg_score)[1], 2), ]$keywords), 
+               check_overlap = F, nudge_y = 0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
+    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9)) +
+    scale_x_continuous(breaks = c(6.1, 6.3, 6.5, 6.7)) +
+    labs(title = "IMDB Score for different keywords", x = "Predicted IMDB Score", y = "Observed IMDB Score") +
+    theme_bw() + 
+    theme(legend.position = "None")
+```
+
+
+For IMDB score prediction.
+
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+genres_model_score <- lm(score ~ genre, data = movies_and_genres)
+#summary(genres_model_score)
+intercept2 <- lm(movies_and_genres$score ~ genres_model_score$fitted)$coefficients[[1]]
+
+movies_and_genres_full <- data.frame(movies_and_genres[,c("gross","score","genre")], predicted_score = genres_model_score$fitted)
+avg_score <- movies_and_genres_full[, 3:4]
+avg_score <- avg_score[!duplicated(avg_score$genre), ]
+avg_score <- avg_score[order(avg_score$predicted_score), ]
+rownames(avg_score) <- 1:dim(avg_score)[1]
+
+ggplot() + 
+    geom_jitter(aes(x = movies_and_genres_full$predicted_score, y = movies_and_genres_full$score, colour = movies_and_genres_full$genre), alpha = 0.1) + 
+    geom_abline(intercept = intercept2) + 
+    geom_point(aes(x = avg_score$predicted_score, y = avg_score$predicted_score, colour = avg_score$genre), 
+               size = 2, shape = 21, stroke = 2) + 
+    geom_text(aes(x = avg_score[seq(1, dim(avg_score)[1], 2), ]$predicted_score, 
+                   y = avg_score[seq(1, dim(avg_score)[1], 2), ]$predicted_score, 
+                   label = avg_score[seq(1, dim(avg_score)[1], 2), ]$genre), 
+               check_overlap = F, nudge_y = -0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
+    geom_text(aes(x = avg_score[seq(2, dim(avg_score)[1], 2), ]$predicted_score, 
+                   y = avg_score[seq(2, dim(avg_score)[1], 2), ]$predicted_score, 
+                   label = avg_score[seq(2, dim(avg_score)[1], 2), ]$genre), 
+               check_overlap = F, nudge_y = 0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
+    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9)) +
+    scale_x_continuous(breaks = c(6, 6.5, 7)) +
+    labs(title = "IMDB Score for different genres", x = "Predicted IMDB Score", y = "Observed IMDB Score") +
+    theme_bw() + 
+    theme(legend.position = "None")
+```
+
+
 
 ##Louise
 
