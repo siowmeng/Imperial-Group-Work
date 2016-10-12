@@ -328,36 +328,37 @@ ggplot(data = temp, aes(x = imdb_score, y = gross, colour = us_or_others)) +
 
 ### Country
 
-Descriptive analysis on the country
+In this section, we look at whether the country of origin has a huge influence on the number of movies and the revenue that a movie generates. Then, we check if there is any relationship between the gross revenue and IMDB score for countries with more than 10 movies.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
-# Sorting the movies by country and picking out the top 10
-counted <- count(movies, 'country')
+# Sorting the movies by country and picking out those with more than 10 movies
+counted <- count(movies, vars = "country")
 removednas <- counted[complete.cases(counted), ]
 sorted <- arrange(removednas, desc(freq))
-topcountries <- sorted[1:10, ]
+topcountries <- sorted[1:12, ]
 topcountries$country <- factor(topcountries$country, levels = topcountries$country[order(topcountries$freq)])
 
-# Taking the countries with more than 10 movies
-countries <- subset(movies, country %in% c("Australia", "Canada", "China", "France", "Germany", "India", "Japan", "Spain", "UK", "USA"))
+# Plot showing number of movies for the above countries
+ggplot(data = topcountries, aes(x = country, y = freq, fill = country)) + 
+    geom_bar(stat = "identity", colour = "black") +
+    labs(title = "Number of movies for countries with more than 10 movies", x = "", y = "") + 
+    geom_text(aes(label = freq), hjust = -0.2, vjust = 0.4) + 
+    coord_flip() +
+    theme_few() +
+    theme(legend.position = "None") +
+    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank(),
+          axis.title.x = element_blank(), axis.title.y = element_blank()) 
 
-score <- countries$imdb_score
-gross <- countries$gross
+# Subsetting the countries with 10 or more movies
+countries <- subset(movies, country %in% c("Australia", "Canada", "China", "France", "Germany", "Hong Kong", "India", "Italy", "Japan", "Spain", "UK", "USA"))
 
 # Plot of gross revenue for the above countries
+gross <- countries$gross
 ggplot(countries, aes(country, gross, fill = country)) + 
     geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(title = "Gross revenue of movies by country", x = "", y = "Gross revenue") + theme_bw() + theme(legend.position = "None") + theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank()) + scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) 
-    
-# Plot of imdb score for the above countries
-ggplot(countries, aes(country, score, fill = country)) + 
-    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(title = "IMDB Score of movies by country", x = "", y = "Gross revenue") + 
-    labs(title = "IMDB Score of movies by country", x = "", y = "IMDB Score") + 
-    theme_bw() +
-    theme(legend.position = "None") +
-    theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank()) +
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) 
 
-
+# Plot of gross revenue vs IMDB score for the above countries
+score <- countries$imdb_score
 ggplot(countries, aes(x = score, y = gross, colour = country)) + 
   geom_jitter() + scale_x_log10() + labs(title = "IMDB Score and Gross Revenue for different countries", x = "IMDB Score", y = "Gross Revenue") +
   facet_wrap(~ country) +
@@ -374,13 +375,15 @@ ggplot(countries, aes(x = score, y = gross, colour = country)) +
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
     scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
     annotation_logticks(sides = "lr", colour = "gray") 
+
+
 ```
 
-More than 50% of US, UK and Germany releases are generating high revenues of over 10 million. On the other hand, more than 25% of releases in China and Spain are generating revenues of lower than 1 million.
+In terms of frequency, we observe that the number of movies originated in USA is almost 10 times that of UK. Also, the top five countries with the most number of movies are in Europe. On the other end, Asian countries have no more than 20 movies in our dataset. 
 
-Looking at the IMDB scores, movies across all ten countries have a mean score between 6 and 7. In India & Japan, at least 40% of the movies scored more than 7, whereas movies in Australia and USA have almost equal numbers scoring between 6 and 7.
+Next, we will look at the gross revenues for the top 12 countries. More than 50% of US, UK and Germany releases are generating high revenues of over 10 million. On the other hand, more than 25% of releases in China and Spain are generating revenues of lower than 1 million.
 
-Therefore, it can be deduced that revenue and IMDB scores are clearly independent of each other. This can be seen in the scatterplots - UK & US movies seem to be symmetrically about 'y = x'; however, the other countries show no particular relationship between the two variables.
+Lastly, when we look at the scatterplots, we see that UK & US movies seem to be symmetrically about 'y = x' indicating a nearly positive correlation between IMDB score and gross revenue; however, the other countries show no particular relationship between the two variables.
 
 ### Budget
 
@@ -411,15 +414,6 @@ subsetcountry <- subsetcountry[order(subsetcountry[,2], decreasing = FALSE),]
 subsetcountry$country <- factor(subsetcountry$country, levels = subsetcountry$country)
 subsetcountry <- subsetcountry[subsetcountry[,2] >= 10,]
 
-ggplot(data = subsetcountry, aes(x = country, y = freq, fill = country)) + 
-    geom_bar(stat = "identity", colour = "black") +
-    coord_flip() +
-    labs(title = "Number of movies by country", x = "", y = "") + 
-    geom_text(aes(label = freq), hjust = -0.2, vjust = 0.4) + 
-    theme_few() +
-    theme(legend.position = "None") +
-    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank(),
-          axis.title.x = element_blank(), axis.title.y = element_blank()) 
 
 #Create dataframe with just Australia, Canada, China, France, Germany, Hong Kong, India, Italy, Japan, Mexico, Spain, UK, USA
 budgetcountry <- subset(movies, country %in% c("Australia", "Canada", "China", "France", "Germany", "Hong Kong", "India", "Italy", "Japan", "Mexico", "Spain", "UK", "USA"))
@@ -931,7 +925,6 @@ dirpercentage <- round(100 * length(sorteddirectorsummary$number_of_movies[sorte
                        / length(sorteddirectorsummary$number_of_movies), 2)
 ```
 
-\
 Before looking into the relationship with the key output variable, gross revenue, descriptive statistics of the director data are explored. There are `r nrow(sorteddirectorsummary)` distinct directors in the data sample, the density of movies per director is shown on the figure on the right.
 
 This is clearly positively skewed, with many directors having only 1 movie in the dataset, and only a few having significantly more. In fact, approximately  `r dirpercentage` of those directors have only 1 movie in the top 5000, leaving `r 100-dirpercentage` that have more than 1.
@@ -1737,6 +1730,27 @@ modelperf2010
 ##Nikhita
 
 ```{r echo=FALSE}
+ggplot(data = counted, aes(x = country, y = freq, fill = country)) + 
+    geom_bar(stat = "identity", colour = "black") +
+    labs(title = "Number of movies by country", x = "", y = "") + 
+    geom_text(aes(label = freq), hjust = -0.2, vjust = 0.4) + 
+    coord_flip() +
+    theme_few() +
+    theme(legend.position = "None") +
+    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank(),
+          axis.title.x = element_blank(), axis.title.y = element_blank()) 
+
+# Plot of imdb score for the top 12 countries
+ggplot(countries, aes(country, score, fill = country)) + 
+    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(title = "IMDB Score of movies by country", x = "", y = "Gross revenue") + 
+    labs(title = "IMDB Score of movies by country", x = "", y = "IMDB Score") + 
+    theme_bw() +
+    theme(legend.position = "None") +
+    theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank()) +
+    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10))
+
+# Looking at the IMDB scores, movies across all ten countries have a mean score between 6 and 7. In India & Japan, at least 40% of the movies scored more than 7, whereas movies in Australia and USA have almost equal numbers scoring between 6 and 7.
+
 ## IMDB Score analysis for top three ratings
 # Boxplot illustration
 ggplot(topratedmovies, aes(contentrating, contentscore, fill = contentrating)) + 
@@ -1747,11 +1761,17 @@ ggplot(topratedmovies, aes(contentrating, contentscore, fill = contentrating)) +
     theme(legend.position = "none", axis.ticks.x = element_blank(), panel.grid.major.x = element_blank())
 
 # Does the mean IMDB Score vary with different ratings?
-t.test(movies$imdb_score[movies$content_rating == "R"], movies$imdb_score[movies$content_rating == "PG-13"])
+imdbscore <- movies$imdb_score
+contentrating <- movies$content_rating
 
-t.test(movies$imdb_score[movies$content_rating == "PG-13"], movies$imdb_score[movies$content_rating == "PG"])
+scoret1 <- t.test(imdbscore[contentrating == "R"], imdbscore[contentrating == "PG-13"])
+pander(scoret1)
 
-t.test(movies$imdb_score[movies$content_rating == "R"], movies$imdb_score[movies$content_rating == "PG"])
+scoret2 <- t.test(imdbscore[contentrating == "PG-13"], imdbscore[contentrating == "PG"])
+pander(scoret2)
+
+scoret3 <- t.test(imdbscore[contentrating == "R"], imdbscore[contentrating == "PG"])
+pander(scoret3)
 ```
 
 ##Steven
