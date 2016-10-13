@@ -136,10 +136,10 @@ An initial review of our dataset identified a few key issues to be addressed bef
 
 * The existence of missing values in key variables
 * The inclusion of columns unnecessary to our analysis
-* The inclusion of erroneous special characters that may be an artefact of text format conversion
+* The inclusion of erroneous special characters, which may be an artefact of text format conversion
 * The inclusion of leading and trailing white spaces.
 
-The below table shows the columns with missing values:
+The below table shows the columns in the initial dataset that contain missing values:
 
 ```{r, echo = FALSE}
     ## function to calculate list of NAs within a column
@@ -930,7 +930,7 @@ To check against one potential confounder for the relationship that number of mo
 
 ```{r echo=FALSE}
 c <- cor.test(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget)
-pander(c)
+pander(c, caption="")
 ```
 
 Even though this correlation was found to be statistically significant, with a p-value of `r c$p.value`, it is quite small (`r round(cor(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget),3)`%), so the analysis of movies by director sample on gross revenue can be continued without an obvious confounder of budget.
@@ -998,9 +998,9 @@ ggplot(data = temp, aes(x = english, y = gross, fill = english)) +
     theme(legend.position = "none", axis.ticks.x = element_blank(), 
           panel.grid.major.x = element_blank(), axis.title.x = element_blank())
 
-pander(t.test(movies$gross[movies$language == "English"], movies$gross[movies$language != "English"], alternative = "greater"))
+pander(t.test(movies$gross[movies$language == "English"], movies$gross[movies$language != "English"], alternative = "greater"), caption="")
 
-pander(var.test(movies$gross[movies$language == "English"], movies$gross[movies$language != "English"], alternative = "greater"))
+pander(var.test(movies$gross[movies$language == "English"], movies$gross[movies$language != "English"], alternative = "greater"), caption="")
 ```
 
 From the above box-and-whisker plots, we can observe a great difference between the revenues achieved by English and non-English movies. More than 75% of the non-English movies achieved gross revenue of US$10 million or lower. In contrast, more than half of the English movies have more than US$25 million revenues.
@@ -1027,9 +1027,9 @@ ggplot(data = temp, aes(x = us_or_others, y = gross, fill = us_or_others)) +
     theme(legend.position = "none", axis.ticks.x = element_blank(), 
           panel.grid.major.x = element_blank(), axis.title.x = element_blank())
 
-pander(t.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater"))
+pander(t.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater"), caption="")
 
-pander(var.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater"))
+pander(var.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater"), caption="")
 ```
 
 Similarly, we did a box-and-whisker plots of revenues achieved by USA and non-USA movies. Movies made in the USA have achieved more than 50 million USD in average revenue while non-USA movies have around 25 million USD
@@ -1067,11 +1067,12 @@ ggplot(topratedmovies, aes(contentrating, contentgross, fill = contentrating)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 
 # Does the gross revenue vary with different ratings?
-pander(t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG-13"]))
 
-pander(t.test(movies$gross[movies$content_rating == "PG-13"], movies$gross[movies$content_rating == "PG"]))
+pander(t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG-13"]), caption="")
 
-pander(t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG"]))
+pander(t.test(movies$gross[movies$content_rating == "PG-13"], movies$gross[movies$content_rating == "PG"]), caption="")
+
+pander(t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG"]), caption="")
 ```
 
 PG, PG-13 and R are the most common ratings observed in our datatset. Looking the boxplots, R movies tend to on average have higher IMDB scores and lower revenues than PG or PG-13 rated movies. 
@@ -1098,7 +1099,7 @@ ggplot(data = movies, aes(y = budget, x = imdb_score)) +
 cov(movies$budget, movies$imdb_score)
 
 #correlation test
-pander(cor.test(movies$budget, movies$imdb_score))
+pander(cor.test(movies$budget, movies$imdb_score), caption="")
 ```
 
 The covariance value of 5.3x10^7 suggests that there is an upward trend - as budget increases, imdb score increases. The Pearson's correlation test between budget and IMDB score gives a p-value of 0.047, which suggests that there isn't a high correlation between budget of the movie and rating on IMDB. 
@@ -1136,7 +1137,7 @@ ggplot(data = movies, aes(x = budget, y = gross)) +
 cov(movies$budget, movies$gross)
 
 #correlation test
-pander(cor.test(movies$budget, movies$gross))
+pander(cor.test(movies$budget, movies$gross), caption="")
 ```
 
 The covariance value of 1.6 x 10^15 suggests that there is an upward trend - as budget increases, revenue from the movie increases. The Pearson's correlation test between budget and gross gives us a value of 0.22, which suggests that there is a positive correlation between the budget of a movie and its gross revenue, but the correlation itself is not very strong. Under the confidence level of 95%, the p-value is significant (2.2e-16) and hence, we can reject the null hypothesis that the true correlation is not equal to 0.
@@ -1180,7 +1181,7 @@ ggplot(data = movieswprofit, aes(x = budget, y = grossprofitmargin)) +
 cov(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.obs")
 
 #correlation test
-pander(cor.test(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.obs"))
+pander(cor.test(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.obs"), caption="")
 ```
 
 Finally, we would also like to look at the effect of gross vs on gross profit margin, whether the an increase in budget would make a better movie, and hence a higher gross profit margin. Gross profit margin can be used as an indictor of profitability of movie. Based on the data, it appears that there is a negative correlation (-0.31) between budget and profit. Although it is not very strong, it still suggests that an increase in budget has a slight negative impact on gross profit margin.
@@ -1189,7 +1190,6 @@ From the plot, we can see that a lot of movies are not profitable. Around half o
 
 ```{r echo = FALSE, fig.width = 10, fig.align = "center"}
 movieswprofit$profitable <- ifelse(movieswprofit$grossprofitmargin >= 0, "yes", "no")
-
 pander(table(movieswprofit$profitable))
 ```
 From the analysis above, we can conclude there is a positive correlation between budget and imdb score, as well as gross revenue, though the correlation themselves are not strong.
@@ -1310,8 +1310,7 @@ Europe <- movies[movies$continent == "Europe",]
 # separate IMDB scores 
 North_America <- North_America[, c("imdb_score", "continent")]
 Europe <- Europe[, c("imdb_score", "continent")]
-
-pander(t.test(Europe$imdb_score, North_America$imdb_score))
+pander(t.test(Europe$imdb_score, North_America$imdb_score), caption="")
 
 # combine two data frames
 comb <- rbind(Europe, North_America)
@@ -1325,7 +1324,9 @@ ggplot(comb, aes(x = imdb_score, fill = continent)) +
     theme(legend.title = element_blank())
 ```
 
-### Director data impact on gross revenue
+### Prolific directors impact on gross revenue
+
+To analyse the impact of the number of movies in our sample per director (a proxy for how prolific the director is), on gross revenue, this section explores the 
 
 ```{r echo=FALSE, message=FALSE, fig.width = 10, fig.align = "center"}
 ##plot for gross revenue vs # of movies
@@ -1336,22 +1337,11 @@ ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross)) +
     labs(x = "Number of movies in sample", y = "Gross Revenue") + scale_y_continuous(label = human_usd)
 ```
 
-```{r echo=FALSE, message=FALSE, fig.width = 10, fig.align = "center"}
-##plot for imdb rating vs # of movies
-ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = imdb_score)) + 
-    geom_jitter(alpha = 0.2, width = 1) + 
-    geom_smooth() +
-    theme_bw() +
-    labs(x = "Number of movies in sample", y = "IMDB Score") +
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10))
-```
-
 ```{r echo=FALSE}
 ##cor test for imdb rating vs # of movies
-pander(cor.test(movieswithdirectordata$imdb_score, movieswithdirectordata$dir_number_of_movies))
-##does seem like very loosely positively correlated and is probably because of the correlation with budget- more analysis to come.
+pander(cor.test(movieswithdirectordata$imdb_score, movieswithdirectordata$dir_number_of_movies), caption="")
 ##cor test for gross score vs # of movies
-pander(cor.test(movieswithdirectordata$gross, movieswithdirectordata$dir_number_of_movies))
+pander(cor.test(movieswithdirectordata$gross, movieswithdirectordata$dir_number_of_movies), caption="") 
 ##does seem like somewhat positively correlated - although we can see from the graph that this doesn't seem linear.
 ```
 
@@ -1374,9 +1364,12 @@ The plots seem to suggest that the movies where the director has 10+ movies in t
 *Can't format the 2 following tests, otherwise my knitting i halted :( --George*
 
 ```{r echo = FALSE,  message=FALSE, fig.width = 10, fig.align = "center"}
-t.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="10+"], movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="Fewer than 10"], alternative="greater")
+t <- t.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="10+"], movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="Fewer than 10"], alternative="greater")
 
-var.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="10+"], movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="Fewer than 10"], alternative="greater")
+v <- var.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="10+"], movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="Fewer than 10"], alternative="greater")
+
+pander(t, caption="") 
+pander(v, caption="") 
 ```
 
 The data therefore suggests that the average gross revenue is higher for movies where the director has over 10 movies in the sample - which gives evidence to the claim that prolific directors are produce more popular movies (if we see gross revenue as a proxy for popularity).
@@ -1389,7 +1382,8 @@ Also, the opposite of the initial intuition appears to be the case for variance,
 
 Multiple models were created to predict gross revenue based on input parameters. Two "full" models were build using all data available, to determine which was the most effective when tested on the test set, and one "known" model was built based on variables that would normally be available *before* a movie is released.
 
-### Second full model
+The results shown are when the data is trained on all data in the dataset, and also when the model is trained only on movies that were released post-2010. This is because some key variables in the dataset (i.e. the facebook like variables) became relevant only since the widespread use of Facebook, and therefore change the values of the coefficients.
+
 ### First full model
 
 ```{r echo=FALSE}
@@ -1414,16 +1408,17 @@ trainwithdirectorandgenredata <- merge(movies_and_genres_wide[3:26], trainwithdi
 _Model summary_
 
 <center>
-```{r echo = FALSE, results = "asis"}
+```{r echo = FALSE, results = "asis", out.extra='style="float:left"'}
 fullmodel <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews,  data=trainwithdirectorandgenredata)
 
 fullmodel2010 <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews,  data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >=2010,])
 
-stargazer(list(fullmodel), type = "html", align = TRUE, dep.var.labels = "Gross revenue", no.space = TRUE, title = "Linear Regression results")
+stargazer(list(fullmodel, fullmodel2010), type = "html", align = TRUE, column.labels=c("For all years", "For 2010 onwards"),
+          dep.var.labels = "Gross revenue", no.space = TRUE, title = "Linear Regression results")
 ```
 </center>
 
-####Justification
+##Justification
 
 A final model is built using data for movies created post 2010, this is because some of our predictive variables (e.g. facebook likes) are only relevant as predictive variables since facebook has become widely popular for celebrities and movies.
 
@@ -1455,7 +1450,7 @@ ggplot(movies, aes(x=color)) + geom_bar() + xlab("")
 * The number of users for review has been included as it is statistically significant and may be correlated due to the two possible mechanisms that reviews may encourage more people to watch the movie, or the more people that see the movie, the more reviews are left.
 * Director number of movies, although significant individually, when other variables are taken into account loses its statistical significance, so is omitted from the model.
 
-### First Full Model
+### Second Full Model (Facebook)
 
 <center>
 
@@ -1684,13 +1679,13 @@ imdbscore <- movies$imdb_score
 contentrating <- movies$content_rating
 
 scoret1 <- t.test(imdbscore[contentrating == "R"], imdbscore[contentrating == "PG-13"])
-pander(scoret1)
+pander(scoret1, caption="")
 
 scoret2 <- t.test(imdbscore[contentrating == "PG-13"], imdbscore[contentrating == "PG"])
-pander(scoret2)
+pander(scoret2, caption="")
 
 scoret3 <- t.test(imdbscore[contentrating == "R"], imdbscore[contentrating == "PG"])
-pander(scoret3)
+pander(scoret3, caption="")
 ```
 
 ##Steven
@@ -2113,6 +2108,18 @@ ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross, colour =
 ```
 
 As the number of data elements in the sample grows for each decade, a geomtrical pattern also seems to emerge, which is an upwards trend of gross revenue by movies per director up to about 10 movies per director, andthen a less clear trend for movies for movies with 10+ movies per director.
+
+
+```{r echo=FALSE, message=FALSE, fig.width = 10, fig.align = "center"}
+##plot for imdb rating vs # of movies
+ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = imdb_score)) + 
+    geom_jitter(alpha = 0.2, width = 1) + 
+    geom_smooth() +
+    theme_bw() +
+    labs(x = "Number of movies in sample", y = "IMDB Score") +
+    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10))
+```
+
 
 #To be removed- Notes and comments:
 
