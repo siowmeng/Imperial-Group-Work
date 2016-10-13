@@ -214,7 +214,21 @@ kable(t(movies[1:3, ]), format = "markdown")
 
 #Theory
 
+The exact factors that determine the gross revenue of a movie are not well known, which can be seen by the high variance of gross revenues of historical movie releases, even with respect to their budgets (explored further below). There are multiple mechanisms that determine the popularity, and the related gross revenue, of a movie.
 
+If it is assumed that movie-makers (including producers, investors and executives), are well informed and profit-maximising, then one of the key predictors of movie revenue should be the budget. The mechanism for this is that a movie-maker should continue to invest money until the expected risk-adjusted returns are below the additional cost, so an increase in budget should lead to a corresponding increase in returns (gross revenue). However, not all movie-makers are necessarily profit maximising. Often there are other incentives to create movies such as recognition, prestigious awards (e.g. the Academy Awards), or an artistic mandate.
+
+The gross revenue of a movie is also expected to be driven by its internal "quality", this is of course difficult to measure but proxies of critics and imdb scores and reviews can be used for quantitative analysis. This should be particularly relevant in the "information age" where the "quality" of a movie as measured by IMDB scores or critics reviews, can be shared amongst broad online and offline social networks, and can have a strong network effect to either increase or decrease viewership of a movie.
+
+The popularity of a movie, in terms of ticket sales and therefore gross revenue, in theory should also be affected by the popularity of the cast and director, as "celebrity" culture would lead fans of those individuals to watch the movies that they act or direct in, and furthermore to promote them within their social circles. Therefore it is expected that there will be a positive correlation in the data between cast and director facebook likes, and the gross revenue.
+
+As both movie-watching populations and ticket prices have been growing over time (see http://www.boxofficemojo.com/yearly/), it is expected that gross revenues of movies would also display growth over time, although this may not necessarily be the case as there are many other factors impacting the industry such as a growing number of theatrical releases for consumers to choose from (e.g. approx 4000 in 1920, and 165,329 in 2010, data from http://www.imdb.com/year/), and the rise in online streaming services and movie piracy.
+
+It is also expected that PG-13 ratings attract a higher audience as they are technically open for all audiences (guidance is only recommended, not enforced, in the US) as per http://www.mpaa.org/film-ratings/, and as there are less rules than for a G/PG movie, their content generally targets a wider range of audiences.
+
+Other key factors that influence the popularity of a movie are internal, such as the language, genre, and key elements of the plot. These factors have multiple potential mechanisms to impact on gross revenue: they directly impact the audience for the movie both in terms of size and demographics, they may also act as a proxy for the quality of movie, as there are different standards and expectations across genres for example, and they may be more directly linked to popular trends which may cause people to go to the cinema.
+
+These factors are explored within this report, both individually and by considering their interrelationships, for the purpose of assessing their inclusion into a predictive model for gross revenue. 
 
 #Analysis
 
@@ -435,7 +449,12 @@ ggplot(data = gross_vs_score, aes(x = imdb_score, y = gross, colour = english)) 
 
 ### Country
 
-In this section, we look at whether the country of origin has a huge influence on the number of movies and the revenue that a movie generates. Then, we check if there is any relationship between the gross revenue and IMDB score for countries with more than 10 movies.
+In this section, we look at whether the country of origin has a huge influence on:
+
+1. The number of movies a country produces.
+2. The revenue that a movie generates. 
+
+Then, we check if there is any relationship between the gross revenue and IMDB score for countries with more than 10 movies.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center", message=FALSE, warning=FALSE}
 # Sorting the movies by country and picking out those with more than 10 movies
@@ -482,13 +501,11 @@ ggplot(countries, aes(x = score, y = gross, colour = country)) +
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
     scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
     annotation_logticks(sides = "lr", colour = "gray") 
-
-
 ```
 
-In terms of frequency, we observe that the number of movies originated in USA is almost 10 times that of UK. Also, the top five countries with the most number of movies are in Europe. On the other end, Asian countries have no more than 20 movies in our dataset. 
+Looking at the barplot, we observe that the number of movies originating in USA is almost 10 times that of UK. Also, the most number of movies originate from Europe. On the other end, no more than 20 movies in our dataset originate from asia.
 
-Next, we will look at the gross revenues for the top 12 countries. More than 50% of US, UK and Germany releases are generating high revenues of over 10 million. On the other hand, more than 25% of releases in China and Spain are generating revenues of lower than 1 million.
+Next, we will look at the gross revenues for the countries with 10 or more movies. The boxplots indicate that the movies originating from these countries have a mean revenue of 1 million. All USA releases generate more than 10 million. At least 50% of movies from Australia, UK, Japan and Germany generate revenues of over 10 million. On the other hand, no movies from India, China and Italy generate more than 10 million.
 
 Lastly, when we look at the scatterplots, we see that UK & US movies seem to be symmetrically about 'y = x' indicating a nearly positive correlation between IMDB score and gross revenue; however, the other countries show no particular relationship between the two variables.
 
@@ -851,7 +868,7 @@ sorteddirectorsummary$director_name <- factor(sorteddirectorsummary$director_nam
 ```
 
 
-```{r in-text-fig, echo=FALSE,  fig.width = 3, fig.height=3, out.extra='style="float:right"'}
+```{r in-text-fig, echo=FALSE,  fig.width = 3, fig.height=2.5, out.extra='style="float:right"'}
 ##Histogram for number of moveies per director
 ggplot(sorteddirectorsummary, aes(x = number_of_movies)) + 
     geom_histogram(binwidth = 1, fill = "darkblue") + 
@@ -859,6 +876,7 @@ ggplot(sorteddirectorsummary, aes(x = number_of_movies)) +
     labs(x = "Number of movies\nper director", y = "Number of directors",
          title = "Density of number of \nmovies per director") +
     scale_x_continuous(breaks = c(0, 5, 10, 15, 20, 25, 30), limits = c(0, 30)) 
+##
 ```
 
 ```{r echo=FALSE, fig.width = 10, fig.align = "center"}
@@ -1319,9 +1337,14 @@ pander(cor.test(movieswithdirectordata$gross, movieswithdirectordata$dir_number_
 pander(cor.test(movieswithdirectordata$gross[movieswithdirectordata$dir_number_of_movies<10], movieswithdirectordata$dir_number_of_movies[movieswithdirectordata$dir_number_of_movies<10]), caption="Covariance Test for Gross Revenue and # of movies per director in sample /n for directors with <10 movies") 
 ```
 
-These correlation tests do infer that there is a slight positive correlation between the # of movies the director has in the sample and the outcome variables, gross revenue. This correlation is both stronger and more statistically significant for directors with fewer than 10 movies in the sample.
+These correlation tests do infer that there is a slight positive correlation between the # of movies the director has in the sample and the outcome variables, gross revenue. This correlation is both stronger and more statistically significant for directors with fewer than 10 movies in the sample. There directors with 10+ movies in the sample can be seen below:
 \
 \
+
+```{r echo=FALSE, warning=FALSE, fig.width=8}
+ggplot(sorteddirectorsummary[sorteddirectorsummary$number_of_movies>=10,], aes(x=director_name, y=number_of_movies, fill=director_name)) + geom_bar(stat="identity") + coord_flip() + guides(fill=FALSE) + labs(x = "", y="Number of movies per director", title="Top 20 directors by number of movies in sample") +  scale_y_continuous(expand = c(0,0)) +  expand_limits(y = c(0,1.05 * max(sorteddirectorsummary$number_of_movies))) + theme_few()
+```
+
 
 ```{r echo=FALSE,  message=FALSE, fig.width = 5, fig.height=3.5, fig.align = "left", out.extra='style="float:left"'}
 ggplot(movieswithdirectordata, aes(x = factor(more_than_ten_movies), y = gross, fill = factor(more_than_ten_movies))) + 
@@ -1617,432 +1640,7 @@ grid.arrange(knownvariablesmodelplot1,knownvariablesmodelplot2,knownvariablesmod
 
 ##Next Steps
 
-#Conclusion & Next Steps
 *to be completed after our analysis*
 *need to write something interesting about our data*
 
-#Appendix
-
-##Nikhita
-
-```{r echo=FALSE}
-ggplot(data = counted, aes(x = country, y = freq, fill = country)) + 
-    geom_bar(stat = "identity", colour = "black") +
-    labs(title = "Number of movies by country", x = "", y = "") + 
-    geom_text(aes(label = freq), hjust = -0.2, vjust = 0.4) + 
-    coord_flip() +
-    theme_few() +
-    theme(legend.position = "None") +
-    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank(),
-          axis.title.x = element_blank(), axis.title.y = element_blank()) 
-
-# Plot of imdb score for the top 12 countries
-ggplot(countries, aes(country, score, fill = country)) + 
-    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(title = "IMDB Score of movies by country", x = "", y = "Gross revenue") + 
-    labs(title = "IMDB Score of movies by country", x = "", y = "IMDB Score") + 
-    theme_bw() +
-    theme(legend.position = "None") +
-    theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank()) +
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10))
-
-# Looking at the IMDB scores, movies across all ten countries have a mean score between 6 and 7. In India & Japan, at least 40% of the movies scored more than 7, whereas movies in Australia and USA have almost equal numbers scoring between 6 and 7.
-
-## IMDB Score analysis for top three ratings
-# Boxplot illustration
-ggplot(topratedmovies, aes(contentrating, contentscore, fill = contentrating)) + 
-    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-    labs(title = "IMDB Score of movies by rating", x = "Content Rating", y = "IMDB Score") + 
-    theme_bw() +
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
-    theme(legend.position = "none", axis.ticks.x = element_blank(), panel.grid.major.x = element_blank())
-
-# Does the mean IMDB Score vary with different ratings?
-imdbscore <- movies$imdb_score
-contentrating <- movies$content_rating
-
-scoret1 <- t.test(imdbscore[contentrating == "R"], imdbscore[contentrating == "PG-13"])
-pander(scoret1, caption="")
-
-scoret2 <- t.test(imdbscore[contentrating == "PG-13"], imdbscore[contentrating == "PG"])
-pander(scoret2, caption="")
-
-scoret3 <- t.test(imdbscore[contentrating == "R"], imdbscore[contentrating == "PG"])
-pander(scoret3, caption="")
-```
-
-##Steven
-
-Appendix
-```{r, echo=FALSE, fig.width = 10, fig.align = "center", message = FALSE}
-
-# imdb score vs year
-temp <- movies[!is.na(movies$title_year),]
-ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
-  labs(title = "IMDB scores against year", x = "", y = "IMDB Score") +
-  scale_y_continuous(limits = c(2.5, max(movies$imdb_score)))
-```
-
-The plot above shows that there might be a downward trend in IMDB scores over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of IMDB scores only years with ten or more entries will be plotted below.
-
-```{r, echo=FALSE, fig.width = 10, fig.align = "center", message = FALSE}
-# subset movies data frame to include all movies from 1980 onwards
-temp <- movies[movies$title_year >= 1980,]
-# plot the range of IMDB scores for all years
-p1 <- ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
-  labs(title = "IMDB scores against year, for years with >= 10 entries", x = "", y = "IMDB Score") +
-    geom_boxplot(outlier.shape = NA) +
-    theme_bw() +
-    theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5),legend.position = "None") +
-    labs(title = "IMDB scores against year, for years with >= 10 entries", x = "", y = "IMDB Score") +
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10))
-
-lm_model <- lm(imdb_score ~ title_year, data = temp)
-
-# make a scatter plot that shows trend in IMDB scores
-p2 <- ggplot(temp, aes(x = title_year, y = imdb_score, colour = factor(title_year))) + 
-    geom_jitter(alpha = 0.4) +
-    geom_abline(intercept = lm_model$coefficients[1], slope = lm_model$coefficients[2], size = 1) +
-    theme_bw() +
-    labs(x = "", y = "IMDB Score") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5), legend.position = "None", axis.title.x = element_blank()) +
-    scale_x_continuous(breaks = seq(min(temp$title_year), max(temp$title_year), by = 1), 0.5) +
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) 
-
-grid.arrange(p1, p2, ncol=1)
-```
-
-The plots above give a less biased represenation of the development of IMDB scores. The scores now appear more constant over the years. Although minimal, the scatter plot reveals that there is still a slight downward trend in scores.
-
-```{r, echo=FALSE, fig.width = 10, fig.align = "center", message = FALSE}
-# for all countries by decade
-
-# remove entries with NA-NA
-temp <- movies[!movies$decade == "NA-NA", ]
-ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
-  labs(title = "IMDB scores against decade, all countries", x = "", y = "IMDB Score")
-```
-
-
-```{r, echo=FALSE, fig.width = 10, fig.align = "center", message = FALSE}
-# facetgrid of imdb scores over decade for continents
-temp <- movies[!is.na(movies$continent), ]
-ggplot(temp, aes(y = imdb_score, x = factor(decade), fill = decade)) + 
-    geom_boxplot() + 
-    labs(title = "IMDB and decades for continents", y = "IMDB score", x = "Decade") + 
-    facet_wrap(~ continent) +
-    theme_bw() + 
-    theme(legend.position = "None",axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5)) +
-    annotation_logticks(sides = "lr", colour = "gray")
-```
-
-```{r, echo=FALSE, fig.width = 10, fig.align = "center", message = FALSE}
-# facetgrid of imdb scores over decade for Europe
-temp <- movies[movies$continent == "Europe", ]
-temp <- temp[!is.na(temp$country), ]
-ggplot(temp, aes(y = imdb_score, x = factor(decade), fill = decade)) + 
-    geom_boxplot() + 
-    labs(title = "IMDB and decades for European Countries", y = "IMDB score", x = "Decade") + 
-    facet_wrap(~ country) +
-    theme_bw() + 
-    theme(legend.position = "None",axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5)) +
-    annotation_logticks(sides = "lr", colour = "gray")
-
-```
-
-```{r, echo=FALSE, fig.width = 10, fig.align = "center", message = FALSE}
-# facetgrid of imdb scores over decade for North America
-temp <- movies[movies$continent == "North America", ]
-temp <- temp[!is.na(temp$country), ]
-ggplot(temp, aes(y = imdb_score, x = factor(decade), fill = decade)) + 
-    geom_boxplot() + 
-    labs(title = "IMDB and Decades for North American Countries", y = "IMDB Score", x = "Decade") + 
-    facet_wrap(~ country) +
-    theme_bw() + 
-    theme(legend.position = "None",axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5)) +
-    annotation_logticks(sides = "lr", colour = "gray")
-
-```
-
-
-```{r, echo=FALSE, fig.width = 10, fig.align = "center", message = FALSE}
-# facetgrid of imdb scores over decade for Asia
-temp <- movies[movies$continent == "Asia", ]
-temp <- temp[!is.na(temp$country), ]
-ggplot(temp, aes(y = imdb_score, x = factor(decade), fill = decade)) + 
-    geom_boxplot() + 
-    labs(title = "IMDB and Decades for Asian Countries", y = "IMDB Score", x = "Decade") + 
-    facet_wrap(~ country) +
-    theme_bw() + 
-    theme(legend.position = "None",axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5)) +
-    annotation_logticks(sides = "lr", colour = "gray")
-
-```
-
-
-##Cecilia
-
-```{r echo=FALSE}
-
-#Analysis on the effect of budget on gross profit margin
-
-#create grossprofit column
-movieswprofit <- data.frame(movies)
-movieswprofit$grossprofitmargin <- (movieswprofit$gross - movieswprofit$budget)/movieswprofit$gross * 100
-
-#scatter plot for budget vs gross profit margin 
-ggplot(data = movieswprofit) + geom_point(aes(x = budget, y = grossprofitmargin, colour = "#FF9999")) + scale_x_log10(breaks = c(1e+03, 1e+05, 1e+07, 1e+09), labels = c("1000", "100,000", "10 million", "1000 million")) + theme(legend.position="none") + scale_y_continuous(limits = c(-1000, 100)) + theme(legend.position="none") + labs(x = "Budget in USD", y = "Gross Profit Margin as %")
-
-#covariance test
-
-cov(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.obs") 
-
-#correlation test
-
-cor.test(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.obs")
-
-movieswprofit$profitable <- ifelse(movieswprofit$grossprofitmargin >= 0, "yes", "no")
-table(movieswprofit$profitable)
-
-```
-
-```{r, echo = FALSE}
-
-#plot for budget vs imdb score for countries
-
-ggplot(data = budgetcountry) + geom_jitter(aes(x = budget, y = imdb_score, color=country, alpha = 0.1)) + labs(x = "Budget", y = "IMDB Score") + scale_x_log10(breaks = c(1e+03, 1e+05, 1e+07, 1e+09), labels = c("1000", "100,000", "10 million", "1000 million"))
-```
-
-```{r, echo = FALSE}
-
-#plot for budget vs gross for countries
-
-ggplot(data = budgetcountry) + geom_jitter(aes(x = budget, y = gross, color=country, alpha = 0.1)) + labs(x = "Budget", y = "Gross Revenue") + scale_x_log10() 
-
-```
-
-
-We would like to investigate whether the imdb score of movie is affected by the budget for the particular movie.
-
-```{r echo = FALSE, fig.width = 10, fig.align = "center"}
-#scatter plot for budget vs imdb score
-ggplot(data = movies, aes(y = budget, x = imdb_score)) + 
-    geom_jitter(alpha = 0.4, colour = "#FF9999") + 
-    theme_bw() +
-    labs(y = "Budget", x = "IMDB Score", title = "Budget versus IMDB Score") + 
-    scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10))+
-    scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
-    annotation_logticks(sides = "lr", colour = "gray") 
-
-#covariance test
-cov(movies$budget, movies$imdb_score)
-
-#correlation test
-cor.test(movies$budget, movies$imdb_score)
-```
-
-The covariance value of 5.3x10^7 suggests that there is an upward trend - as budget increases, imdb score increases. The Pearson's correlation test between budget and IMDB score gives a p-value of 0.047, which suggests that there isn't a high correlation between budget of the movie and rating on IMDB. 
-
-Even if we dig deeper to look at the effect of budget on IMDB score for movies from different countries, it appears to be that there is not much of a trend.
-
-```{r echo = FALSE, fig.width = 10, fig.align = "center"}
-ggplot(budgetcountry, aes(y = budget, x = imdb_score, colour = country)) + 
-    geom_jitter(alpha = 0.2) + 
-    labs(title = "Budget and IMDB score for different countries", y = "Budget", x = "IMDB Score") + 
-    scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
-    scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
-    facet_wrap(~ country) +
-    theme_bw() + 
-    theme(legend.position = "None") +
-    annotation_logticks(sides = "lr", colour = "gray") 
-```
-
-```{r echo=FALSE}
-
-ggplot(budgetcountry, aes(x = budget, y = imdb_score, colour = country)) + 
-  geom_jitter() + scale_x_log10()+ labs(title = "Budget and IMDB score for different countries", x = "Budget", y = "IMDB Score") + scale_x_log10(breaks = c(1e+03, 1e+05, 1e+07, 1e+09), labels = c("1000", "100,000", "10 million", "1000 million")) +
-  facet_wrap(~ country) +
-  theme_bw() + 
-  theme(legend.position = "None")
-
-```
-
-
-Does budget affect gross profit margin?
-
-```{r echo = FALSE, fig.width = 10, fig.align = "center"}
-#create grossprofit column
-movieswprofit <- data.frame(movies)
-movieswprofit$grossprofitmargin <- (movieswprofit$gross - movieswprofit$budget)/movieswprofit$gross * 100
-
-#scatter plot for budget vs gross profit margin 
-ggplot(data = movieswprofit, aes(x = budget, y = grossprofitmargin)) + 
-    geom_point(alpha = 0.4, colour = "#FF9999") + 
-    theme_bw() +
-    scale_x_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) + 
-    scale_y_continuous(limits = c(-1000, 100)) + 
-    labs(x = "Budget in USD", y = "Gross Profit Margin as %") +
-    annotation_logticks(sides = "tb", colour = "gray") 
-
-#covariance test
-cov(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.obs") 
-
-#correlation test
-cor.test(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.obs")
-```
-
-Finally, we would also like to look at the effect of gross vs on gross profit margin, whether the an increase in budget would make a better movie, and hence a higher gross profit margin. Gross profit margin can be used as an indictor of profitability of movie. Based on the data, it appears that there is a negative correlation (-0.31) between budget and profit. Although it is not very strong, it still suggests that an increase in budget has a slight negative impact on gross profit margin.
-
-From the plot, we can see that a lot of movies are not profitable. Around half of the movies are profitable (count = 1988), half are not (count = 1801).
-
-```{r echo = FALSE, fig.width = 10, fig.align = "center"}
-movieswprofit$profitable <- ifelse(movieswprofit$grossprofitmargin >= 0, "yes", "no")
-
-table(movieswprofit$profitable)
-```
-
-##Siow Meng
-
-##George
-
-
-For IMDB score prediction.
-
-```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
-keywords_model_score <- lm(score ~ keywords, data = movies_and_keywords)
-#summary(keywords_model_score)
-intercept4 <- lm(movies_and_keywords$score ~ keywords_model_score$fitted)$coefficients[[1]]
-
-movies_and_keywords_full <- data.frame(movies_and_keywords, predicted_score = keywords_model_score$fitted)
-avg_score <- movies_and_keywords_full[, 3:4]
-avg_score <- avg_score[!duplicated(avg_score$keywords), ]
-avg_score <- avg_score[order(avg_score$predicted_score), ]
-rownames(avg_score) <- 1:dim(avg_score)[1]
-
-ggplot() + 
-    geom_jitter(aes(x = movies_and_keywords_full$predicted_score, y = movies_and_keywords_full$score, 
-                    colour = movies_and_keywords_full$keywords), alpha = 0.1) + 
-    geom_abline(intercept = intercept4) + 
-    geom_point(aes(x = avg_score$predicted_score, y = avg_score$predicted_score, colour = avg_score$keywords), 
-               size = 2, shape = 21, stroke = 2) + 
-    geom_text(aes(x = avg_score[seq(1, dim(avg_score)[1], 2), ]$predicted_score, 
-                   y = avg_score[seq(1, dim(avg_score)[1], 2), ]$predicted_score, 
-                   label = avg_score[seq(1, dim(avg_score)[1], 2), ]$keywords), 
-               check_overlap = F, nudge_y = -0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
-    geom_text(aes(x = avg_score[seq(2, dim(avg_score)[1], 2), ]$predicted_score, 
-                   y = avg_score[seq(2, dim(avg_score)[1], 2), ]$predicted_score, 
-                   label = avg_score[seq(2, dim(avg_score)[1], 2), ]$keywords), 
-               check_overlap = F, nudge_y = 0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9)) +
-    scale_x_continuous(breaks = c(6.1, 6.3, 6.5, 6.7)) +
-    labs(title = "IMDB Score for different keywords", x = "Predicted IMDB Score", y = "Observed IMDB Score") +
-    theme_bw() + 
-    theme(legend.position = "None")
-```
-
-
-For IMDB score prediction.
-
-```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
-genres_model_score <- lm(score ~ genre, data = movies_and_genres)
-#summary(genres_model_score)
-intercept2 <- lm(movies_and_genres$score ~ genres_model_score$fitted)$coefficients[[1]]
-
-movies_and_genres_full <- data.frame(movies_and_genres[,c("gross","score","genre")], predicted_score = genres_model_score$fitted)
-avg_score <- movies_and_genres_full[, 3:4]
-avg_score <- avg_score[!duplicated(avg_score$genre), ]
-avg_score <- avg_score[order(avg_score$predicted_score), ]
-rownames(avg_score) <- 1:dim(avg_score)[1]
-
-ggplot() + 
-    geom_jitter(aes(x = movies_and_genres_full$predicted_score, y = movies_and_genres_full$score, colour = movies_and_genres_full$genre), alpha = 0.1) + 
-    geom_abline(intercept = intercept2) + 
-    geom_point(aes(x = avg_score$predicted_score, y = avg_score$predicted_score, colour = avg_score$genre), 
-               size = 2, shape = 21, stroke = 2) + 
-    geom_text(aes(x = avg_score[seq(1, dim(avg_score)[1], 2), ]$predicted_score, 
-                   y = avg_score[seq(1, dim(avg_score)[1], 2), ]$predicted_score, 
-                   label = avg_score[seq(1, dim(avg_score)[1], 2), ]$genre), 
-               check_overlap = F, nudge_y = -0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
-    geom_text(aes(x = avg_score[seq(2, dim(avg_score)[1], 2), ]$predicted_score, 
-                   y = avg_score[seq(2, dim(avg_score)[1], 2), ]$predicted_score, 
-                   label = avg_score[seq(2, dim(avg_score)[1], 2), ]$genre), 
-               check_overlap = F, nudge_y = 0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9)) +
-    scale_x_continuous(breaks = c(6, 6.5, 7)) +
-    labs(title = "IMDB Score for different genres", x = "Predicted IMDB Score", y = "Observed IMDB Score") +
-    theme_bw() + 
-    theme(legend.position = "None")
-```
-
-
-
-##Louise
-
-```{r echo = FALSE, message = FALSE, fig.width = 3, fig.height=3, fig.align = "center" }
-##plot for budget vs number of directors in sample
-ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = budget)) + 
-    geom_jitter(alpha = 0.1, width = 1) +
-    theme_bw() + 
-    labs(x = "Number of movies by director in sample", y = "Budget") + 
-    scale_y_continuous(label = human_usd) + 
-    scale_x_continuous(breaks = c(0, 5, 10, 15, 20, 25, 30), limits = c(0, 30))
-```
-
-If we then split this out by decades, we can see the below:
-```{r echo = FALSE}
-##add the decades in as per Steven's code (note: potentially change into a function?)
-movieswithdirectordata$decade <- sapply(movieswithdirectordata$title_year, FUN = convert_decade)
-```
-
-```{r echo = FALSE, fig.width = 10, fig.align = "center", warning = FALSE, message = FALSE}
-ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross, colour = decade)) + 
-    geom_jitter(alpha = 0.1) + 
-    scale_y_continuous(label = human_usd) + 
-    scale_x_continuous(breaks = c(0, 5, 10, 15, 20, 25, 30), limits = c(0, 30)) +
-    theme_bw() +
-    labs(title = "Gross Revenue by\n number of movies per director\n by decades", x = "Number of movies\nper director", y = "Gross Revenue") + 
-    facet_wrap(~ decade, nrow = 4) + 
-    theme(legend.position = "None") + 
-    geom_smooth(color="#000000")
-```
-
-As the number of data elements in the sample grows for each decade, a geomtrical pattern also seems to emerge, which is an upwards trend of gross revenue by movies per director up to about 10 movies per director, andthen a less clear trend for movies for movies with 10+ movies per director.
-
-
-```{r echo=FALSE, message=FALSE, fig.width = 10, fig.align = "center"}
-##plot for imdb rating vs # of movies
-ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = imdb_score)) + 
-    geom_jitter(alpha = 0.2, width = 1) + 
-    geom_smooth() +
-    theme_bw() +
-    labs(x = "Number of movies in sample", y = "IMDB Score") +
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10))
-```
-
-```{r echo=FALSE}
-##cor test for imdb rating vs # of movies
-pander(cor.test(movieswithdirectordata$imdb_score, movieswithdirectordata$dir_number_of_movies), caption="")
-```
-
-#To be removed- Notes and comments:
-
-At the end of the assignment we should go back to:
-
-* Check coding standards are consistent (and align with his recommendation - http://adv-r.had.co.nz/Style.html)
-* Check language is consistent (tense / case)
-* Convert ggplots into the same theme - colour scheme, fonts, etc.
-* All assumptions have been noted in the appropriate sections
-* We think we're roughly aiming for 20ish pages - tbd at a later stage
-* Make sure we don't use language that implies causation when we can only infer correlation
-* Double check each others' analyses for Simpson's paradox.
-* Maybe put all libraries at the top?
 
