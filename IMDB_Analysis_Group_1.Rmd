@@ -705,9 +705,7 @@ ggplot(movies_and_keywords, aes(x = score, y = gross, colour = keywords)) +
 ```
 
 ### Gross revenue over time
-### Decades
-Boxplot gross against year, decade
-```{r, echo = FALSE, fig.width = 10, fig.align = "center", message=FALSE, warning=FALSE}
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # code to create continent column
 movies$continent <- countrycode(as.character(movies$country), "country.name", "continent")
 
@@ -724,45 +722,6 @@ for (i in 1:nrow(movies)) {
   } 
 }
 
-# for all countries and all years
-# remove NA from title_year column first 
-#### should you remove outliers from plot????
-temp <- movies[!is.na(movies$title_year),]
-ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
-  labs(title = "IMDB scores against year", x = "", y = "IMDB Score") +
-  scale_y_continuous(limits = c(2.5, max(movies$imdb_score)))
-```
-
-```{r, echo = FALSE, fig.width = 10, fig.align = "center", message=FALSE, warning=FALSE}
-
-# subset movies data frame to include all movies from 1980 onwards
-temp <- movies[movies$title_year >= 1980,]
-# plot the range of IMDB scores for all years
-p1 <- ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_year))) + 
-  geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-  theme(axis.text.x=element_text(angle=90, hjust=0.5, vjust=0.5),legend.position = "None") +
-  labs(title = "IMDB scores against year, for years with >= 10 entries", x = "", y = "IMDB Score") +
-    geom_boxplot(outlier.shape = NA) +
-    theme_bw() +
-    theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5),legend.position = "None") +
-    labs(title = "IMDB scores against year, for years with >= 10 entries", x = "", y = "IMDB Score") +
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10))
-
-lm_model <- lm(imdb_score ~ title_year, data = temp)
-# make a scatter plot that shows trend in IMDB scores
-p2 <- ggplot(temp, aes(x = title_year, y = imdb_score, colour = factor(title_year))) + 
-    geom_jitter(alpha = 0.4) +
-    geom_abline(intercept = lm_model$coefficients[1], slope = lm_model$coefficients[2], size = 1) +
-    theme_bw() +
-    labs(x = "", y = "IMDB Score") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5), legend.position = "None", axis.title.x = element_blank()) +
-    scale_x_continuous(breaks = seq(min(temp$title_year), max(temp$title_year), by = 1), 0.5) +
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) 
-
-grid.arrange(p1, p2, ncol=1)
 ```
 
 
@@ -777,7 +736,8 @@ convert_decade <- function(year){
 movies$decade <- sapply(movies$title_year, FUN = convert_decade)
 ```
 
-This section will analyze the evolution of revenues over time.
+In order to get a better understanding of gross revenues they can be studied over time. This analysis will determine if title year has a significant effect on gross revenues and if there were any excpetionally successful years for gross revenues.
+
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # plot gross vs. years
 temp <- movies[!is.na(movies$title_year),]
@@ -785,7 +745,7 @@ ggplot(temp, aes(x = factor(title_year), y = gross, fill = factor(title_year))) 
     geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
     theme_bw() + 
     theme(axis.text.x=element_text(angle = 45, hjust = 0.5, vjust = 0.5), legend.position = "None", axis.title.x = element_blank()) +
-    labs(title = "Gross revenues against year, for years with >= 10 entries", x = "", y = "Gross Revenue") + 
+    labs(title = "Gross revenues against year", x = "", y = "Gross Revenue") + 
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billion"), limits = c(1, 1e+10)) +
     scale_x_discrete(breaks = seq(1920, 2016, 2), labels = seq(1920, 2016, 2), drop = FALSE) +
@@ -793,7 +753,7 @@ ggplot(temp, aes(x = factor(title_year), y = gross, fill = factor(title_year))) 
 
 ```
 
-The above plot shows that there might be a slight upward trend in gross revenue over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of gross revenues over time the following two plots will only include years which have a minimum of ten entries.
+The above plot shows gross revenues against title years for all movies. It shows that there might be a slight upward trend in gross revenues. Years prior to 1972 show a higher variance than those after 1972. In addition, movies with a release date prior to 1972 have lower mean and median gross revenue. The exception is one outlier with a release date in 1937. Several release years, however, include fewer than ten movies and can therefore not be considered representative of a specific year's gross revenue. To get a more accurate picture of the development of gross revenues over time the following two plots will remove years with less than ten entries.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # plot all years that have at least ten movies
@@ -813,7 +773,9 @@ p1 <- ggplot(temp, aes(x = factor(title_year), y = gross, fill = factor(title_ye
    annotation_logticks(sides = "lr", colour = "gray") 
 
 lm_model2 <- lm(log10(gross) ~ title_year, data = temp)
+
 # make a scatter plot that shows trend in IMDB scores
+
 p2 <- ggplot(temp, aes(x = title_year, y = gross, colour = factor(title_year))) + 
     geom_jitter(alpha = 0.4) +
     geom_abline(intercept = lm_model2$coefficients[1], slope = lm_model2$coefficients[2], size = 1) +
@@ -828,7 +790,7 @@ p2 <- ggplot(temp, aes(x = title_year, y = gross, colour = factor(title_year))) 
 grid.arrange(p1, p2, ncol=1)
 ```
 
-The plots above give a less biased represenation of the development of gross revenues over time. The revenues now appear more constant. The trendline on the second plot indicates that there is a slight upward trend. Even though the 2000s have more extreme oultliers than the 1990s and 1980s these do not seem to have a substantial affect the median (mean) gross revenues.
+The two plots above plot title years with more than ten entries. This gives a less biased represenation of the development of gross revenues. From the first plot, revenues now appear more constant. Recent years have more outliers with a lower gross revenue which suggests a downward trend. The slighlty downward sloping trendline on the second plot confirms this assumption. (conclude? or conclude at the end?)
 
 ```{r, echo = FALSE}
 # create function that converts years into decades
@@ -1785,6 +1747,7 @@ ggplot(temp, aes(y = imdb_score, x = factor(decade), fill = decade)) +
     annotation_logticks(sides = "lr", colour = "gray")
 
 ```
+
 
 ##Cecilia
 
