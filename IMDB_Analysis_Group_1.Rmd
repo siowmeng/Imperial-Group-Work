@@ -1396,14 +1396,9 @@ fullmodel <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total
 
 fullmodel2010 <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews,  data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >=2010,])
 
-<<<<<<< HEAD
 stargazer(list(fullmodel, fullmodel2010), type = "html", align = TRUE, column.labels=c("For all years", "From 2010 onwards"),
           dep.var.labels = "Gross revenue", no.space = TRUE, title = "Linear Regression results")
 
-=======
-stargazer(list(fullmodel, fullmodel2010), type = "html", align = TRUE, column.labels=c("For all years", "For 2010 onwards"),
-          dep.var.labels = "Gross revenue", no.space = TRUE, title = "Linear Regression results")
->>>>>>> 4a2e99fdc3846c633276251d6d9a1b66fbf572a3
 ```
 </center>
 
