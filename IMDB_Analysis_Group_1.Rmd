@@ -26,6 +26,14 @@ library(stargazer)
 #Executive Summary
 *to be filled out after we have finished our analysis*
 
+The purpose of this report is to try and understand what sort of factors contribute to the successfulness of a movie. The analyses is split into three types parts - descriptive, influential and followed by an attempt to make a predictive model. The first section looks to analyze the data available and the second section aims to identify relevant variables which are correlated to gross revenue of a movie. The final section attempts to make a predictive model based on the chosen relevant variables and this model is tested against a subsetted dataset, to see how accurate it is in predicting the gross revenue of a movie.
+
+From our analyses, we found that … - budget has the most impact on revenue out of all the variables available in the dataset - our predictive models are able predict the gross revenue with a MSE of 37-56 million USD, depending on the chosen variables in the particular model
+
+From our findings, the following can be concluded…
+
+However, there are many limitations to this dataset, including a limited number of variables and a clear bias in the number of English movies vs other language movies. Thus, the conclusions drawn from this analysis needs to be verified with a more extensive data set. Moving forward, it would be very useful to obtain data from other movie databases indigenious to countries other than the US and UK e.g. *http://www.bollywoodmdb.com* for Indian Bollywood movies. Though our model is able to predict revenues considerably well for a first attempt, and specifically for movies with revenue up to 50 million USD, it still has difficult estimating the revenue with decent accuracy for movies with even higher gross revenues. Acquiring more data points and having datasets with relevant variables different from the current ones, can help to improve the accuracy of our predictive models.
+
 #Introduction
 
 With the advent of big data and advanced predictive analytics capabilities, very often, producers are trying to determine beforehand what will make a movie successful or fail. Rather than relying on intuition and guesswork, producers such as Netflix are trying to figure out what will make a movie a successful one by analysing historical data available in the movie industry and increase their success rates through the use of data analytics. For Netflix, the recent award-winning drama 'House of Cards' was a success story of theirs - descriptive, prescriptive and predictive analytics were crucial in the process of developing the drama, to gauge what content viewers were interested in.
