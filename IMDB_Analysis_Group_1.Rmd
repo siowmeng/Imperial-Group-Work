@@ -1186,9 +1186,8 @@ When we actually make predictions based on a linear model for categorical data, 
 
 ### Steven
 
-With Hollywood, North America arguably has the most successful movie industry in the world. Monetary success, however, does not necessarily imply good quality. This tradeoff is obvious in many multinational companies that produce large volumes albeit at lower qualities. If IMDB scores are taken as proxy for movie quality, Europe's movie industry can be compared to North America's.
+With Hollywood, North America arguably has the most successful movie industry in the world. Monetary success, however, does not necessarily imply good quality. This tradeoff is obvious in many multinational companies that produce large volumes albeit at lower qualities. If IMDB scores are taken as proxy for movie quality, Europe's movie industry can be compared to North America's. To test the claim whether there is a difference in quality between North American and European movies a t-test can be conducted. 
 
-To test the claim whether there is a difference in quality between North American and European movies a t-test can be conducted. 
 This section tests whether North American movies have a higher mean IMDB score than European ones. Intuitively, one would assume that North American movies score higher than European ones. This intuition stems from the prevalence of North American movies in media. 
 
 H0 -> Europe and North America get equal scores
