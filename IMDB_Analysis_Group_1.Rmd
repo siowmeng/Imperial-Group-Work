@@ -54,7 +54,7 @@ The dataset used in this report was downloaded from *kaggle.com*, a website for 
 
 Although *imdb.com* covers movies from various different countries, the website is only offered in English, which implies certain limitations. The movies included in the dataset are skewed towards an English-speaking audience. This means that movies from North America, the UK, and other English speaking countries are overrepresented. In addition, the dataset includes more movies with release dates after 1980. In fact, multiple release years prior to 1980 include as little as one movie.
    
-Despite these limitations the dataset offers extensive information on movies as well as a large enough number of observations. This will allow the analysis to  reveal interesting insights and answer the report's leading question. The dataset can be retrieved [here](https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset).
+Despite these limitations the dataset provides a solid base for in-depth analysis. As a matter of fact, there exist few movie datasets that include such variety. This will allow the analysis to  reveal interesting insights and answer the report's leading question. The dataset can be retrieved [here](https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset).
 
 The dataset includes the following variables:
 ```{r echo = FALSE}
