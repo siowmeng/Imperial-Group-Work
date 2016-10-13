@@ -792,7 +792,7 @@ convert_decade <- function(year){
 movies$decade <- sapply(movies$title_year, FUN = convert_decade)
 ```
 
-In order to get a better understanding of gross revenues they can be studied over time. This analysis will determine if title year has a significant effect on gross revenues and if there were any excpetionally successful years for gross revenues.
+Whereas in the past, movies were the principal source of entertainment, there are today several other sources to consider. While they are not consumed in the same way they can be considered serious competitors to the classic movie. Some of the sources are high budget TV-Shows, video games, and user created content to name a few. This raises the question as to how gross revenues have developed over time.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # plot gross vs. years
@@ -801,7 +801,7 @@ ggplot(temp, aes(x = factor(title_year), y = gross, fill = factor(title_year))) 
     geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
     theme_bw() + 
     theme(axis.text.x=element_text(angle = 45, hjust = 0.5, vjust = 0.5), legend.position = "None", axis.title.x = element_blank()) +
-    labs(title = "Gross revenues against year", x = "", y = "Gross Revenue") + 
+    labs(title = "Gross revenue against year", x = "", y = "Gross Revenue") + 
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billion"), limits = c(1, 1e+10)) +
     scale_x_discrete(breaks = seq(1920, 2016, 2), labels = seq(1920, 2016, 2), drop = FALSE) +
@@ -809,7 +809,7 @@ ggplot(temp, aes(x = factor(title_year), y = gross, fill = factor(title_year))) 
 
 ```
 
-The above plot shows gross revenues against title years for all movies. It shows that there might be a slight upward trend in gross revenues. Years prior to 1972 show a higher variance than those after 1972. In addition, movies with a release date prior to 1972 have lower mean and median gross revenue. The exception is one outlier with a release date in 1937. Several release years, however, include fewer than ten movies and can therefore not be considered representative of a specific year's gross revenue. To get a more accurate picture of the development of gross revenues over time the following two plots will remove years with less than ten entries.
+The above plot shows gross revenue against title year for all movies. It shows a slight upward trend. The plot can visually be divided into two sections. The first section goes from 1920 to 1972 and shows a big variance between mean gross revenue for different years. The second section includes movies from 1972 to onwards. This section show a smaller variance in mean gross revenue for different years. In addition, the plot seems to have more outliers with low revenues than outliers with high revenues. Several release years, however, include fewer than ten movies and can therefore not be considered representative of a year's gross revenue. To get a more accurate picture the following two plots will remove years with less than ten entries.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # plot all years that have at least ten movies
@@ -823,7 +823,7 @@ p1 <- ggplot(temp, aes(x = factor(title_year), y = gross, fill = factor(title_ye
     geom_boxplot() +
     theme_bw() + 
     theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5), legend.position = "None", axis.title.x = element_blank()) +
-    labs(title = "Gross revenues against year, for years with >= 10 entries", x = "", y = "Gross Revenue") +
+    labs(title = "Gross revenue against year, for years with >= 10 movies", x = "", y = "Gross Revenue") +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "1 billions"),  limits = c(1, 1e+10)) +
    annotation_logticks(sides = "lr", colour = "gray") 
@@ -846,7 +846,7 @@ p2 <- ggplot(temp, aes(x = title_year, y = gross, colour = factor(title_year))) 
 grid.arrange(p1, p2, ncol=1)
 ```
 
-The two plots above plot title years with more than ten entries. This gives a less biased represenation of the development of gross revenues. From the first plot, revenues now appear more constant. Recent years have more outliers with a lower gross revenue which suggests a downward trend. The slighlty downward sloping trendline on the second plot confirms this assumption. (conclude? or conclude at the end?)
+The plots now shows a different picutre. Compared to the plot above it cannot be visually divided into two distinct sections. In fact, the trendline on the second plot shows that revenues are on a slight downward trend. 
 
 ```{r, echo = FALSE}
 # create function that converts years into decades
