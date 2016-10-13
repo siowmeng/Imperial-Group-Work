@@ -28,6 +28,7 @@ library(stargazer)
 
 The purpose of this report is to try and understand what sort of factors contribute to the successfulness of a movie. The analyses is split into three types parts - descriptive, inferential and followed by an attempt to make a predictive model. The first section looks to analyze the data available and the second section aims to identify relevant variables which are correlated to gross revenue of a movie. The final section attempts to make a predictive model based on the chosen relevant variables and this model is tested against a subsetted test dataset, to see how accurate it is in predicting the gross revenue of a movie. 
 
+
 From our analyses, we found that ...
 - Budget has the most impact on revenue out of all the variables available in the dataset 
 - Aside from budget, content total cast facebook likes, director facebook likes, ratingsm duration and key genres are also strong factors in determining whether a movie performs well in the box office or not
