@@ -556,11 +556,11 @@ From the histogram with count of movies across different budgets, we can see mos
 
 From the boxplots, we can see that the average budget on the films across different countries is similar, around a ballpark range of 10 million to 100 million. Mexico and Italy appears to have a lower average for film budget than the rest of ther other countries. (the data has been subsetted to include only countries with over 10 movies in the data set)
 
-### Genres and Plot Keywords
+### Genres
 
-##### Genres
+Next, we will try to find out some information about the genres the movies belong to and some summary statistics for them. We must note that each movie may belong to more than one genre. In that case, each movie is counted as many times as the number of genres it belongs to. In the following graphs, we only present the most popular genres. The less popolar genres which include less than 10 movies have been omitted.
 
-Descriptive analysis based on the movies genres and how do they correlate possibly with other variables of the dataset. Genres with less than 10 movies have been omitted. The first graph shows the number of movies in each genre while the second and the third plots present a boxplot for each genre associated with the profit of the movies and the IMDB score of the movies respectively.
+The first graph shows the number of movies per genre. Dramas and comedies are by far the most popular genres, followed by thriller, action and romance movies. 
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 genres <- c()
@@ -608,7 +608,11 @@ ggplot(genres_sum, aes(x = genre, y = sum, fill = genre)) +
     theme(legend.position = "None") +
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank(),
           axis.title.x = element_blank(), axis.title.y = element_blank()) 
+```
 
+Next, we create a boxplot graph based on the genres to observe how gross revenue is distributed among different genres. We observe great differences in the distribution of gross revenue in each genre, with Animation movies being the most profitable and Documentaries the least profitable on average.
+
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 ## Create an appropriate dataframe with gross, imdb_score and genres for each movie
 movies_and_genres <- cbind(gross = movies$gross, score = movies$imdb_score, movie_title = movies$movie_title, movies_and_genres, stringsAsFactors = FALSE)
 ## saving a full wide data frame to be used in later analysis
@@ -625,41 +629,33 @@ movies_and_genres <- movies_and_genres[complete.cases(movies_and_genres), ]
 ggplot(movies_and_genres, aes(genre, gross, fill = genre)) + 
     geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
     coord_flip() +
-    labs(title = "Gross revenue of movies by genre", x = "", y = "Gross revenue") + 
+    labs(title = "Gross revenue of movies by genre", x = "", y = "") + 
     theme_bw() +
     theme(legend.position = "None") +
-    theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank()) + 
+    theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank(), axis.title.y = element_blank()) + 
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10))
+```
 
-# Boxplot of genres and imdb score
-ggplot(movies_and_genres, aes(genre, score, fill = genre)) + 
-    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-    coord_flip() +
-    labs(title = "IMDB score of movies by genre", x = "", y = "IMDB score") + 
-    theme_bw() +
-    theme(legend.position = "None") +
-    theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank()) +
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10))
+Finally, we observe the diffirences between genres based not only on their gross revenue but also on theit IMDB score. 
 
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # Scatter plots of genres based on gross and imdb score
 ggplot(movies_and_genres, aes(x = score, y = gross, colour = genre)) + 
     geom_jitter(alpha = 0.1) +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
     scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
-    labs(title = "Gross Revenue and IMDB score for different genres", x = "IMDB Score", y = "Gross Revenue") +
+    labs(title = "Gross Revenue and IMDB score for different genres", y = "Gross Revenue", x = "IMDB Score") +
     facet_wrap(~ genre) +
     theme_bw() + 
     theme(legend.position = "None") +
     annotation_logticks(sides = "lr", colour = "gray") 
 ```
 
-*Should we move the "IMDB score of movies by genre" plot to appendix? -- Siow Meng*
-
 #### Plot Keywords
 
-We display the 20 most popular keywords.
+We perform a similar analysis to the previous one, but this time based on plot keywords. Again, each movie may have more than one keywords that describe its plot. However, if one movie has more than one keywords, we will count it as many times as the keywords used to describe it. To simplify things, we will only look at the 20 most popular keywords, as the vast majority of all the possible keywords appear only a few times in the whole dataset and doesn't provide us with useful insights. As we see, the most popular keywords are love, friend, murder and death, followed by some less usual ones.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 movies0 <- movies[movies$plot_keywords != "", ]
@@ -711,7 +707,11 @@ ggplot(keywords_sum, aes(x = keywords, y = sum, fill = keywords)) +
     theme(legend.position = "None") +
     theme(axis.text.x=element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank(),
           axis.title.x = element_blank(), axis.title.y = element_blank()) 
+```
 
+Same as before, we create a boxplot graph based on the keywords to observe how gross revenue is distributed among the most popular plot keywords. We observe that the differences in the distribution of gross revenue among keywords are not that great in comparison with those based on genres. Interestingly, however, it seems that the most popular keywords are not the ones that bring the greatest gross revenue, while somee less populat keywords appear to bring greatest gross revenue on average.
+
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 ## Create an appropriate dataframe with gross, imdb_score and keywords    for each movie
 movies_and_keywords <- cbind(gross = movies0$gross, score = movies0$imdb_score, movies_and_keywords, stringsAsFactors = FALSE)
 movies_and_keywords <- melt(movies_and_keywords, id = c("gross", "score"))
@@ -722,34 +722,28 @@ colnames(movies_and_keywords) <- c("gross", "score", "keywords")
 movies_and_keywords$keywords <- factor(movies_and_keywords$keywords, levels = keywords_sum$keywords)
 movies_and_keywords <- movies_and_keywords[complete.cases(movies_and_keywords), ]
 
-# Boxplot of genres and profit
+# Boxplot of keywords and profit
 ggplot(movies_and_keywords, aes(keywords, gross, fill = keywords)) + 
     geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
     coord_flip() +
-    labs(title = "Gross revenue of movies by keyword", x = "", y = "Gross revenue") + 
+    labs(title = "Gross revenue of movies by keyword", x = "", y = "") + 
     theme_bw() +
     theme(legend.position = "None") +
-    theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank()) + 
+    theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank(), axis.title.y = element_blank()) + 
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10))
+```
 
-# Boxplot of genres and imdb score
-ggplot(movies_and_keywords, aes(keywords, score, fill = keywords)) + 
-    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
-    coord_flip() +
-    labs(title = "IMDB score of movies by keyword", x = "", y = "IMDB score") + 
-    theme_bw() +
-    theme(legend.position = "None") +
-    theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank()) +
-    scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10))
+Again, we observe the diffirences between plot keywords based not only on their gross revenue but also on theit IMDB score. 
 
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # Scatter plots of keywords based on gross and imdb score
 ggplot(movies_and_keywords, aes(x = score, y = gross, colour = keywords)) + 
     geom_jitter(alpha = 0.2) +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
     scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
-    labs(title = "Gross Revenue and IMDB score for different keywords", x = "IMDB Score", y = "Gross Revenue") +
+    labs(title = "Gross Revenue and IMDB score for different keywords", y = "Gross Revenue", x = "IMDB Score") +
     facet_wrap(~ keywords, nrow = 4) +
     theme_bw() + 
     theme(legend.position = "None") +
