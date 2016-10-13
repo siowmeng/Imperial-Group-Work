@@ -1457,6 +1457,7 @@ Similar to the first full model, this full model is built using training set. Th
 
 ####Variables included in the model:  
 Some of the variables used in this model are identical to those used in the first model. The justifications for these variables can be found in earlier section. The list below discusses the variables used only in the second model:
+
 * Two new variables ("english" and "us _ or _ others") have been created to separate the movies into two distinct groups (i.e. English vs non-English, USA vs non-USA). From the inferential analysis section, we have seen a huge difference in gross revenue between English and non-English (similarly, USA and non-USA). Therefore, these two variables are expected to have a major effect in predicting gross revenue.
 * This model does not consider the "number of users voted" variable. Intuitively, higher number of voters does not necessarily translate to higher movie quality. IMDB score may reflect the movie quality better instead. In the descriptive analysis section, we have observed that there is a slight positive correlation between gross revenue and IMDB score. This model includes IMDB score to predict the quality and popularity of the movie.
 * Movie facebook likes is also statistically significant when included into the model, this can be interpreted as a proxy for the popularity of the movie, and also could be that the more people who saw the movie (based on gross revenue), the more people then subsequently liked the page.
@@ -1464,6 +1465,7 @@ Some of the variables used in this model are identical to those used in the firs
 
 ####Not included into the model:
 We have already discussed some of the variables not included in this model (in the section for first model), the list below describes the rationale in excluding some other variables:  
+
 * Number of voted users is not included as explained above.
 * Number of critic reviews is not included. Similar to reasons in excluding "number of voted users", this metric is not considered to have a major impact on the popularity of a movie.
 * Movie duration is excluded since it should not affect the quality (and hence the popularity) of a movie.
