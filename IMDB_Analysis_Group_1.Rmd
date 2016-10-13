@@ -214,7 +214,21 @@ kable(t(movies[1:3, ]), format = "markdown")
 
 #Theory
 
+The exact factors that determine the gross revenue of a movie are not well known, which can be seen by the high variance of gross revenues of historical movie releases, even with respect to their budgets (explored further below). There are multiple mechanisms that determine the popularity, and the related gross revenue, of a movie.
 
+If it is assumed that movie-makers (including producers, investors and executives), are well informed and profit-maximising, then one of the key predictors of movie revenue should be the budget. The mechanism for this is that a movie-maker should continue to invest money until the expected risk-adjusted returns are below the additional cost, so an increase in budget should lead to a corresponding increase in returns (gross revenue). However, not all movie-makers are necessarily profit maximising. Often there are other incentives to create movies such as recognition, prestigious awards (e.g. the Academy Awards), or an artistic mandate.
+
+The gross revenue of a movie is also expected to be driven by its internal "quality", this is of course difficult to measure but proxies of critics and imdb scores and reviews can be used for quantitative analysis. This should be particularly relevant in the "information age" where the "quality" of a movie as measured by IMDB scores or critics reviews, can be shared amongst broad online and offline social networks, and can have a strong network effect to either increase or decrease viewership of a movie.
+
+The popularity of a movie, in terms of ticket sales and therefore gross revenue, in theory should also be affected by the popularity of the cast and director, as "celebrity" culture would lead fans of those individuals to watch the movies that they act or direct in, and furthermore to promote them within their social circles. Therefore it is expected that there will be a positive correlation in the data between cast and director facebook likes, and the gross revenue.
+
+As both movie-watching populations and ticket prices have been growing over time (see http://www.boxofficemojo.com/yearly/), it is expected that gross revenues of movies would also display growth over time, although this may not necessarily be the case as there are many other factors impacting the industry such as a growing number of theatrical releases for consumers to choose from (e.g. approx 4000 in 1920, and 165,329 in 2010, data from http://www.imdb.com/year/), and the rise in online streaming services and movie piracy.
+
+It is also expected that PG-13 ratings attract a higher audience as they are technically open for all audiences (guidance is only recommended, not enforced, in the US) as per http://www.mpaa.org/film-ratings/, and as there are less rules than for a G/PG movie, their content generally targets a wider range of audiences.
+
+Other key factors that influence the popularity of a movie are internal, such as the language, genre, and key elements of the plot. These factors have multiple potential mechanisms to impact on gross revenue: they directly impact the audience for the movie both in terms of size and demographics, they may also act as a proxy for the quality of movie, as there are different standards and expectations across genres for example, and they may be more directly linked to popular trends which may cause people to go to the cinema.
+
+These factors are explored within this report, both individually and by considering their interrelationships, for the purpose of assessing their inclusion into a predictive model for gross revenue. 
 
 #Analysis
 
