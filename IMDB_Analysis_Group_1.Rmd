@@ -1490,7 +1490,7 @@ stargazer(list(knownvariablesmodel, knownvariablesmodel2010), type = "html", ali
 
 To build a model to predict revenue of movies that have not yet been released, this model includes only variables that are known before the time of release. Our dataset provided us with number of facebook likes at a specific point in time, and to use this as part of our predictive model we would need to analyse number of facebook likes before the movie was released, however we will use what we currently have as a proxy to build the model. This model has lower predictive power (adjusted R squared of `r summary(knownvariablesmodel)$adj.r.squared`), but could be used in a more useful business context.
 
-###Model Performance
+##Model Performance
 
 *we will then test this model using the test dataset, make a plot of the predictions against the actual values, and calculate the MSE/other success statistics*
 
