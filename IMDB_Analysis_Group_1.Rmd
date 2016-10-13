@@ -1037,7 +1037,9 @@ pander(var.test(movies$gross[movies$country == "USA"], movies$gross[movies$count
 
 In summary, we are confident to say that the English movies in this dataset are generally more popular than non-English movies.  
 
+The huge success of English and USA movies is not surprising. With the growing soft power of USA and UK in 20th-century, more and more worldwide audiences started to watch English movies. Some highly successful Hollywood movies are even dubbed in other languages (e.g. Chinese, Japanese, Hindi) for the consumption of non-English speaking movie-goers. On the contrary, non-English movies tend to be primarily targeted at their respective local markets.  
 
+As a result, there are much more USA and English movies made and they are generally more successful (in terms of gross revenue) than non-English movies.  
 
 
 ## Content Rating vs IMDB Score
@@ -1083,10 +1085,14 @@ A glance at the boxplots: R rated movies tend to, on average, generate lower rev
 
 T-test results: There is no difference in the gross revenue for PG and PG-13 movies whereas p-values lower than 5% support the alternative hypothesis that the difference in mean gross revenue for R and PG/PG-13 movies is not equal to 0.
 
+*The t-test result tables came one after another, it may be hard to discern which group they are comparing against. Might want to add wording in between the tables. --Siow Meng*
+
 ### Cecilia
 
 Intuitively, the higher the budget of a movie, the better it should be and hence should attract more people to watch it, resulting in a higher gross revenue. 
 We would like to investigate whether the imdb score of movie is affected by the budget for the particular movie.
+
+*Should we move IMDB score portions to appendix?*
 
 ```{r echo = FALSE, fig.width = 10, fig.align = "center"}
 #scatter plot for budget vs gross
@@ -1208,7 +1214,11 @@ ggplot() +
 
 When we actually make predictions based on a linear model for categorical data, the predicted value is equal to the mean of all observations for each categorical value. So, for each genre or keyword, the predicted value of the gross revenue is equal to the mean value of gross revenues of all the movies of that genre or of that keyword, e.g. the predicted gross revenue for a "Drama" movie is equal to the mean of gross revenues of all the observed "Drama" movies.
 
+*To discuss, I don't quite understand the intercept1 and intercept3. --Siow Meng*
+
 ### IMDB Scores in North America and Europe
+
+*To discuss whether to move IMDB scores section to appendix. --Siow Meng*
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 
@@ -1282,14 +1292,14 @@ To analyse the impact of the director (a proxy for how prolific the director is)
 
 The basic relationship between the two variables can be seen on the figure to the right, and seems to show on upward trend for directors who have a low number of movies in the sample (roughly fewer than 10), and a less clear trend for directors who have more movies in the sample.
 
-Two correlation tests are performend (output below) to test two hypothesese: if the number of movies per director is correlated with the gross revenue (where the correlation is `r cor(movieswithdirectordata$gross, movieswithdirectordata$dir_number_of_movies)`), and specifically ifthe number of movies per director is correlated with the gross revenue, for movies where the director has fewer than 10 movies (where the correlation is `r cor(movieswithdirectordata$gross[movieswithdirectordata$dir_number_of_movies<10], movieswithdirectordata$dir_number_of_movies[movieswithdirectordata$dir_number_of_movies<10])`).
+Two correlation tests are performend (output below) to test two hypotheses: if the number of movies per director is correlated with the gross revenue (where the correlation is `r cor(movieswithdirectordata$gross, movieswithdirectordata$dir_number_of_movies)`), and specifically if the number of movies per director is correlated with the gross revenue, for movies where the director has fewer than 10 movies (where the correlation is `r cor(movieswithdirectordata$gross[movieswithdirectordata$dir_number_of_movies<10], movieswithdirectordata$dir_number_of_movies[movieswithdirectordata$dir_number_of_movies<10])`).
 
 ```{r echo=FALSE}
 ##cor test for gross score vs # of movies
-pander(cor.test(movieswithdirectordata$gross, movieswithdirectordata$dir_number_of_movies), caption="Covariance Test for Gross Revenue and # of movies per director in sample") 
+pander(cor.test(movieswithdirectordata$gross, movieswithdirectordata$dir_number_of_movies), caption="Correlation Test for Gross Revenue and # of movies per director in sample") 
 
 ##cor test for gross score vs # of movies for <10 movies
-pander(cor.test(movieswithdirectordata$gross[movieswithdirectordata$dir_number_of_movies<10], movieswithdirectordata$dir_number_of_movies[movieswithdirectordata$dir_number_of_movies<10]), caption="Covariance Test for Gross Revenue and # of movies per director in sample /n for directors with <10 movies") 
+pander(cor.test(movieswithdirectordata$gross[movieswithdirectordata$dir_number_of_movies<10], movieswithdirectordata$dir_number_of_movies[movieswithdirectordata$dir_number_of_movies<10]), caption="Correlation Test for Gross Revenue and # of movies per director in sample /n for directors with <10 movies") 
 ```
 
 These correlation tests do infer that there is a slight positive correlation between the # of movies the director has in the sample and the outcome variables, gross revenue. This correlation is both stronger and more statistically significant for directors with fewer than 10 movies in the sample. There directors with 10+ movies in the sample can be seen below:
@@ -1297,13 +1307,14 @@ These correlation tests do infer that there is a slight positive correlation bet
 \
 
 ```{r echo=FALSE, warning=FALSE, fig.width=8}
-ggplot(sorteddirectorsummary[sorteddirectorsummary$number_of_movies>=10,], aes(x=director_name, y=number_of_movies, fill=director_name)) + geom_bar(stat="identity") + coord_flip() + guides(fill=FALSE) + labs(x = "", y="Number of movies per director", title="Top 20 directors by number of movies in sample") +  scale_y_continuous(expand = c(0,0)) +  expand_limits(y = c(0,1.05 * max(sorteddirectorsummary$number_of_movies))) + theme_few()
+ggplot(sorteddirectorsummary[sorteddirectorsummary$number_of_movies >= 10,], aes(x = director_name, y = number_of_movies, fill = director_name)) + geom_bar(stat = "identity") + coord_flip() + guides(fill = FALSE) + labs(x = "", y = "Number of movies per director", title = "Top 20 directors by number of movies in sample") +  scale_y_continuous(expand = c(0,0)) +  expand_limits(y = c(0,1.05 * max(sorteddirectorsummary$number_of_movies))) + theme_few()
 ```
 
+*To discuss whether to use logarithmic scale for below boxplot. --Siow Meng*
 
 ```{r echo=FALSE,  message=FALSE, fig.width = 5, fig.height=3.5, fig.align = "left", out.extra='style="float:left"'}
 ggplot(movieswithdirectordata, aes(x = factor(more_than_ten_movies), y = gross, fill = factor(more_than_ten_movies))) + 
-    geom_boxplot() + stat_summary(fun.y=mean, colour="darkblue", geom="point", size=1, show.legend = FALSE) +
+    geom_boxplot() + stat_summary(fun.y = mean, colour = "darkblue", geom = "point", size = 1, show.legend = FALSE) +
     theme_bw() +
     labs(x = "", y = "Gross", title = "Gross revenue distribution by \n number of movies per director") +
     scale_y_continuous(label = human_num) + 
