@@ -1627,12 +1627,12 @@ knownvariablesmodelplot3 <- ggplot(data = dfknownvariablesmodel2010, aes(x = y_p
     geom_abline(colour = "red") + xlab("Predicted Gross Revenue (US$)") + 
     ylab("Actual Gross Revenue(US$)") + 
     coord_cartesian(xlim = c(-0.2e8, 1.5e8), ylim = c(0, 2.5e8)) + 
-    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("Facebook Model post 2010")
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("Known Variables Model post 2010")
 knownvariablesmodelplot4 <-ggplot(data = dfknownvariablesmodel2010, aes(x = y_predict, y = y_actual - y_predict)) + 
     geom_point(colour = "blue") + geom_hline(yintercept = 0, colour = "red") + 
     xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
     coord_cartesian(xlim = c(-0.2e8, 2e8), ylim = c(-1.5e8, 1.5e8)) + 
-    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Facebook Model post 2010")
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Known Variables Model post 2010")
 grid.arrange(knownvariablesmodelplot1,knownvariablesmodelplot2,knownvariablesmodelplot3,knownvariablesmodelplot4, ncol=2)
 ```
 
