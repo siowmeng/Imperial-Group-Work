@@ -402,7 +402,7 @@ ggplot(data = temp, aes(x = imdb_score, y = gross, colour = us_or_others)) +
 
 In this section, we look at whether the country of origin has a huge influence on the number of movies and the revenue that a movie generates. Then, we check if there is any relationship between the gross revenue and IMDB score for countries with more than 10 movies.
 
-```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+```{r, echo = FALSE, fig.width = 10, fig.align = "center", message=FALSE, warning=FALSE}
 # Sorting the movies by country and picking out those with more than 10 movies
 counted <- count(movies, vars = "country")
 removednas <- counted[complete.cases(counted), ]
@@ -1096,7 +1096,7 @@ As both variables are indicators of a movie's popularity, we can conclude from t
 
 Does budget affect gross profit margin?
 
-```{r echo = FALSE, fig.width = 10, fig.align = "center"}
+```{r echo = FALSE, fig.width = 10, fig.align = "center", message=FALSE, warning=FALSE}
 #create grossprofit column
 movieswprofit <- data.frame(movies)
 movieswprofit$grossprofitmargin <- (movieswprofit$gross - movieswprofit$budget)/movieswprofit$gross * 100
