@@ -330,12 +330,15 @@ grid.arrange(reg,log,ncol=2)
 
 The descriptive analysis below focuses on individual variables and relationships in turn, drawing both from the above correlations, and from relationships between numerican and non-numerical variables.
 
-### Language 
+### Language  
 
-```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+The following chart illustrates the changes of average gross revenues from year 1920 to 2016. We can observe a large fluctuation between 1920 and 1968, this can be attributed to the lack of data during this period. The dataset only contains `r nrow(movies[movies$title_year <= 1968, ])` records from 1920 to 1968, whereas there are `r nrow(movies[movies$title_year > 1968, ])` records of movies screened after 1968.
+
+```{r RevByYear, echo = FALSE, fig.width = 10, fig.align = "center"}
 revYear <- ddply(movies, ~ title_year, summarise, meanRev = mean(gross, na.rm = TRUE))
 
 ggplot(data = revYear, aes(x = title_year, y = meanRev)) + 
+    geom_point(size = 2) +
     geom_line(size = 1) + 
     theme_bw() + 
     labs(title = "Average Gross Revenue from Year 1920 to 2016", x = "Year", y = "Average Gross Revenue") + 
@@ -343,36 +346,65 @@ ggplot(data = revYear, aes(x = title_year, y = meanRev)) +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10),
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
     annotation_logticks(sides = "lr", colour = "gray") 
+```
 
+The two charts below compare the gross revenues achieved by English and non-English movies across the years.  
+
+For English movies, the huge fluctuations in early years are due to the small amount of movie data before year 1968. After 1968, the average gross revenue grew steadily to around US$80 million in year 2016.  
+
+For non-English movies, we can observe fluctuations across the entire period (from 1920 to 2016). This is likely caused by the lack of non-English movie data. There are only `r nrow(movies[movies$language != "English", ])` non-English movies in the dataset, compared to `r nrow(movies[movies$language == "English", ])` English movies. In recent years (after year 1990), the average gross revenue of non-English movies range from below US$10 thousand to over US$100 million.
+
+```{r RevByYearLanguage, echo = FALSE, fig.width = 10, fig.align = "center"}
 revLanguage <- ddply(movies, ~ title_year + language, summarise, meanRev = mean(gross, na.rm = TRUE))
+revLanguage$language[revLanguage$language != "English"] <- "Non-English"
 
-ggplot(data = revLanguage[revLanguage$language == "English", ], aes(x = title_year, y = meanRev)) + 
+ggplot(data = revLanguage, aes(x = title_year, y = meanRev, colour = language)) + 
+    geom_point(size = 2) +
     geom_line(size = 1) + 
     theme_bw() + 
-    labs(title = "Average Gross Revenue of English Movies from Year 1920 to 2016", x = "Year", y = "Average Gross Revenue") + 
+    labs(title = "Average Gross Revenue of Movies from Year 1920 to 2016", x = "Year", y = "Average Gross Revenue") + 
     scale_x_continuous(breaks = seq(1920, 2016, 8), limits = c(1920, 2016)) +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10),
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
-    annotation_logticks(sides = "lr", colour = "gray") 
-
-ggplot(data = revLanguage[revLanguage$language != "English", ], aes(x = title_year, y = meanRev)) + 
-    geom_line(size = 1) + 
-    theme_bw() + 
-    labs(title = "Average Gross Revenue of Non-English Movies from Year 1920 to 2016", x = "Year", y = "Average Gross Revenue") + 
-    scale_x_continuous(breaks = seq(1920, 2016, 8), limits = c(1920, 2016)) +
-    scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10),
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+    facet_grid(~ language) +
+    theme(legend.position = "None") +
     annotation_logticks(sides = "lr", colour = "gray") 
 ```
 
-*Shall we keep only the one with the logarithmic scale? --George*
+Next, we separate the movie data into two groups: USA and non-USA. From the charts below, USA movies exhibit a similar pattern as the English movies. There is still a large fluctuations within the non-USA group. The number of USA movies clearly dominate this dataset.  
 
-```{r GrossVSScore, echo = FALSE, fig.width = 10, fig.align = "center"}
-temp <- movies
-temp$us_or_others <- temp$country
-temp$us_or_others[temp$country != "USA"] = "Non-USA"
+```{r RevByYearCountry, echo = FALSE, fig.width = 10, fig.align = "center"}
+revCountry <- ddply(movies, ~ title_year + country, summarise, meanRev = mean(gross, na.rm = TRUE))
+revCountry$country[revCountry$country != "USA"] <- "Non-USA"
+revCountry$country <- factor(revCountry$country, levels = c("USA", "Non-USA"))
 
-ggplot(data = temp, aes(x = imdb_score, y = gross, colour = us_or_others)) + 
+ggplot(data = revCountry, aes(x = title_year, y = meanRev, colour = country)) + 
+    geom_point(size = 2) +
+    geom_line(size = 1) + 
+    theme_bw() + 
+    labs(title = "Average Gross Revenue of Movies from Year 1920 to 2016", x = "Year", y = "Average Gross Revenue") + 
+    scale_x_continuous(breaks = seq(1920, 2016, 8), limits = c(1920, 2016)) +
+    scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10),
+                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+    facet_grid(~ country) +
+    theme(legend.position = "None") +
+    annotation_logticks(sides = "lr", colour = "gray") 
+
+```
+
+This subsection inspects the effect of IMDB score on gross revenue. From the two plots below, it can be observed that gross revenue is positively correlated with IMDB score for all the four groups (i.e. USA, Non-USA, English, and non-English).  
+
+From the first plot, there is a stronger correlation between gross revenue and IMDB score for USA movies. This is expected because IMDB is an US-based online service and its users are predominantly from the USA. A highly popular USA movie is expected to garner more favourable reviews from USA users.  
+
+```{r GrossVSScoreUSA, echo = FALSE, fig.width = 10, fig.align = "center"}
+gross_vs_score <- movies
+gross_vs_score$english <- gross_vs_score$language
+gross_vs_score$english[gross_vs_score$english != "English"] <- "Non-English"
+gross_vs_score$us_or_others <- gross_vs_score$country
+gross_vs_score$us_or_others[gross_vs_score$us_or_others != "USA"] <- "Non-USA"
+gross_vs_score$us_or_others <- factor(gross_vs_score$us_or_others, levels = c("USA", "Non-USA"))
+
+ggplot(data = gross_vs_score, aes(x = imdb_score, y = gross, colour = us_or_others)) + 
     geom_jitter(alpha = 0.1, width = 0.1) +
     theme_bw() +
     geom_smooth(method = "lm") + 
@@ -381,21 +413,24 @@ ggplot(data = temp, aes(x = imdb_score, y = gross, colour = us_or_others)) +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10),
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
     scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
-    theme(legend.position = "None") +
     annotation_logticks(sides = "lr", colour = "gray") 
-    
-ggplot(data = temp, aes(x = imdb_score, y = gross, colour = us_or_others)) +
+```
+
+English movies exhibit a similar pattern as the USA movies. An interesting finding: while non-English movies generally achieved lower gross revenue, there is a fairly strong correlation between the gross revenue and IMDB score. We can deduce that IMDB users make up a large proportion of their audiences, and a higher IMDB score indicates higher popularity.  
+
+```{r GrossVSScoreEnglish, echo = FALSE, fig.width = 10, fig.align = "center"}
+ggplot(data = gross_vs_score, aes(x = imdb_score, y = gross, colour = english)) + 
     geom_jitter(alpha = 0.1, width = 0.1) +
-    geom_smooth(method = "lm") +
     theme_bw() +
-    labs(title = "Gross Revenue against IMDB Score for USA and non-USA Movies", x = "IMDB Score", y = expression("Gross Revenue")) +
-    scale_colour_discrete(name = "Countries") +
+    geom_smooth(method = "lm") + 
+    labs(title = "Gross Revenue against IMDB Score for English and non-English Movies", 
+         x = "IMDB Score", y = "Gross Revenue") + 
+    scale_colour_discrete(name = "Languages") +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10),
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
     scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
-    facet_grid(~ us_or_others) +
-    theme(legend.position = "None") +
-    annotation_logticks(sides = "lr", colour = "gray")
+    annotation_logticks(sides = "lr", colour = "gray") 
+
 ```
 
 ### Country
