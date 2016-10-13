@@ -146,7 +146,7 @@ The below table shows the columns with missing values:
 colNA <- function(dfCol){ sum(is.na(dfCol)) }
 ## To show table of sum of NAs by column
 na_values <- data.frame(colnames(movies), apply(movies, 2, colNA))
-na_values <- na_values[na_values$apply.movies..2..colNA.>0,]
+na_values <- na_values[na_values$apply.movies..2..colNA.>0, ]
 colnames(na_values) <- c("Variable Name", "Number of missing values")
 na_values <- na_values[order(na_values[, "Variable Name"]), ]
 kable(na_values, format = "markdown", align = "l", row.names = FALSE)
@@ -164,8 +164,8 @@ To resolve these issues, the following cleansing process is applied:
 ## To remove rows where NAs are present for any of the applicable columns
 movies <- movies[complete.cases(movies[c("title_year","budget","gross")]),]
 ## To remove aspect ratio and imdb link columns
-movies$aspect_ratio<- NULL
-movies$movie_imdb_link<- NULL
+movies$aspect_ratio <- NULL
+movies$movie_imdb_link <- NULL
 ```
 
 * After this step there are only `r sum(is.na(movies))` remaining missing values within the dataframe. For these missing values, the mean value for that column will be used to replace all misisng values within that column. Although this has some drawbacks in terms of accuracy, it allows us to maintain rows of data with other valid information, and is an unbiased approach.
@@ -1419,7 +1419,9 @@ fullmodel <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total
 
 fullmodel2010 <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews,  data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >=2010,])
 
-stargazer(list(fullmodel), type = "html", align = TRUE, dep.var.labels = "Gross revenue", no.space = TRUE, title = "Linear Regression results")
+stargazer(list(fullmodel, fullmodel2010), type = "html", align = TRUE, column.labels=c("For all years", "From 2010 onwards"),
+          dep.var.labels = "Gross revenue", no.space = TRUE, title = "Linear Regression results")
+
 ```
 </center>
 
@@ -1458,7 +1460,6 @@ ggplot(movies, aes(x=color)) + geom_bar() + xlab("")
 ### First Full Model
 
 <center>
-
 ```{r linearmodel, echo=FALSE, results="asis"}
 ##Data preparation
 trainwithdirectorandgenredata$us_or_others <- trainwithdirectorandgenredata$country
@@ -1471,12 +1472,12 @@ fbmodel <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes 
               + Biography + Documentary + us_or_others + english, 
               data = trainwithdirectorandgenredata)
 
-fbmodel2010 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes 
-              + director_facebook_likes + imdb_score + PG_13 + Action + Adventure + Fantasy + Family 
-              + Western + Drama + Crime + Biography + Documentary + us_or_others + english, 
-              data = trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >= 2010, ])
+fbmodel2010 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes 
+                  + imdb_score + PG_13 + Action + Adventure + Fantasy + Family + Western + Drama + Crime 
+                  + Biography + Documentary + us_or_others + english, 
+                  data = trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >= 2010, ])
 
-stargazer(list(fbmodel, fbmodel2010), type = "html", align = TRUE, column.labels=c("For all years", "For 2010 onwards"),
+stargazer(list(fbmodel, fbmodel2010), type = "html", align = TRUE, column.labels=c("For all years", "From 2010 onwards"),
           dep.var.labels = "Gross revenue", no.space = TRUE, title = "Linear Regression results")
 ```
 </center>
@@ -1487,9 +1488,10 @@ stargazer(list(fbmodel, fbmodel2010), type = "html", align = TRUE, column.labels
 ```{r echo=FALSE, results = "asis"}
 knownvariablesmodel <- lm(gross ~ budget + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + more_than_ten_movies, data=trainwithdirectorandgenredata)
 
-knownvariablesmodel2010 <- lm(gross ~ budget + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + more_than_ten_movies, data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year>=2010,])
+knownvariablesmodel2010 <- lm(gross ~ budget + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + more_than_ten_movies, data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year>=2010, ])
 
-stargazer(list(knownvariablesmodel, knownvariablesmodel2010), type = "html", align = TRUE, dep.var.labels = "Gross revenue", no.space = TRUE, title = "Linear Regression results")
+stargazer(list(knownvariablesmodel, knownvariablesmodel2010), type = "html", align = TRUE, column.labels=c("For all years", "From 2010 onwards"), 
+          dep.var.labels = "Gross revenue", no.space = TRUE, title = "Linear Regression results")
 ```
 </center>
 
@@ -1499,7 +1501,7 @@ To build a model to predict revenue of movies that have not yet been released, w
 *we will then test this model using the test dataset, make a plot of the predictions against the actual values, and calculate the MSE/other success statistics*
 
 ```{r conditiontestdata, echo=FALSE}
-##Data Preparation for model building
+##Data Preparation for testing
 
 ##create a summary for directors with count of instances in the sample
 testdirectorsummary <- ddply(test, ~ director_name,summarise, number_of_movies=length(director_name))
@@ -1524,25 +1526,26 @@ test$english <- factor(test$language == "English", levels = c(TRUE, FALSE), labe
 Model including all data:
 ```{r prediction, echo = FALSE, results = TRUE}
 
-##calculate the prediction and MSE for all 3 models using all data and data post 2010
+##calculate the prediction and RMSE for all 3 models using all data and data post 2010
 fullmodelpre <- predict(fullmodel, test)
-fullmodelmse <- sqrt(mean((fullmodelpre - test$gross)^2))
-fullmodel2010pre <- predict(fullmodel2010, test[test$title_year >= 2010, ])
-fullmodel2010mse <- sqrt(mean((fullmodel2010pre - test$gross[test$title_year >= 2010])^2))
+fullmodelrmse <- sqrt(mean((fullmodelpre - test$gross)^2))
 fbmodelpre <- predict(fbmodel, test)
-fbmodelmse <- sqrt(mean((fbmodelpre - test$gross)^2))
-fbmodel2010pre <- predict(fbmodel2010, test[test$title_year >= 2010, ])
-fbmodel2010mse <- sqrt(mean((fbmodel2010pre - test$gross[test$title_year >= 2010])^2))
+fbmodelrmse <- sqrt(mean((fbmodelpre - test$gross)^2))
 knownvariablesmodelpre <- predict(knownvariablesmodel, test)
-knownvariablesmodelmse <- sqrt(mean((knownvariablesmodelpre - test$gross)^2))
-knownvariablesmodel2010pre <- predict(knownvariablesmodel2010, test[test$title_year >= 2010, ])
-knownvariablesmodel2010mse <- sqrt(mean((knownvariablesmodel2010pre - test$gross[test$title_year >= 2010])^2))
+knownvariablesmodelrmse <- sqrt(mean((knownvariablesmodelpre - test$gross)^2))
 
-##turn MSE data into a table for display with columns of "all data" and "post 2010", and rows of model type
-msetable <- data.frame(alldata=c(fullmodelmse, fbmodelmse, knownvariablesmodelmse), post2010 = c(fullmodel2010mse, fbmodel2010mse, knownvariablesmodel2010mse))
-rownames(msetable) <- c("Full Model", "Facebook Model", "Known Variables Model")
-colnames(msetable) <- c("Model using all data", "Model using post 2010 data")
-pander(msetable, format="markdown")
+fullmodel2010pre <- predict(fullmodel2010, test[test$title_year >= 2010, ])
+fullmodel2010rmse <- sqrt(mean((fullmodel2010pre - test$gross[test$title_year >= 2010])^2))
+fbmodel2010pre <- predict(fbmodel2010, test[test$title_year >= 2010, ])
+fbmodel2010rmse <- sqrt(mean((fbmodel2010pre - test$gross[test$title_year >= 2010])^2))
+knownvariablesmodel2010pre <- predict(knownvariablesmodel2010, test[test$title_year >= 2010, ])
+knownvariablesmodel2010rmse <- sqrt(mean((knownvariablesmodel2010pre - test$gross[test$title_year >= 2010])^2))
+
+##turn RMSE data into a table for display with columns of "all data" and "post 2010", and rows of model type
+rmsetable <- data.frame(alldata=c(fullmodelrmse, fbmodelrmse, knownvariablesmodelrmse), post2010 = c(fullmodel2010rmse, fbmodel2010rmse, knownvariablesmodel2010rmse))
+rownames(rmsetable) <- c("Full Model", "Facebook Model", "Known Variables Model")
+colnames(rmsetable) <- c("Model using all data", "Model using post 2010 data")
+pander(rmsetable, format="markdown")
 
 ```
 
