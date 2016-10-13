@@ -1456,6 +1456,7 @@ The second model builds on the observation that English and USA movies are gener
 Similar to the first full model, this model is built using training set. The left column is trained using all training data, and the right column uses data for movies created post 2010. This is because some of our predictive variables (e.g. facebook likes) are only relevant as predictive variables since facebook has become widely popular for celebrities and movies.  
 
 ####Variables included in the model:  
+
 Some of the variables used in this model are identical to those used in the first model. The justifications for these variables can be found in earlier section. The list below discusses the variables used only in the second model:  
 
 * Two new variables ("english" and "us_or_others") have been created to separate the movies into two distinct groups (i.e. English vs non-English, USA vs non-USA). From the inferential analysis section, we have seen a huge difference in gross revenue between English and non-English (similarly, USA and non-USA). Therefore, these two variables are expected to have a major effect in predicting gross revenue.
