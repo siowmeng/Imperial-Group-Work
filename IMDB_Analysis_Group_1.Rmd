@@ -1818,6 +1818,7 @@ ggplot(temp, aes(y = imdb_score, x = factor(decade), fill = decade)) +
 
 ```
 
+```{r echo=FALSE}
 # for France
 temp <- movies[!movies$decade == "NA-NA", ]
 temp <- temp[temp$country == "France", ]
@@ -1873,7 +1874,7 @@ ggplot(temp, aes(x = decade, y = imdb_score, fill = decade)) +
   geom_boxplot(outlier.shape = NA) + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
   theme(axis.text.x=element_text(angle=45, hjust=0.5, vjust=0.5), legend.position = "None") +
   labs(title = "IMDB scores against decade, Hong Kong", x = "", y = "IMDB Score")
-
+```
 
 The plot above show that there might be a downward trend in IMDB scores over the years. Some years, however, include fewer than ten movies. To get a more accurate picture of the development of IMDB scores only years with ten or more entries will be plotted below.
 
