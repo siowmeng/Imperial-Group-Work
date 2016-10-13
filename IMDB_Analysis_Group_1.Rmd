@@ -658,7 +658,7 @@ ggplot(movies_and_keywords, aes(x = score, y = gross, colour = keywords)) +
 ### Gross revenue over time
 ### Decades
 Boxplot gross against year, decade
-```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+```{r, echo = FALSE, fig.width = 10, fig.align = "center", message=FALSE, warning=FALSE}
 # code to create continent column
 movies$continent <- countrycode(as.character(movies$country), "country.name", "continent")
 
@@ -686,45 +686,7 @@ ggplot(temp, aes(x = factor(title_year), y = imdb_score, fill = factor(title_yea
   scale_y_continuous(limits = c(2.5, max(movies$imdb_score)))
 ```
 
-```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
-
-# function to plot multiple plots at in one grid (from r-cookbook)
-
-multiplot <- function(..., plotlist = NULL, file, cols = 1, layout = NULL) {
-  library(grid)
-  
-  # Make a list from the ... arguments and plotlist
-  plots <- c(list(...), plotlist)
-  
-  numPlots = length(plots)
-  
-  # If layout is NULL, then use 'cols' to determine layout
-  if (is.null(layout)) {
-    # Make the panel
-    # ncol: Number of columns of plots
-    # nrow: Number of rows needed, calculated from # of cols
-    layout <- matrix(seq(1, cols * ceiling(numPlots / cols)),
-                     ncol = cols, nrow = ceiling(numPlots / cols))
-  }
-  
-  if (numPlots == 1) {
-    print(plots[[1]])
-    
-  } else {
-    # Set up the page
-    grid.newpage()
-    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-    
-    # Make each plot, in the correct location
-    for (i in 1:numPlots) {
-      # Get the i,j matrix positions of the regions that contain this subplot
-      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-      
-      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
-                                      layout.pos.col = matchidx$col))
-    }
-  }
-}
+```{r, echo = FALSE, fig.width = 10, fig.align = "center", message=FALSE, warning=FALSE}
 
 # subset movies data frame to include all movies from 1980 onwards
 temp <- movies[movies$title_year >= 1980,]
@@ -751,7 +713,7 @@ p2 <- ggplot(temp, aes(x = title_year, y = imdb_score, colour = factor(title_yea
     scale_x_continuous(breaks = seq(min(temp$title_year), max(temp$title_year), by = 1), 0.5) +
     scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) 
 
-multiplot(p1, p2)
+grid.arrange(p1, p2, ncol=1)
 ```
 
 
@@ -788,8 +750,6 @@ The above plot shows that there might be a slight upward trend in gross revenue 
 # plot all years that have at least ten movies
 # table(movies$title_year)  
 # shows that from 1980 onwards all the years have at least ten entries
-
-# function to plot multiple plots at in one grid (from r-cookbook)
 
 # subset movies data frame to include all movies from 1980 onwards
 temp <- movies[movies$title_year >= 1980, ]
@@ -1326,11 +1286,10 @@ ggplot(comb, aes(x = imdb_score, fill = continent)) +
     theme(legend.title = element_blank())
 ```
 
-### Prolific directors impact on gross revenue
+### Director relationship with Gross Revenue
 
-To analyse the impact of the number of movies in our sample per director (a proxy for how prolific the director is), on gross revenue, this section explores the 
 
-```{r echo=FALSE, message=FALSE, fig.width = 10, fig.align = "center"}
+```{r echo=FALSE, message=FALSE, fig.width = 5, fig.height=3.5, fig.align = "right", out.extra='style="float:right"'}
 ##plot for gross revenue vs # of movies
 ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross)) + 
     geom_jitter(alpha = 0.2, width = 1) + 
@@ -1339,9 +1298,11 @@ ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross)) +
     labs(x = "Number of movies in sample", y = "Gross Revenue") + scale_y_continuous(label = human_usd)
 ```
 
+To analyse the impact of the director (a proxy for how prolific the director is), on gross revenue, this section explores the relationship between director-specific variables, and the target outcome variable, gross revenue.
+
+The basic relationship between the two variables can be seen on the figure to the right, and seems to show on upward trend for directors who have a low number of movies in the sample (roughly less than 10), and a less clear trend for directors who have more movies in the sample.
+
 ```{r echo=FALSE}
-##cor test for imdb rating vs # of movies
-pander(cor.test(movieswithdirectordata$imdb_score, movieswithdirectordata$dir_number_of_movies), caption="")
 ##cor test for gross score vs # of movies
 pander(cor.test(movieswithdirectordata$gross, movieswithdirectordata$dir_number_of_movies), caption="") 
 ##does seem like somewhat positively correlated - although we can see from the graph that this doesn't seem linear.
@@ -2123,6 +2084,10 @@ ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = imdb_score)) +
     scale_y_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10))
 ```
 
+```{r echo=FALSE}
+##cor test for imdb rating vs # of movies
+pander(cor.test(movieswithdirectordata$imdb_score, movieswithdirectordata$dir_number_of_movies), caption="")
+```
 
 #To be removed- Notes and comments:
 
