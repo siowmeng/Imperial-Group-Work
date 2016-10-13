@@ -76,7 +76,7 @@ trainwithdirectordata$more_than_ten_movies <- factor(trainwithdirectordata$more_
 ```
 
 ```{r echo=FALSE}
-directormodel <- lm(gross ~ more_than_ten_movies + budget + imdb_score + num_voted_users + content_rating + duration + cast_total_facebook_likes + director_facebook_likes + movie_facebook_likes, data=trainwithdirectordata)
+directormodel <- lm(gross ~ more_than_ten_movies + budget + imdb_score + num_voted_users + content_rating + duration + cast_total_facebook_likes + director_facebook_likes + movie_facebook_likes, data=trainwithdirectordata[trainwithdirectordata$title_year >= 2010,])
 summary(directormodel)
 ```
 
@@ -106,7 +106,7 @@ ggplot(movies, aes(x=color)) + geom_bar() + xlab("")
 ##Second Model, with only pre-known variables
 
 ```{r echo=FALSE}
-directormodelknownvariables <- lm(gross ~ more_than_ten_movies + budget + content_rating + duration + cast_total_facebook_likes + director_facebook_likes + movie_facebook_likes, data=trainwithdirectordata)
+directormodelknownvariables <- lm(gross ~ more_than_ten_movies + budget + content_rating + duration + cast_total_facebook_likes + director_facebook_likes + movie_facebook_likes, data=trainwithdirectordata[trainwithdirectordata >= 2010])
 summary(directormodelknownvariables)
 ```
 
