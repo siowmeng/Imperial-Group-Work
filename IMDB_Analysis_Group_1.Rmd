@@ -26,7 +26,7 @@ library(stargazer)
 #Executive Summary
 *to be filled out after we have finished our analysis*
 
-The purpose of this report is to try and understand what sort of factors contribute to the successfulness of a movie. The analyses is split into three types parts - descriptive, influential and followed by an attempt to make a predictive model. The first section looks to analyze the data available and the second section aims to identify relevant variables which are correlated to gross revenue of a movie. The final section attempts to make a predictive model based on the chosen relevant variables and this model is tested against a subsetted dataset, to see how accurate it is in predicting the gross revenue of a movie. 
+The purpose of this report is to try and understand what sort of factors contribute to the successfulness of a movie. The analyses is split into three types parts - descriptive, inferential and followed by an attempt to make a predictive model. The first section looks to analyze the data available and the second section aims to identify relevant variables which are correlated to gross revenue of a movie. The final section attempts to make a predictive model based on the chosen relevant variables and this model is tested against a subsetted dataset, to see how accurate it is in predicting the gross revenue of a movie. 
 
 From our analyses, we found that ...
 - budget has the most impact on revenue out of all the variables available in the dataset 
@@ -36,7 +36,7 @@ From our findings, the following can be concluded...
 
 
 
-However, there are many limitations to this dataset, including a limited number of variables and a clear bias in the number of English movies vs other language movies. Thus, the conclusions drawn from this analysis needs to be verified with a more extensive data set. Moving forward, it would be very useful to obtain data from other movie databases indigenious to countries other than the US and UK e.g. *http://www.bollywoodmdb.com* for Indian Bollywood movies. Though our model is able to predict revenues considerably well for a first attempt, and specifically for movies with revenue up to 50 million USD, it still has difficult estimating the revenue with decent accuracy for movies with even higher gross revenues. Acquiring more data points and having datasets with relevant variables different from the current ones, can help to improve the accuracy of our predictive models.
+However, there are many limitations to this dataset, including a limited number of variables and a clear bias in the number of English movies vs other language movies. Thus, the conclusions drawn from this analysis needs to be verified with a more extensive data set. Moving forward, it would be very useful to obtain data from other movie databases indigenious to countries other than the US and UK e.g. *http://www.bollywoodmdb.com* for Indian Bollywood movies. Though our model is able to predict revenues considerably well for a first attempt, and specifically for movies with revenue up to 50 million USD, it still has difficulties estimating the revenue with decent accuracy for movies with even higher gross revenues. Acquiring more data points and having datasets with relevant variables different from the current ones, can help to improve the accuracy of our predictive models.
 
 #Introduction
 
@@ -154,6 +154,8 @@ colnames(na_values) <- c("Variable Name", "Number of missing values")
 na_values <- na_values[order(na_values[, "Variable Name"]), ]
 kable(na_values, format = "markdown", align = "l", row.names = FALSE)
 ```
+
+*To discuss: since title year is not key to analysis, we shan't propose to remove the whole row altogether. Actually for this particular dataset, these records (with title year NA) has either gross=NA or budget=NA. So we can just remove the records which has budget=NA and gross=NA. -- Siow Meng*
 
 To resolve these issues, the following cleansing process is applied:
 
