@@ -400,7 +400,12 @@ ggplot(data = temp, aes(x = imdb_score, y = gross, colour = us_or_others)) +
 
 ### Country
 
-In this section, we look at whether the country of origin has a huge influence on the number of movies and the revenue that a movie generates. Then, we check if there is any relationship between the gross revenue and IMDB score for countries with more than 10 movies.
+In this section, we look at whether the country of origin has a huge influence on:
+
+1. The number of movies a country produces.
+2. The revenue that a movie generates. 
+
+Then, we check if there is any relationship between the gross revenue and IMDB score for countries with more than 10 movies.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center", message=FALSE, warning=FALSE}
 # Sorting the movies by country and picking out those with more than 10 movies
@@ -447,13 +452,11 @@ ggplot(countries, aes(x = score, y = gross, colour = country)) +
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
     scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
     annotation_logticks(sides = "lr", colour = "gray") 
-
-
 ```
 
-In terms of frequency, we observe that the number of movies originated in USA is almost 10 times that of UK. Also, the top five countries with the most number of movies are in Europe. On the other end, Asian countries have no more than 20 movies in our dataset. 
+Looking at the barplot, we observe that the number of movies originating in USA is almost 10 times that of UK. Also, the most number of movies originate from Europe. On the other end, no more than 20 movies in our dataset originate from asia.
 
-Next, we will look at the gross revenues for the top 12 countries. More than 50% of US, UK and Germany releases are generating high revenues of over 10 million. On the other hand, more than 25% of releases in China and Spain are generating revenues of lower than 1 million.
+Next, we will look at the gross revenues for the countries with 10 or more movies. The boxplots indicate that the movies originating from these countries have a mean revenue of 1 million. All USA releases generate more than 10 million. At least 50% of movies from Australia, UK, Japan and Germany generate revenues of over 10 million. On the other hand, no movies from India, China and Italy generate more than 10 million.
 
 Lastly, when we look at the scatterplots, we see that UK & US movies seem to be symmetrically about 'y = x' indicating a nearly positive correlation between IMDB score and gross revenue; however, the other countries show no particular relationship between the two variables.
 
