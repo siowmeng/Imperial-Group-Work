@@ -410,9 +410,9 @@ ggplot(data = revCountry, aes(x = title_year, y = meanRev, colour = country)) +
 
 This subsection inspects the effect of IMDB score on gross revenue. From the two plots below, it can be observed that gross revenue is positively correlated with IMDB score for all the four groups (i.e. USA, Non-USA, English, and non-English).  
 
-From the first plot, there is a stronger correlation between gross revenue and IMDB score for USA movies. This is expected because IMDB is an US-based online service and its users are predominantly from the USA. A highly popular USA movie is expected to garner more favourable reviews from USA users.  
+From the first plot, both English and non-English movies have positive correlation between gross revenue and IMDB score. Note that non-English movies generally have much lower gross revenues and the y-axis of this plot is on logarithmic scale. As a result, English movies have stronger correlation than non-English movies (even though non-English movies seem to have higher slope). This is as expected since most (if not all) IMDB users are English speakers. A favourable IMDB score would reflect a higher popularity amongst English-speaking audiences. On the other hand, non-English movies might not be targeted to English-speaking populations. Hence a higher IMDB score might not reflect the true popularity of non-English movies.  
 
-```{r GrossVSScoreUSA, echo = FALSE, fig.width = 10, fig.align = "center"}
+```{r GrossVSScoreEnglish, echo = FALSE, fig.width = 10, fig.align = "center"}
 gross_vs_score <- movies
 gross_vs_score$english <- gross_vs_score$language
 gross_vs_score$english[gross_vs_score$english != "English"] <- "Non-English"
@@ -420,21 +420,6 @@ gross_vs_score$us_or_others <- gross_vs_score$country
 gross_vs_score$us_or_others[gross_vs_score$us_or_others != "USA"] <- "Non-USA"
 gross_vs_score$us_or_others <- factor(gross_vs_score$us_or_others, levels = c("USA", "Non-USA"))
 
-ggplot(data = gross_vs_score, aes(x = imdb_score, y = gross, colour = us_or_others)) + 
-    geom_jitter(alpha = 0.1, width = 0.1) +
-    theme_bw() +
-    geom_smooth(method = "lm") + 
-    labs(title = "Gross Revenue against IMDB Score for USA and non-USA Movies", x = "IMDB Score", y = "Gross Revenue") + 
-    scale_colour_discrete(name = "Countries") +
-    scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10),
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
-    scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
-    annotation_logticks(sides = "lr", colour = "gray") 
-```
-
-English movies exhibit a similar pattern as the USA movies. An interesting finding: while non-English movies generally achieved lower gross revenue, there is a fairly strong correlation between the gross revenue and IMDB score. We can deduce that IMDB users make up a large proportion of their audiences, and a higher IMDB score indicates higher popularity.  
-
-```{r GrossVSScoreEnglish, echo = FALSE, fig.width = 10, fig.align = "center"}
 ggplot(data = gross_vs_score, aes(x = imdb_score, y = gross, colour = english)) + 
     geom_jitter(alpha = 0.1, width = 0.1) +
     theme_bw() +
@@ -442,6 +427,23 @@ ggplot(data = gross_vs_score, aes(x = imdb_score, y = gross, colour = english)) 
     labs(title = "Gross Revenue against IMDB Score for English and non-English Movies", 
          x = "IMDB Score", y = "Gross Revenue") + 
     scale_colour_discrete(name = "Languages") +
+    scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10),
+                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+    scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
+    annotation_logticks(sides = "lr", colour = "gray") 
+
+```
+
+We can observe from the second plot that there is a stronger correlation between gross revenue and IMDB score for USA movies. This is expected because IMDB is an US-based online service and its users are predominantly from the USA. A highly popular USA movie is expected to garner more favourable reviews from USA users.  
+
+```{r GrossVSScoreUSA, echo = FALSE, fig.width = 10, fig.align = "center"}
+
+ggplot(data = gross_vs_score, aes(x = imdb_score, y = gross, colour = us_or_others)) + 
+    geom_jitter(alpha = 0.1, width = 0.1) +
+    theme_bw() +
+    geom_smooth(method = "lm") + 
+    labs(title = "Gross Revenue against IMDB Score for USA and non-USA Movies", x = "IMDB Score", y = "Gross Revenue") + 
+    scale_colour_discrete(name = "Countries") +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10),
                   labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
     scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
