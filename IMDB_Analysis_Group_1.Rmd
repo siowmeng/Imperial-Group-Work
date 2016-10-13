@@ -830,7 +830,7 @@ sorteddirectorsummary$director_name <- factor(sorteddirectorsummary$director_nam
 ```
 
 
-```{r in-text-fig, echo=FALSE,  fig.width = 3, fig.height=3, out.extra='style="float:right"'}
+```{r in-text-fig, echo=FALSE,  fig.width = 3, fig.height=2.5, out.extra='style="float:right"'}
 ##Histogram for number of moveies per director
 ggplot(sorteddirectorsummary, aes(x = number_of_movies)) + 
     geom_histogram(binwidth = 1, fill = "darkblue") + 
@@ -838,6 +838,7 @@ ggplot(sorteddirectorsummary, aes(x = number_of_movies)) +
     labs(x = "Number of movies\nper director", y = "Number of directors",
          title = "Density of number of \nmovies per director") +
     scale_x_continuous(breaks = c(0, 5, 10, 15, 20, 25, 30), limits = c(0, 30)) 
+##
 ```
 
 ```{r echo=FALSE, fig.width = 10, fig.align = "center"}
@@ -1298,9 +1299,14 @@ pander(cor.test(movieswithdirectordata$gross, movieswithdirectordata$dir_number_
 pander(cor.test(movieswithdirectordata$gross[movieswithdirectordata$dir_number_of_movies<10], movieswithdirectordata$dir_number_of_movies[movieswithdirectordata$dir_number_of_movies<10]), caption="Covariance Test for Gross Revenue and # of movies per director in sample /n for directors with <10 movies") 
 ```
 
-These correlation tests do infer that there is a slight positive correlation between the # of movies the director has in the sample and the outcome variables, gross revenue. This correlation is both stronger and more statistically significant for directors with fewer than 10 movies in the sample.
+These correlation tests do infer that there is a slight positive correlation between the # of movies the director has in the sample and the outcome variables, gross revenue. This correlation is both stronger and more statistically significant for directors with fewer than 10 movies in the sample. There directors with 10+ movies in the sample can be seen below:
 \
 \
+
+```{r echo=FALSE, warning=FALSE, fig.width=8}
+ggplot(sorteddirectorsummary[sorteddirectorsummary$number_of_movies>=10,], aes(x=director_name, y=number_of_movies, fill=director_name)) + geom_bar(stat="identity") + coord_flip() + guides(fill=FALSE) + labs(x = "", y="Number of movies per director", title="Top 20 directors by number of movies in sample") +  scale_y_continuous(expand = c(0,0)) +  expand_limits(y = c(0,1.05 * max(sorteddirectorsummary$number_of_movies))) + theme_few()
+```
+
 
 ```{r echo=FALSE,  message=FALSE, fig.width = 5, fig.height=3.5, fig.align = "left", out.extra='style="float:left"'}
 ggplot(movieswithdirectordata, aes(x = factor(more_than_ten_movies), y = gross, fill = factor(more_than_ten_movies))) + 
@@ -1995,7 +2001,6 @@ ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross, colour =
 ```
 
 As the number of data elements in the sample grows for each decade, a geomtrical pattern also seems to emerge, which is an upwards trend of gross revenue by movies per director up to about 10 movies per director, andthen a less clear trend for movies for movies with 10+ movies per director.
-
 
 ```{r echo=FALSE, message=FALSE, fig.width = 10, fig.align = "center"}
 ##plot for imdb rating vs # of movies
