@@ -29,12 +29,9 @@ library(stargazer)
 The purpose of this report is to try and understand what sort of factors contribute to the successfulness of a movie. The analyses is split into three types parts - descriptive, inferential and followed by an attempt to make a predictive model. The first section looks to analyze the data available and the second section aims to identify relevant variables which are correlated to gross revenue of a movie. The final section attempts to make a predictive model based on the chosen relevant variables and this model is tested against a subsetted test dataset, to see how accurate it is in predicting the gross revenue of a movie. 
 
 From our analyses, we found that ...
-- budget has the most impact on revenue out of all the variables available in the dataset 
-- our predictive models are able predict the gross revenue with a Root-Mean-Square Error of 37-56 million USD, depending on the chosen variables in the particular model
-
-From our findings, the following can be concluded...
-
-
+- Budget has the most impact on revenue out of all the variables available in the dataset 
+- Aside from budget, content total cast facebook likes, director facebook likes, ratingsm duration and key genres are also strong factors in determining whether a movie performs well in the box office or not
+- Our predictive models are able predict the gross revenue with a Root-Mean-Square Error of 37-56 million USD, depending on the chosen variables in the particular model
 
 However, there are many limitations to this dataset, including a limited number of variables and a clear bias in the number of English movies vs other language movies. Thus, the conclusions drawn from this analysis needs to be verified with a more extensive data set. Moving forward, it would be very useful to obtain data from other movie databases indigenious to countries other than the US and UK e.g. *http://www.bollywoodmdb.com* for Indian Bollywood movies. Though our model is able to predict revenues considerably well for a first attempt, and specifically for movies with revenue up to 50 million USD, it still has difficulties estimating the revenue with decent accuracy for movies with even higher gross revenues. Acquiring more data points and having datasets with relevant variables different from the current ones, can help to improve the accuracy of our predictive models.
 
@@ -47,8 +44,6 @@ Similarly, a question can be posed - whether one can predict the successfulness 
 #Methods
 
 ##Data
-
-Similarly, a question which can be posed - whether one can predict the successfulness of a movie before it is released on cinema. To address this question, we have obtained a dataset from Kaggle scraped from the *imdb.com* containing 28 different variables for our analysis. Our key objectives for this report is to determine what makes a movie popular (based on gross revenue), and what makes a movie highly rated by the public (based on IMDB score). Descriptive analyses and influential analyses to look at which of the variables available in the dataset affect user ratings and gross revenue, will be followed by an attempt to develop a predictive model. This predictive model will try to determine which movies will be successful based on the relevant variable identified. 10% of the original data has been set aside to act as the test dataset and the model will be evaluated on its accuracy to predict gross revenue using Mean Squared Error and other success statistics.
 
 ```{r, echo = FALSE}
 movies <- read.csv(file = "movie_metadata.csv", header = TRUE, stringsAsFactors = FALSE, strip.white = TRUE)
@@ -559,9 +554,7 @@ ggplot(budgetcountry, aes(x = country, y = budget, fill = country)) +
 
 From the histogram with count of movies across different budgets, we can see most movies are around the ballpark range of 1 million to 100 million, with around 85% of the movies falling under the range of 1 million to 100 million. A negative skew in the data can be observed. 
 
-From the boxplots, we can see that the average budget on the films across different countries is similar, around a ballpark range of 10 million to 100 million. India, Mexico and Italy appears to have a lower average (???) for film budget than the rest of ther other countries.
-
-*The "???" part to be removed? -- Siow Meng*
+From the boxplots, we can see that the average budget on the films across different countries is similar, around a ballpark range of 10 million to 100 million. Mexico and Italy appears to have a lower average for film budget than the rest of ther other countries. (the data has been subsetted to include only countries with over 10 movies in the data set)
 
 ### Genres and Plot Keywords
 
@@ -1101,43 +1094,6 @@ Intuitively, the higher the budget of a movie, the better it should be and hence
 We would like to investigate whether the imdb score of movie is affected by the budget for the particular movie.
 
 ```{r echo = FALSE, fig.width = 10, fig.align = "center"}
-#scatter plot for budget vs imdb score
-ggplot(data = movies, aes(y = budget, x = imdb_score)) + 
-    geom_jitter(alpha = 0.4, colour = "#FF9999") + 
-    theme_bw() +
-    labs(y = "Budget", x = "IMDB Score", title = "Budget versus IMDB Score") + 
-    scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10))+
-    scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
-    annotation_logticks(sides = "lr", colour = "gray") 
-
-#covariance test
-cov(movies$budget, movies$imdb_score)
-
-#correlation test
-pander(cor.test(movies$budget, movies$imdb_score), caption="")
-```
-
-The covariance value of 5.3x10^7 suggests that there is an upward trend - as budget increases, imdb score increases. The Pearson's correlation test between budget and IMDB score gives a p-value of 0.047, which suggests that there isn't a high correlation between budget of the movie and rating on IMDB. 
-
-Even if we dig deeper to look at the effect of budget on IMDB score for movies from different countries, it appears to be that there is not much of a trend.
-
-```{r echo = FALSE, fig.width = 10, fig.align = "center"}
-ggplot(budgetcountry, aes(y = budget, x = imdb_score, colour = country)) + 
-    geom_jitter(alpha = 0.2) + 
-    labs(title = "Budget and IMDB score for different countries", y = "Budget", x = "IMDB Score") + 
-    scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
-    scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
-    facet_wrap(~ country) +
-    theme_bw() + 
-    theme(legend.position = "None") +
-    annotation_logticks(sides = "lr", colour = "gray") 
-```
-
-Next, we want to look to see whether the budget has an influence on gross revenue.
-
-```{r echo = FALSE, fig.width = 10, fig.align = "center"}
 #scatter plot for budget vs gross
 ggplot(data = movies, aes(x = budget, y = gross)) + 
     geom_jitter(alpha = 0.2, colour = "#FF9999") + 
@@ -1173,42 +1129,6 @@ ggplot(budgetcountry, aes(x = budget, y = gross, colour = country)) +
     facet_wrap(~ country) +
     theme(legend.position = "None")
 ```
-
-As both variables are indicators of a movie's popularity, we can conclude from the above analysis that budget does not have a huge influence on how 'popular' a movie is.
-
-Does budget affect gross profit margin?
-
-```{r echo = FALSE, fig.width = 10, fig.align = "center", message=FALSE, warning=FALSE}
-#create grossprofit column
-movieswprofit <- data.frame(movies)
-movieswprofit$grossprofitmargin <- (movieswprofit$gross - movieswprofit$budget)/movieswprofit$gross * 100
-
-#scatter plot for budget vs gross profit margin 
-ggplot(data = movieswprofit, aes(x = budget, y = grossprofitmargin)) + 
-    geom_point(alpha = 0.4, colour = "#FF9999") + 
-    theme_bw() +
-    scale_x_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) + 
-    scale_y_continuous(limits = c(-1000, 100)) + 
-    labs(x = "Budget in USD", y = "Gross Profit Margin as %") +
-    annotation_logticks(sides = "tb", colour = "gray") 
-
-#covariance test
-cov(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.obs")
-
-#correlation test
-pander(cor.test(movieswprofit$budget, movieswprofit$grossprofitmargin, use = "complete.obs"), caption="")
-```
-
-Finally, we would also like to look at the effect of gross vs on gross profit margin, whether the an increase in budget would make a better movie, and hence a higher gross profit margin. Gross profit margin can be used as an indictor of profitability of movie. Based on the data, it appears that there is a negative correlation (-0.31) between budget and profit. Although it is not very strong, it still suggests that an increase in budget has a slight negative impact on gross profit margin.
-
-From the plot, we can see that a lot of movies are not profitable. Around half of the movies are profitable (count = 1988), half are not (count = 1801).
-
-```{r echo = FALSE, fig.width = 10, fig.align = "center"}
-movieswprofit$profitable <- ifelse(movieswprofit$grossprofitmargin >= 0, "yes", "no")
-pander(table(movieswprofit$profitable))
-```
-From the analysis above, we can conclude there is a positive correlation between budget and imdb score, as well as gross revenue, though the correlation themselves are not strong.
 
 ### George
 
