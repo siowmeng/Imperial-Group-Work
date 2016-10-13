@@ -213,6 +213,8 @@ kable(t(movies[1:3, ]), format = "markdown")
 
 #Theory
 
+
+
 #Analysis
 
 ##Descriptive Data Analysis
@@ -275,6 +277,54 @@ post2010plot <- ggplot(data = meltedmovies2010, aes(x=Var1, y=Var2, fill=value))
 
 ##joint plot
 grid.arrange(post2005plot, post2010plot, widths=c(2,2.4), ncol=2)
+```
+
+To additionally look at some key statistics regarding our output variable, the maximum is $`r format(max(movies$gross), big.mark= ",")`, the minimum is $`r format(min(movies$gross), big.mark= ",")`, and the standard deviation is $`r format(sd(movies$gross), big.mark= ",")`. This high standard deviation (and therefore variance), is expected as per the theory. The distribution and log distribution can be seen below, the first of which is positively skewed, and the second is negatively skewed.
+
+```{r echo=FALSE}
+##function to create human readable axis labels.
+##code taken from publically available github to give human readable axis labels. (https://github.com/fdryan/R/blob/master/ggplot2_formatter.r)
+human_numbers <- function(x = NULL, smbl =""){
+  humanity <- function(y){             
+    
+    if (!is.na(y)){
+      
+       b <- round_any(abs(y) / 1e9, 0.1)
+       m <- round_any(abs(y) / 1e6, 0.1)
+       k <- round_any(abs(y) / 1e3, 0.1)
+      
+      if ( y >= 0 ){ 
+        y_is_positive <- ""
+      } else {
+        y_is_positive <- "-"
+      }
+      
+      if ( k < 1 ) {
+        paste0(y_is_positive, smbl, y )
+        } else if ( m < 1){
+        paste0 (y_is_positive, smbl,  k , "k")
+      } else if (b < 1){
+        paste0 (y_is_positive, smbl, m ,"m")
+      } else {
+        paste0 (y_is_positive, smbl,  comma(b), "b")     
+      }
+    }
+  }
+  
+  sapply(x,humanity)
+}
+
+human_num <- function(x){human_numbers(x, smbl = "")} 
+human_usd <- function(x){human_numbers(x, smbl = "$")}
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=10}
+reg <- ggplot(movies, aes(x=gross)) + geom_histogram() + labs(x="Gross Revenue") + theme_few() + scale_x_continuous(label=human_num)
+
+log <- ggplot(movies, aes(x=gross)) + geom_histogram() + scale_x_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), labels = c("1", "100", "10,000", "1m", "100m", "10bn"), limits = c(1, 1e+10)) + labs(x="Log (Gross Revenue)") + theme_few()
+
+grid.arrange(reg,log,ncol=2)
 ```
 
 The descriptive analysis below focuses on individual variables and relationships in turn, drawing both from the above correlations, and from relationships between numerican and non-numerical variables.
@@ -797,7 +847,7 @@ movies$decade <- sapply(movies$title_year, FUN = convert_decade)
 
 ```{r echo = FALSE, message = FALSE}
 ##create summary statistics for average imdb score & number of movies for each director
-directorssummary <- ddply(movies, ~ director_name,summarise,score_average=round(mean(imdb_score),2), gross_average=round(mean(gross),2), number_of_movies=length(director_name))
+directorssummary <- ddply(movies, ~ director_name,summarise,score_average=round(mean(imdb_score),2), gross_average=round(mean(gross),2), number_of_movies=length(director_name), director_facebook_likes = max(director_facebook_likes))
 ##sort by # of movies then imdb average score
 sorteddirectorsummary <- arrange(directorssummary,desc(number_of_movies), desc(score_average))
 ##ensure that factors are in the order of number of movies, otherwise ggplot will default to alphabetical ordering in the graph
@@ -833,45 +883,6 @@ This is clearly positively skewed, with many directors having only 1 movie in th
 movieswithdirectordata <- merge(movies, sorteddirectorsummary, by = "director_name")
 movieswithdirectordata <- rename(movieswithdirectordata, c('number_of_movies'='dir_number_of_movies'))
 ```
-
-
-```{r echo=FALSE}
-##function to create human readable axis labels.
-##code taken from publically available github to give human readable axis labels. (https://github.com/fdryan/R/blob/master/ggplot2_formatter.r)
-human_numbers <- function(x = NULL, smbl =""){
-  humanity <- function(y){             
-    
-    if (!is.na(y)){
-      
-       b <- round_any(abs(y) / 1e9, 0.1)
-       m <- round_any(abs(y) / 1e6, 0.1)
-       k <- round_any(abs(y) / 1e3, 0.1)
-      
-      if ( y >= 0 ){ 
-        y_is_positive <- ""
-      } else {
-        y_is_positive <- "-"
-      }
-      
-      if ( k < 1 ) {
-        paste0(y_is_positive, smbl, y )
-        } else if ( m < 1){
-        paste0 (y_is_positive, smbl,  k , "k")
-      } else if (b < 1){
-        paste0 (y_is_positive, smbl, m ,"m")
-      } else {
-        paste0 (y_is_positive, smbl,  comma(b), "b")     
-      }
-    }
-  }
-  
-  sapply(x,humanity)
-}
-
-human_num <- function(x){human_numbers(x, smbl = "")} 
-human_usd <- function(x){human_numbers(x, smbl = "$")}
-```
-
 
 ```{r echo = FALSE, message = FALSE, fig.width = 3, fig.height = 2.5, fig.align = "center", out.extra='style="float:left"'}
 ##plot for gross revenue vs number of directors in sample
@@ -1295,49 +1306,59 @@ ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross)) +
     geom_jitter(alpha = 0.2, width = 1) + 
     geom_smooth() +
     theme_bw() +
-    labs(x = "Number of movies in sample", y = "Gross Revenue") + scale_y_continuous(label = human_usd)
+    labs(x = "Number of movies per director", y = "Gross Revenue") + scale_y_continuous(label = human_usd)
 ```
 
 To analyse the impact of the director (a proxy for how prolific the director is), on gross revenue, this section explores the relationship between director-specific variables, and the target outcome variable, gross revenue.
 
-The basic relationship between the two variables can be seen on the figure to the right, and seems to show on upward trend for directors who have a low number of movies in the sample (roughly less than 10), and a less clear trend for directors who have more movies in the sample.
+The basic relationship between the two variables can be seen on the figure to the right, and seems to show on upward trend for directors who have a low number of movies in the sample (roughly fewer than 10), and a less clear trend for directors who have more movies in the sample.
+
+Two correlation tests are performend (output below) to test two hypothesese: if the number of movies per director is correlated with the gross revenue (where the correlation is `r cor(movieswithdirectordata$gross, movieswithdirectordata$dir_number_of_movies)`), and specifically ifthe number of movies per director is correlated with the gross revenue, for movies where the director has fewer than 10 movies (where the correlation is `r cor(movieswithdirectordata$gross[movieswithdirectordata$dir_number_of_movies<10], movieswithdirectordata$dir_number_of_movies[movieswithdirectordata$dir_number_of_movies<10])`).
 
 ```{r echo=FALSE}
 ##cor test for gross score vs # of movies
-pander(cor.test(movieswithdirectordata$gross, movieswithdirectordata$dir_number_of_movies), caption="") 
-##does seem like somewhat positively correlated - although we can see from the graph that this doesn't seem linear.
+pander(cor.test(movieswithdirectordata$gross, movieswithdirectordata$dir_number_of_movies), caption="Covariance Test for Gross Revenue and # of movies per director in sample") 
+
+##cor test for gross score vs # of movies for <10 movies
+pander(cor.test(movieswithdirectordata$gross[movieswithdirectordata$dir_number_of_movies<10], movieswithdirectordata$dir_number_of_movies[movieswithdirectordata$dir_number_of_movies<10]), caption="Covariance Test for Gross Revenue and # of movies per director in sample /n for directors with <10 movies") 
 ```
 
-These correlation tests do infer that there is a slight positive correlation between the two outcome variables (gross and imdb score) and the # of movies the director has in the sample. However, the impact on gross revenue does not look to be linear, and neither of the correlations seem to be particularly strong. Whether or not a director is prolific does not seem to have a strong impact on the quality (as proxied by imdb score) or popularity (as proxied by gross revenue) of a movie.
+These correlation tests do infer that there is a slight positive correlation between the # of movies the director has in the sample and the outcome variables, gross revenue. This correlation is both stronger and more statistically significant for directors with fewer than 10 movies in the sample.
+\
+\
 
-If we look at the categorical variable of whether or not a director has directed >10 movies, then we can see these distributions look slightly different:
-
-```{r echo=FALSE,  message=FALSE, fig.width = 10, fig.align = "center"}
+```{r echo=FALSE,  message=FALSE, fig.width = 5, fig.height=3.5, fig.align = "left", out.extra='style="float:left"'}
 ggplot(movieswithdirectordata, aes(x = factor(more_than_ten_movies), y = gross, fill = factor(more_than_ten_movies))) + 
-    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) +
+    geom_boxplot() + stat_summary(fun.y=mean, colour="darkblue", geom="point", size=1, show.legend = FALSE) +
     theme_bw() +
     labs(x = "", y = "Gross", title = "Gross revenue distribution by \n number of movies per director") +
     scale_y_continuous(label = human_num) + 
     theme(axis.title.x = element_blank(), axis.ticks.x = element_blank(), legend.position = "None", panel.grid.major.x = element_blank()) +
-    scale_x_discrete(labels = c("Fewer than 10", "More than 10"))
+    scale_x_discrete(labels = c("Fewer than 10", "10+"))
 ```
 
-The plots seem to suggest that the movies where the director has 10+ movies in the sample have a higher mean and a lower variance of gross revenue. However, this may be largely explained by the number of observations in each sample. To determine whether the change is statistically significant we run a t test and an f test.
+If we look at the categorical variable of whether or not a director has directed >10 movies, then we can see these distributions look slightly different (see figure on left).
 
-*Can't format the 2 following tests, otherwise my knitting i halted :( --George*
+The plots seem to suggest that the movies where the director has 10+ movies in the sample have a higher mean and a lower variance of gross revenue. However, this may be largely explained by the number of observations in each sample.
+
+To determine whether the difference is statistically significant we run a t test and an f test (output below), to determine whether the mean is higher for movies with directors who have directed 10+ movies, than others, and whether the variance is the same for those movies.
+
+The data suggests that the average gross revenue is higher for movies where the director has over 10 movies in the sample - which gives evidence to the claim that prolific directors are produce more popular movies (if we see gross revenue as a proxy for popularity).
+
+Also, the opposite of the initial intuition appears to be the case for variance, the movies made by directors with over 10 movies in the sample has higher variance than others. This can be explained by the much larger number of movies made by directors with fewer than 10 movies.
 
 ```{r echo = FALSE,  message=FALSE, fig.width = 10, fig.align = "center"}
 t <- t.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="10+"], movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="Fewer than 10"], alternative="greater")
 
-v <- var.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="10+"], movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="Fewer than 10"], alternative="greater")
-
-pander(t, caption="") 
-pander(v, caption="") 
+pander(t, caption="T-test of means - Gross revenue for movies with directors with more or fewer than 10 movies") 
 ```
 
-The data therefore suggests that the average gross revenue is higher for movies where the director has over 10 movies in the sample - which gives evidence to the claim that prolific directors are produce more popular movies (if we see gross revenue as a proxy for popularity).
+```{r echo = FALSE,  message=FALSE, fig.width = 10, fig.align = "center"}
+v <- var.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="10+"], movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="Fewer than 10"])
 
-Also, the opposite of the initial intuition appears to be the case for variance, the movies made by directors with over 10 movies in the sample has higher variance than others. This can be explained by the much larger number of movies made by directors with fewer than 10 movies.
+pander(v, caption="F-test of variance - Gross revenue for movies with directors with more or fewer than 10 movies") 
+```
+
 
 # Predictive Data Analysis
 
