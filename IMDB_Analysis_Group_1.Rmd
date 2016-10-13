@@ -1349,7 +1349,7 @@ pander(v, caption="F-test of variance - Gross revenue for movies with directors 
 
 ## Model Building and Justification
 
-Multiple models were created to predict gross revenue based on input parameters. Two "full" models were build using all data available, to determine which was the most effective when tested on the test set, and one "known" model was built based on variables that would normally be available *before* a movie is released.
+Multiple models were created to predict gross revenue based on input parameters. Two models, namely Full model and English model, were built using all data available, to determine which was the most effective when tested on the test set, and one "known" model was built based on variables that would normally be available *before* a movie is released.
 
 The results shown are when the data is trained on all data in the training set, and also when the model is trained only on movies that were released post-2010 in the training set. This is because some key variables in the dataset (i.e. the facebook like variables) became relevant only since the widespread use of Facebook, and therefore change the values of the coefficients.
 
