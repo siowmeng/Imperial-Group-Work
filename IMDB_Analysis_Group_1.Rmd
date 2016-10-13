@@ -1351,9 +1351,9 @@ pander(v, caption="F-test of variance - Gross revenue for movies with directors 
 
 Multiple models were created to predict gross revenue based on input parameters. Two "full" models were build using all data available, to determine which was the most effective when tested on the test set, and one "known" model was built based on variables that would normally be available *before* a movie is released.
 
-The results shown are when the data is trained on all data in the dataset, and also when the model is trained only on movies that were released post-2010. This is because some key variables in the dataset (i.e. the facebook like variables) became relevant only since the widespread use of Facebook, and therefore change the values of the coefficients.
+The results shown are when the data is trained on all data in the training set, and also when the model is trained only on movies that were released post-2010 in the training set. This is because some key variables in the dataset (i.e. the facebook like variables) became relevant only since the widespread use of Facebook, and therefore change the values of the coefficients.
 
-### First full model
+## First full model
 
 ```{r echo=FALSE}
 ##Data Preparation for model building
@@ -1388,9 +1388,9 @@ stargazer(list(fullmodel, fullmodel2010), type = "html", align = TRUE, column.la
 ```
 </center>
 
-##Justification
+###Justification
 
-A final model is built using data for movies created post 2010, this is because some of our predictive variables (e.g. facebook likes) are only relevant as predictive variables since facebook has become widely popular for celebrities and movies.
+The first full model is built using training set. The left column is trained using all training data, and the right column uses data for movies created post 2010. This is because some of our predictive variables (e.g. facebook likes) are only relevant as predictive variables since facebook has become widely popular for celebrities and movies.
 
 ####Variables included in the model:
 * Inferential analysis showed that the budget of a movie is positively correlated with the gross revenue, which can be interpreted as movie-makers being wise enough to get a high return on investment.
@@ -1399,10 +1399,12 @@ A final model is built using data for movies created post 2010, this is because 
 * The duration, when included into the model has a statistically significant positive coefficient, this could be interpreted as movie-goers perceiving longer movies as more value for money or higher quality.
 * Cast total facebook likes can also be seen as a potential predictor for gross revenue, as in theory the more popular the actor (measured by facebook likes), the more people will go to see the movie to see that actor, the more tickets are sold and therefore the higher the revenue. We can see from the positive coefficient that this seems to be reflected in the data.
 * Director facebook likes is statistically significant when included into the model, interestingly with a negative coefficient. Again, this variable is at first glance positively correlated with the gross revenue, however once you take into account the number of voted users, this relationship is reversed, potentially for similar reasons to the above.
-* Movie facebook likes is also statistically significant when included into the model, this can be interpreted as a proxy for the popularity of the movie, and also could be that the more people who saw the movie (based on gross revenue), the more people then subsequently liked the page.
 * Key genres have been included into the model if they had statistically significant predictive power, there is a risk of overfitting here, so the variables that have been included are those that have a logical intuition, for example animated and family films are possibly more likely to be targeted to a younger audience, which may therefore have larger potential viewership, and Drama movies are the   
+* The number of users for review has been included as it is statistically significant and may be correlated due to the two possible mechanisms that reviews may encourage more people to watch the movie, or the more people that see the movie, the more reviews are left.
 
-###Not included into the model
+*Unfinished sentence for the second last bulleted point: "and Drama movies are the..." --Siow Meng*
+
+####Not included into the model:
 * Movie title, director names and actor names were not included into the variable as there many different values for these variables with a small number of observations (usually one observation) for each.
 * Plot keywords were not included as there was a high number of possible values, and they were not statistically significant when included into the model.
 * Number of critic reviews is quite highly correlated with the number of user reviews, with a correlation coefficient of `r round(cor(movies$num_user_for_reviews,movies$num_critic_for_reviews),2)`. So it was decided to include only one of these variable into the model, in this case number of user reviews.
@@ -1412,15 +1414,16 @@ A final model is built using data for movies created post 2010, this is because 
 ggplot(movies, aes(x=color)) + geom_bar() + xlab("")
 ```
 
-* When color is included into the model then none of the options are found to be statistically significant, there is also not a very large variation in this variable in the sample set (seen right).
+* When colour is included into the model then none of the options are found to be statistically significant, there is also not a very large variation in this variable in the sample set (seen right).
 * When either language or country are included into the model, the R squared does go up, but by a small amount, and this also includes a lot of additional values to be interpreted, so the model loses some interpretability. Due to this, these factors have been left out. 
 * The multiple actor "facebook likes" variables are mostly correlated with each other, as can be seen from the correlation matrix, so the total cast facebook likes has been chosen as the "overall" variable to explain the effects of facebook popularity of the cast.
 * The number of faces in the poster has not been included into the model, when included it is only slightly statistically significant, and the intuition behind this variable is unclear, so including it may lead to model overfitting.
 * IMDB score as discussed above.
-* The number of users for review has been included as it is statistically significant and may be correlated due to the two possible mechanisms that reviews may encourage more people to watch the movie, or the more people that see the movie, the more reviews are left.
 * Director number of movies, although significant individually, when other variables are taken into account loses its statistical significance, so is omitted from the model.
 
-### Second Full Model (Facebook)
+## Second Full Model (English)
+
+_Model summary_
 
 <center>
 ```{r linearmodel, echo=FALSE, results="asis"}
@@ -1431,21 +1434,43 @@ trainwithdirectorandgenredata$english <- factor(trainwithdirectorandgenredata$la
 
 ##Linear Model
 fbmodel <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes 
-              + imdb_score + PG_13 + Action + Adventure + Fantasy + Family + Western + Drama + Crime 
-              + Biography + Documentary + us_or_others + english, 
+              + imdb_score + PG_13 + Action + Adventure + Animation + Documentary + Fantasy + Family 
+              + us_or_others + english, 
               data = trainwithdirectorandgenredata)
 
 fbmodel2010 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes 
-                  + imdb_score + PG_13 + Action + Adventure + Fantasy + Family + Western + Drama + Crime 
-                  + Biography + Documentary + us_or_others + english, 
+                  + imdb_score + PG_13 + Action + Adventure + Animation + Documentary + Fantasy + Family 
+                  + us_or_others + english, 
                   data = trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >= 2010, ])
 
-stargazer(list(fbmodel, fbmodel2010), type = "html", align = TRUE, column.labels=c("For all years", "From 2010 onwards"),
+stargazer(list(fbmodel, fbmodel2010), type = "html", align = TRUE, 
+          column.labels=c("For all years", "From 2010 onwards"),
           dep.var.labels = "Gross revenue", no.space = TRUE, title = "Linear Regression results")
 ```
 </center>
 
-####Third Model, with only pre-known variables
+###Justification
+
+The second full model builds on the observation that English and USA movies are generally more successful than others, and uses this information as predictor variables. We will name this model the "English" model here.  
+
+Similar to the first full model, this full model is built using training set. The left column is trained using all training data, and the right column uses data for movies created post 2010. This is because some of our predictive variables (e.g. facebook likes) are only relevant as predictive variables since facebook has become widely popular for celebrities and movies.  
+
+####Variables included in the model:  
+Some of the variables used in this model are identical to those used in the first model. The justifications for these variables can be found in earlier section. The list below discusses the variables used only in the second model:
+* Two new variables ("english" and "us _ or _ others") have been created to separate the movies into two distinct groups (i.e. English vs non-English, USA vs non-USA). From the inferential analysis section, we have seen a huge difference in gross revenue between English and non-English (similarly, USA and non-USA). Therefore, these two variables are expected to have a major effect in predicting gross revenue.
+* This model does not consider the "number of users voted" variable. Intuitively, higher number of voters does not necessarily translate to higher movie quality. IMDB score may reflect the movie quality better instead. In the descriptive analysis section, we have observed that there is a slight positive correlation between gross revenue and IMDB score. This model includes IMDB score to predict the quality and popularity of the movie.
+* Movie facebook likes is also statistically significant when included into the model, this can be interpreted as a proxy for the popularity of the movie, and also could be that the more people who saw the movie (based on gross revenue), the more people then subsequently liked the page.
+* From the genre analysis section, it can be seen that Documentaries have signficantly lower gross revenue while Action, Adventure, Animation, Family and Fantasy movies are more popular than the rest. These six genres are included in the model.  
+
+####Not included into the model:
+We have already discussed some of the variables not included in this model (in the section for first model), the list below describes the rationale in excluding some other variables:  
+* Number of voted users is not included as explained above.
+* Number of critic reviews is not included. Similar to reasons in excluding "number of voted users", this metric is not considered to have a major impact on the popularity of a movie.
+* Movie duration is excluded since it should not affect the quality (and hence the popularity) of a movie.
+
+##Third Model, with only pre-known variables
+
+_Model summary_
 
 <center>
 ```{r echo=FALSE, results = "asis"}
@@ -1458,7 +1483,9 @@ stargazer(list(knownvariablesmodel, knownvariablesmodel2010), type = "html", ali
 ```
 </center>
 
-To build a model to predict revenue of movies that have not yet been released, we include only variables that are known before the time of release. Our dataset provided us with number of facebook likes at a specific point in time, and to use this as part of our predictive model we would need to analyse number of facebook likes before the movie was released, however we will use what we currently have as a proxy to build the model. This model has lower predictive power (adjusted R squared of `r summary(knownvariablesmodel)$adj.r.squared`), but could be used in a more useful business context.
+###Justification
+
+To build a model to predict revenue of movies that have not yet been released, this model includes only variables that are known before the time of release. Our dataset provided us with number of facebook likes at a specific point in time, and to use this as part of our predictive model we would need to analyse number of facebook likes before the movie was released, however we will use what we currently have as a proxy to build the model. This model has lower predictive power (adjusted R squared of `r summary(knownvariablesmodel)$adj.r.squared`), but could be used in a more useful business context.
 
 ###Model Performance
 *we will then test this model using the test dataset, make a plot of the predictions against the actual values, and calculate the MSE/other success statistics*
