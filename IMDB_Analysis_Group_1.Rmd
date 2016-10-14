@@ -504,9 +504,8 @@ Looking at the barplot, we observe that the number of movies originating in USA 
 
 Next, we will look at the gross revenues for the countries with 10 or more movies. The boxplots indicate that the movies originating from these countries have a mean revenue of 1 million. All USA releases generate more than 10 million. At least 50% of movies from Australia, UK, Japan and Germany generate revenues of over 10 million. On the other hand, no movies from India, China and Italy generate more than 10 million.
 
-Lastly, when we look at the scatterplots, we see that UK & US movies seem to be symmetrically about 'y = x' indicating a nearly positive correlation between IMDB score and gross revenue; however, the other countries show no particular relationship between the two variables.
+Lastly, when we look at the scatterplots, we see that UK & US movies seem to show some symmetry about 'y = x' but the other countries have too few movies to determine whether there is any relationship between gross revenue and IMDB score.
 
-*To discuss the interpretation of the above results: Should positive correlation be attributed to symmetricity around y=x? For other countries, there seem to be slight positive correlation, but the data is too few to have confident inference -- Siow Meng*
 
 ### Budget
 
@@ -1072,11 +1071,11 @@ ggplot(topratedmovies, aes(contentrating, contentgross, fill = contentrating)) +
 
 # Does the gross revenue vary with different ratings?
 
-pander(t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG-13"]), caption="")
+pander(t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG-13"]), caption="R vs PG-13")
 
-pander(t.test(movies$gross[movies$content_rating == "PG-13"], movies$gross[movies$content_rating == "PG"]), caption="")
+pander(t.test(movies$gross[movies$content_rating == "PG-13"], movies$gross[movies$content_rating == "PG"]), caption="PG-13 vs PG")
 
-pander(t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG"]), caption="")
+pander(t.test(movies$gross[movies$content_rating == "R"], movies$gross[movies$content_rating == "PG"]), caption="R vs PG")
 ```
 
 We conducted t-tests to test whether the mean revenue across the top three ratings - PG, PG-13 and R - is the same. 
