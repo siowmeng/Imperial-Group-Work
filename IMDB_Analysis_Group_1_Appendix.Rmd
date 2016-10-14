@@ -251,6 +251,66 @@ ggplot(temp, aes(y = imdb_score, x = factor(decade), fill = decade)) +
 
 ```
 
+### IMDB Scores in North America and Europe
+
+*To discuss whether to move IMDB scores section to appendix. --Siow Meng*
+
+```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
+
+# code to create continent column
+movies$continent <- countrycode(as.character(movies$country), "country.name", "continent")
+
+# divide "Americas" into "North Americas" and "South America"
+south_America = c("Brazil", "Argentina", "Chile", "Colombia", "Peru")
+
+for (i in 1:nrow(movies)) {
+  if (is.na(movies$continent[i])) {
+    next
+  } else if ((movies$continent[i] == "Americas") & (movies$country[i] %in% south_America)) {
+    movies$continent[i] <- "South America"
+  } else if ((movies$continent[i] == "Americas") & (!(movies$country[i] %in% south_America))) {
+    movies$continent[i] <- "North America"
+  } 
+}
+```
+
+```{r echo=FALSE, message=FALSE, fig.width = 5, fig.height=3.5, fig.align = "right", out.extra='style="float:right"'}
+# make dataframes for North America and Europe
+North_America <- movies[movies$continent == "North America",]
+Europe <- movies[movies$continent == "Europe",]
+
+# separate IMDB scores 
+North_America <- North_America[, c("imdb_score", "continent")]
+Europe <- Europe[, c("imdb_score", "continent")]
+
+# combine two data frames
+comb <- rbind(Europe, North_America)
+
+# plot both densities
+ggplot(comb, aes(x = imdb_score)) +
+    geom_density() +
+    geom_density(aes(x = imdb_score, color = continent)) +
+    theme_bw() +
+    scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
+    labs(title = "", x = "IMDB Score", y = "Density") +
+    theme(legend.title = element_blank())
+```
+
+Hollywood is arguably the biggest and most successful movie industry in the world. But monetary succes does not necessarily imply superior quality. To illustrate this tradeoff we can think of two companies, one large multinational and one medium sized company. While the large multinational can out-produce the medium sized company, its products may very well fall short on quality.
+
+Here, we would like to test if north american movies, which are moslty made in Hollywood, differ in quality compared to european ones. Although we have no reason to believe they moght be different, the above example can serve as a guide for intuition. In order to make the comparison, IMDB scores will be considered a proxy for movie quality.
+
+An inital look at the distribution of IMDB scores of north american and european movies reveals that european movies have a larger number of high scoring IMDB movies. The mean IMDB score for european movies is `r mean(comb[comb$continent == "Europe", "imdb_score"], na.rm = TRUE)` compared to `r mean(comb[comb$continent == "North America", "imdb_score"], na.rm = TRUE)` for north american movies. The combined mean of both continents is `r mean(comb$imdb_score, na.rm = TRUE)`.
+
+To test whether this difference can be attributed to sampling we will use a t-test. Our null-hypothesis is that there is no difference in IMDB scores between north american and european movies.
+
+
+```{r echo=FALSE}
+pander(t.test(Europe$imdb_score, North_America$imdb_score), caption="")
+```
+
+With a p-value of `r t.test(Europe$imdb_score, North_America$imdb_score)[["p.value"]]`, it is highly unlikely that to randomly get a mean IMDB score of `r mean(comb[comb$continent == "Europe", "imdb_score"], na.rm = TRUE)` for european movies. The 95% confidence interval is `r t.test(Europe$imdb_score, North_America$imdb_score)[["conf.int"]][1]` - `r t.test(Europe$imdb_score, North_America$imdb_score)[["conf.int"]][2]`. We therefore reject the hypothesis that there is no difference in IMDB scores between north american and european movies. 
+
 
 ##Cecilia
 
