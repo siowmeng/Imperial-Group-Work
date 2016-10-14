@@ -1,0 +1,12 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+* Add in post 2010 timeline - SL
+* Move imdb hypothesis test - SL
+* Remove messages/warnings - LF
+* Write conclusion - LF
+* Resolve SM's comments throughout her sections - LF
+* Add clarification to PG discussion in Theory - LF
+* Remove all files except the main file from the repo - SML
