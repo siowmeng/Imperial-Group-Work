@@ -445,7 +445,7 @@ ggplot(data = movies, aes(x = imdb_score, y = gross, colour = us_or_others)) +
 
 ### Country
 
-In this section, we look at whether the country of origin has a huge influence on: The number of movies a country produces, and the revenue that a movie generates. 
+In this section, we look at whether the country of origin has a huge influence on the number of movies a country produces, and the revenue that a movie generates. 
 
 Then, we check if there is any relationship between the gross revenue and IMDB score for countries with more than 10 movies.
 
@@ -870,7 +870,7 @@ p2 <- ggplot(temp, aes(x = title_year, y = gross, colour = factor(title_year))) 
 grid.arrange(p1, p2, ncol=1)
 ```
 
-The above plot shows the development of gross revenue since the release of Facebook in 2005. There is an upward trend (note, the y axis is logarithmic), which is a different pattern compared to the plot with displaying all years with more than ten entries.
+The above plot shows the development of gross revenue since the widespread popularity of Facebook in 2010. There is an upward trend (note, the y axis is logarithmic), which is a different pattern compared to the plot with displaying all years with more than ten entries.
 
 ```{r, echo = FALSE}
 # create function that converts years into decades
@@ -1334,7 +1334,7 @@ pander(v, caption="F-test of variance - Gross revenue for movies with directors 
 
 ## Model Building and Justification
 
-Multiple models were created to predict gross revenue based on input parameters. Two models, namely Full model and English model, were built using all data available, to determine which was the most effective when tested on the test set, and one "known" model was built based on variables that would normally be available *before* a movie is released.
+Multiple models were created to predict gross revenue based on input parameters based on the descriptive and inferential analysis above. Two models, namely Full model and English model, were built using all data available, to determine which was the most effective when tested on the test set, and one "known" model was built based on variables that would normally be available *before* a movie is released.
 
 The results shown are when the data is trained on all data in the training set, and also when the model is trained only on movies that were released post-2010 in the training set. This is because some key variables in the dataset (i.e. the facebook like variables) became relevant only since the widespread use of Facebook, and therefore change the values of the coefficients.
 
@@ -1627,7 +1627,7 @@ Interestingly, the accuracy of known variables model also improved when it is tr
 
 #Dicussion
 
-##Conclusion
+##Findings
 
 ###Limitation of Linear Models
 
@@ -1641,7 +1641,17 @@ While the full model delivers a reasonably good performance in predicting the mo
 
 ##Next Steps
 
-*to be completed after our analysis*
-*need to write something interesting about our data*
+This report has identified facts and relationships about multiple variables in the dataset, namely country, language, year of release, director name, content rating and budget. Although used in the predictive models, further descriptive and inferential analysis of the other variables could also give further insight, in particular the "facebook likes" variables, with further investigation into how these were gathered and methods of handling the cases where some or all of the cast have no facebook page.
 
+This report focuses on the relationship between these variables and the domestic gross revenue of the movie. Other interesting target variables could be:
+
+* The worldwide revenue of the movie
+* The imdb score, which can be seen as a proxy for "quality" of a movie. 
+* The profit of a movie, which was not available in our dataset.
+
+Further data collection would likely improve the predictive model. There are some key variables that were not present in the data which are likely to have an impact on the gross revenue of movies. These factors could include the date of release, the marketing budget and channels, the number of theatres showing the movie on initial release, the studio, whether or not the movie is a sequel or part of a franchise, the age of the leading actors, the number of movies that the actors have previously starred in etc., from this list in particular, it is expected that the date of release will have a large impact on the gross revenue prediction, as cinema habits are usually season-dependent.
+
+Additionally, some of the limitations of the data could be overcome to improve the accuracy and relevance of the results. For example, only taking into account cast and director facebook likes at the time that the movie was released or proposed (depending on the stage of the process that the model would be used in practice). The data scraping process for the . As is usual in predictive modelling, having a higher number of input samples would also likely improve the accuracy of the model, and in this case, if we want to forecast global movie revenues, our dataset would be improved by having a wider set of movies from countries other than the USA.
+
+Similarly, more complex analysis could be done including natural language processing and semantic analysis of the script for example for sentiment analysis, or including additional text features such as frequency of certain words, number of words per minute, proportion of male to female lines etc. Cluster analysis could also be performed on movies to see whether there are similarities that help to determine the gross revenue (potentially by considering groups of actors and directors that regularly work with each other).
 
