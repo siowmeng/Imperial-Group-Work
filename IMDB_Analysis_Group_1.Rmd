@@ -1320,13 +1320,13 @@ Also, the opposite of the initial intuition appears to be the case for variance,
 ```{r echo = FALSE,  message=FALSE, fig.width = 10, fig.align = "center"}
 t <- t.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="10+"], movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="Fewer than 10"], alternative="greater")
 
-pander(t, caption="T-test of means - Gross revenue for movies with directors with more or fewer than 10 movies") 
+pander(t, caption="T-test of means - Gross revenue for movies with directors with 10+ movies against those with fewer") 
 ```
 
 ```{r echo = FALSE,  message=FALSE, fig.width = 10, fig.align = "center"}
 v <- var.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="10+"], movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="Fewer than 10"])
 
-pander(v, caption="F-test of variance - Gross revenue for movies with directors with more or fewer than 10 movies") 
+pander(v, caption="F-test of variance - Gross revenue for movies with directors with 10+ movies against those with fewer") 
 ```
 
 
@@ -1382,7 +1382,7 @@ The first full model is built using training set. The left column is trained usi
 * The duration, when included into the model has a statistically significant positive coefficient, this could be interpreted as movie-goers perceiving longer movies as more value for money or higher quality.
 * Cast total facebook likes can also be seen as a potential predictor for gross revenue, as in theory the more popular the actor (measured by facebook likes), the more people will go to see the movie to see that actor, the more tickets are sold and therefore the higher the revenue. We can see from the positive coefficient that this seems to be reflected in the data.
 * Director facebook likes is statistically significant when included into the model, interestingly with a negative coefficient. Again, this variable is at first glance positively correlated with the gross revenue, however once you take into account the number of voted users, this relationship is reversed, potentially for similar reasons to the above.
-* Key genres have been included into the model if they had statistically significant predictive power, there is a risk of overfitting here, so the variables that have been included are those that have a logical intuition, for example animated and family films are possibly more likely to be targeted to a younger audience, which may therefore have larger potential viewership, and Mystery and Drama genres generally contain award-nominated movies which draw high audiences.
+* Key genres have been included into the model if they had statistically significant predictive power, there is a risk of overfitting here, so the variables that have been included are those that have a logical intuition, for example animated and family films are possibly more likely to be targeted to a younger audience, which may therefore have larger potential viewership, and Mystery and Drama genres are less likely to be targetting a younger audience.
 * The number of users for review has been included as it is statistically significant and may be correlated due to the two possible mechanisms that reviews may encourage more people to watch the movie, or the more people that see the movie, the more reviews are left.
 
 ####Not included into the model:
@@ -1432,7 +1432,7 @@ stargazer(list(englishmodel, englishmodel2010), type = "html", align = TRUE,
 
 The second model builds on the observation that English and USA movies are generally more successful than others, and uses this information as predictor variables. We will name this model the "English" model here.  
 
-Similar to the first full model, this model is built using training set. The left column is trained using all training data, and the right column uses data for movies created post 2010. This is because some of our predictive variables (e.g. facebook likes) are only relevant as predictive variables since facebook has become widely popular for celebrities and movies.  
+Similar to the first full model, this model is built using the training set. The left column is trained using all training data, and the right column uses data for movies created post 2010. This is because some of our predictive variables (e.g. facebook likes) are only relevant as predictive variables since facebook has become widely popular for celebrities and movies.  
 
 ####Variables included in the model:  
 
@@ -1627,7 +1627,17 @@ Interestingly, the accuracy of known variables model also improved when it is tr
 
 #Dicussion
 
-##Findings
+##Key Findings
+
+* In this dataset, English/US-made movies, have higher gross revenues than Non-English/Non-US-made movies, this is in line with the theory.
+* R-rated movies appear to have a lower gross revenue than PG/PG-13 rated movies, again, this is in line with the expected theory.
+* Although budget and revenue are correlated, this correlation is not particularly strong. Although this positive correlation is in line with the expected theory, the fact that it is not particularly strong shows that investors into movie venures take on a lot of risk, as there is only a low amount of variance that can be explained by budget alone.
+* Gross revenue has been overall on the decline since 1980, but with a recent uptick in trend if we look more closely at the post 2010 data, and in prediction, the year of release is not statistically significant. There were  opposing theoretical mechanisms that would explain the year of release's impact on gross revenue, so this analysis supports the claim that these mechanisms roughly cancel each other out, although this may change if the increase in revenue we have seen since 2010 continues.
+* The genres that have the highest gross revenues are Animation, Adventure, Family, Fantasy and Action, and the genre with the lowest gross revenue is Documentary, which has a significantly lower revenue than the remaining genres, which are fairly well clustered together.
+* The number of movies produced by a director has a positive impact on the gross revenue, in particular there is usually an increase in gross revenue if the movie has a director with more than 10 movies in the sample.
+* The data available, with the models created in this report, only explain approximately 66% of the variance in gross revenue, and the model containing only factors known before the release of the model, explains only approximately 52% of the variance.
+
+If the outcomes of this report were used to make a movie to maximise gross revenues, that movie would be a long, Animated, Family movie, made in the US in the English language, rated PG-13, casted by actors who are popular on facebook, made by a director who has a lot of facebook likes and has already made at least 9 movies. Although the plot keyword analysis would suggest that the movie was about aliens seeking revenge on an island, this may be seen as too derivative of the movie with the highest revenue in our sample, Avatar, and as such we would recommend a more original plot.
 
 ###Limitation of Linear Models
 
