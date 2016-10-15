@@ -158,7 +158,7 @@ To resolve these issues, the following cleansing process is applied:
 * All rows where the title year has a missing value are removed - as there are a high number, and this variable is not expected to be key to the analysis.
 * All rows where gross has a missing value are removed - as there are a high number, and this variable is expected to be one of the output variables
 * All rows where the budget has a missing value are removed - as there are a high number, and this variable is expected to be key to the analysis.
-* The aspect ratio column has a missing value removed - as there are a high number of NAs, and this variable is not expected to be key to the analysis. 
+* The aspect ratio column with many missing values is removed - as there are a high number of NAs, and this variable is not expected to be key to the analysis. 
 * The IMDB link column is removed - as this variable is not expected to be key to the analysis
 
 ```{r, echo = FALSE}
