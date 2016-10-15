@@ -1049,13 +1049,13 @@ ggplot(data = movies, aes(x = us_or_others, y = gross, fill = us_or_others)) +
 The below table tabulates the t-test results. The results show that the average gross revenues of USA movies are significantly higher than non-USA movies.  
 
 ```{r usameantest, echo = FALSE, results = TRUE, fig.width = 10, fig.align = "center"}
-pander(t.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater"), caption="T-test of means - Gross revenue for USA and non USA movies")
+pander(t.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater"), caption="")
 ```
 
 In addition, the gross revenues of USA movies vary greatly (wider range of gross revenues), compared to non-USA movies. The below variance test output confirms this.  
 
 ```{r usavartest, echo = FALSE, results = TRUE, fig.width = 10, fig.align = "center"}
-pander(var.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater"), caption="F-test of variance - Gross revenue for USA and non USA movies")
+pander(var.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater"), caption="")
 ```
 
 In summary, we are confident to say that the English movies in this dataset are generally more popular than non-English movies.  
@@ -1266,17 +1266,17 @@ To analyse the impact of the director (a proxy for how prolific the director is)
 
 The basic relationship between the two variables can be seen on the figure to the right, and seems to show on upward trend for directors who have a low number of movies in the sample (roughly fewer than 10), and a less clear trend for directors who have more movies in the sample.
 
-Two correlation tests are performend (output below) to test two hypotheses: if the number of movies per director is correlated with the gross revenue (where the correlation is `r cor(movieswithdirectordata$gross, movieswithdirectordata$dir_number_of_movies)`), and specifically if the number of movies per director is correlated with the gross revenue, for movies where the director has fewer than 10 movies (where the correlation is `r cor(movieswithdirectordata$gross[movieswithdirectordata$dir_number_of_movies<10], movieswithdirectordata$dir_number_of_movies[movieswithdirectordata$dir_number_of_movies<10])`).
+Two correlation tests are performend (output below) to test two hypotheses: if the number of movies per director is correlated with the gross revenue, and specifically if the number of movies per director is correlated with the gross revenue, for movies where the director has fewer than 10 movies.
 
 ```{r echo=FALSE}
 ##cor test for gross score vs # of movies
-pander(cor.test(movieswithdirectordata$gross, movieswithdirectordata$dir_number_of_movies), caption="Correlation Test for Gross Revenue and # of movies per director in sample") 
+pander(cor.test(movieswithdirectordata$gross, movieswithdirectordata$dir_number_of_movies), caption=paste("Correlation Test for Gross Revenue and # of movies per director in sample, correlation= ",round(cor(movieswithdirectordata$gross, movieswithdirectordata$dir_number_of_movies),3))) 
 
 ##cor test for gross score vs # of movies for <10 movies
-pander(cor.test(movieswithdirectordata$gross[movieswithdirectordata$dir_number_of_movies<10], movieswithdirectordata$dir_number_of_movies[movieswithdirectordata$dir_number_of_movies<10]), caption="Correlation Test for Gross Revenue and # of movies per director in sample /n for directors with <10 movies") 
+pander(cor.test(movieswithdirectordata$gross[movieswithdirectordata$dir_number_of_movies<10], movieswithdirectordata$dir_number_of_movies[movieswithdirectordata$dir_number_of_movies<10]), caption=paste("Correlation Test for Gross Revenue and # of movies per director in sample /n for directors with <10 movies, correlation= ",round(cor(movieswithdirectordata$gross[movieswithdirectordata$dir_number_of_movies<10], movieswithdirectordata$dir_number_of_movies[movieswithdirectordata$dir_number_of_movies<10]),3))) 
 ```
 
-These correlation tests do infer that there is a slight positive correlation between the # of movies the director has in the sample and the outcome variables, gross revenue. This correlation is both stronger and more statistically significant for directors with fewer than 10 movies in the sample. There directors with 10+ movies in the sample can be seen below:
+These correlation tests do infer that there is a slight positive correlation between the # of movies the director has in the sample and the outcome variables, gross revenue. This correlation is both stronger and more statistically significant for directors with fewer than 10 movies in the sample. The directors with 10+ movies in the sample can be seen below:
 \
 \
 
