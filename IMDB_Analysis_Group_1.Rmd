@@ -487,14 +487,14 @@ Next, we look at the gross revenues for the countries with 10 or more movies. Th
 # Plot of gross revenue vs IMDB score for the above countries
 score <- countries$imdb_score
 ggplot(countries, aes(x = score, y = gross, colour = country)) + 
-  geom_jitter() + scale_x_log10() + labs(title = "IMDB Score and Gross Revenue for different countries", x = "IMDB Score", y = "Gross Revenue") +
+  geom_jitter() + scale_x_log10() + labs(title = "IMDB Score and Gross Revenue by Country", x = "IMDB Score", y = "Gross Revenue") +
   facet_wrap(~ country) +
   theme_few() + 
   theme(legend.position = "None") + 
     scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
                   labels = c("100", "10,000", "1 million", "100 million", "1 billion")) +
     geom_jitter(alpha = 0.2) + 
-    labs(title = "IMDB Score and Gross Revenue for different countries", x = "IMDB Score", y = "Gross Revenue") +
+    labs(title = "IMDB Score and Gross Revenue by Country", x = "IMDB Score", y = "Gross Revenue") +
     facet_wrap(~ country, nrow = 2) +
     theme_bw() + 
     theme(legend.position = "None") + 
@@ -1107,14 +1107,10 @@ A glance at the boxplots: R rated movies tend to, on average, generate lower rev
 
 T-test results: There is no difference in the gross revenue for PG and PG-13 movies whereas p-values lower than 5% support the alternative hypothesis that the difference in mean gross revenue for R and PG/PG-13 movies is not equal to 0.
 
-*The t-test result tables came one after another, it may be hard to discern which group they are comparing against. Might want to add wording in between the tables. --Siow Meng*
-
 ### Budget
 
 Intuitively, the higher the budget of a movie, the better it should be and hence should attract more people to watch it, resulting in a higher gross revenue. 
 We would like to investigate whether the imdb score of movie is affected by the budget for the particular movie.
-
-*Should we move IMDB score portions to appendix?*
 
 ```{r echo = FALSE, fig.width = 10, fig.align = "center"}
 #scatter plot for budget vs gross
@@ -1142,10 +1138,10 @@ If we subset the data by different countries, we still do not see a strong corre
 ```{r echo = FALSE, fig.width = 10, fig.align = "center"}
 ggplot(budgetcountry, aes(x = budget, y = gross, colour = country)) + 
     geom_jitter(alpha = 0.2) +  
-    labs(title = "Budget and Gross Revenue for different countries", x = "Budget", y = "Gross Revenue") +       
+    labs(title = "Budget and Gross Revenue by Country", x = "Budget", y = "Gross Revenue") +       
     theme_bw() + 
     scale_x_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1m", "100m", "10bn"), limits = c(1, 1e+10)) +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
                   labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
     annotation_logticks(sides = "tlbr", colour = "gray") +
@@ -1259,7 +1255,11 @@ ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross)) +
     geom_jitter(alpha = 0.2, width = 1) + 
     geom_smooth() +
     theme_bw() +
-    labs(x = "Number of movies per director", y = "Gross Revenue") + scale_y_continuous(label = human_usd)
+    labs(x = "Number of movies per director", y = "Gross Revenue") +
+    scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                  labels = c("1", "100", "10,000", "1m", "100 m", "10 bn"),
+                  limits = c(1, 1e+10)) +
+    annotation_logticks(sides = "lr", colour = "gray")
 ```
 
 To analyse the impact of the director (a proxy for how prolific the director is), on gross revenue, this section explores the relationship between director-specific variables, and the target outcome variable, gross revenue.
@@ -1284,15 +1284,26 @@ These correlation tests do infer that there is a slight positive correlation bet
 ggplot(sorteddirectorsummary[sorteddirectorsummary$number_of_movies >= 10,], aes(x = director_name, y = number_of_movies, fill = director_name)) + geom_bar(stat = "identity") + coord_flip() + guides(fill = FALSE) + labs(x = "", y = "Number of movies per director", title = "Top 20 directors by number of movies in sample") +  scale_y_continuous(expand = c(0,0)) +  expand_limits(y = c(0,1.05 * max(sorteddirectorsummary$number_of_movies))) + theme_few()
 ```
 
-*To discuss whether to use logarithmic scale for below boxplot. --Siow Meng*
-
 ```{r echo=FALSE,  message=FALSE, fig.width = 5, fig.height=3.5, fig.align = "left", out.extra='style="float:left"'}
 ggplot(movieswithdirectordata, aes(x = factor(more_than_ten_movies), y = gross, fill = factor(more_than_ten_movies))) + 
-    geom_boxplot() + stat_summary(fun.y = mean, colour = "darkblue", geom = "point", size = 1, show.legend = FALSE) +
+    geom_boxplot() +
+    stat_summary(fun.y = mean,
+                 colour = "darkblue",
+                 geom = "point",
+                 size = 1,
+                 show.legend = FALSE) +
     theme_bw() +
-    labs(x = "", y = "Gross", title = "Gross revenue distribution by \n number of movies per director") +
-    scale_y_continuous(label = human_num) + 
-    theme(axis.title.x = element_blank(), axis.ticks.x = element_blank(), legend.position = "None", panel.grid.major.x = element_blank()) +
+    labs(x = "",
+         y = "Gross",
+         title = "Gross revenue distribution by \n number of movies per director") +
+    scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                  labels = c("1", "100", "10,000", "1m", "100 m", "10 bn"),
+                  limits = c(1, 1e+10)) +
+    annotation_logticks(sides = "lr", colour = "gray") +
+    theme(axis.title.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          legend.position = "None",
+          panel.grid.major.x = element_blank()) +
     scale_x_discrete(labels = c("Fewer than 10", "10+"))
 ```
 
@@ -1348,8 +1359,6 @@ trainwithdirectordata$PG_13 <- factor(trainwithdirectordata$PG_13, levels=c("Not
 trainwithdirectorandgenredata <- merge(movies_and_genres_wide[3:26], trainwithdirectordata, by="movie_title")
 ```
 
-_Model summary_
-
 <center>
 ```{r echo = FALSE, results = "asis", out.extra='style="float:left"'}
 fullmodel <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews,  data=trainwithdirectorandgenredata)
@@ -1373,10 +1382,8 @@ The first full model is built using training set. The left column is trained usi
 * The duration, when included into the model has a statistically significant positive coefficient, this could be interpreted as movie-goers perceiving longer movies as more value for money or higher quality.
 * Cast total facebook likes can also be seen as a potential predictor for gross revenue, as in theory the more popular the actor (measured by facebook likes), the more people will go to see the movie to see that actor, the more tickets are sold and therefore the higher the revenue. We can see from the positive coefficient that this seems to be reflected in the data.
 * Director facebook likes is statistically significant when included into the model, interestingly with a negative coefficient. Again, this variable is at first glance positively correlated with the gross revenue, however once you take into account the number of voted users, this relationship is reversed, potentially for similar reasons to the above.
-* Key genres have been included into the model if they had statistically significant predictive power, there is a risk of overfitting here, so the variables that have been included are those that have a logical intuition, for example animated and family films are possibly more likely to be targeted to a younger audience, which may therefore have larger potential viewership, and Drama movies are the   
+* Key genres have been included into the model if they had statistically significant predictive power, there is a risk of overfitting here, so the variables that have been included are those that have a logical intuition, for example animated and family films are possibly more likely to be targeted to a younger audience, which may therefore have larger potential viewership, and Mystery and Drama genres generally contain award-nominated movies which draw high audiences.
 * The number of users for review has been included as it is statistically significant and may be correlated due to the two possible mechanisms that reviews may encourage more people to watch the movie, or the more people that see the movie, the more reviews are left.
-
-*Unfinished sentence for the second last bulleted point: "and Drama movies are the..." --Siow Meng*
 
 ####Not included into the model:
 * Movie title, director names and actor names were not included into the variable as there many different values for these variables with a small number of observations (usually one observation) for each.
@@ -1396,8 +1403,6 @@ ggplot(movies, aes(x=color)) + geom_bar() + xlab("")
 * Director number of movies, although significant individually, when other variables are taken into account loses its statistical significance, so is omitted from the model.
 
 ## Second Model (English)
-
-_Model summary_
 
 <center>
 ```{r linearmodel, echo=FALSE, results="asis"}
@@ -1447,8 +1452,6 @@ We have already discussed some of the variables not included in this model (in t
 
 ##Third Model, with only pre-known variables
 
-_Model summary_
-
 <center>
 ```{r echo=FALSE, results = "asis"}
 knownvariablesmodel <- lm(gross ~ budget + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + more_than_ten_movies, data=trainwithdirectorandgenredata)
@@ -1465,8 +1468,6 @@ stargazer(list(knownvariablesmodel, knownvariablesmodel2010), type = "html", ali
 To build a model to predict revenue of movies that have not yet been released, this model includes only variables that are known before the time of release. Our dataset provided us with number of facebook likes at a specific point in time, and to use this as part of our predictive model we would need to analyse number of facebook likes before the movie was released, however we will use what we currently have as a proxy to build the model. This model has lower predictive power (adjusted R squared of `r summary(knownvariablesmodel)$adj.r.squared`), but could be used in a more useful business context.
 
 ##Model Performance
-
-*we will then test this model using the test dataset, make a plot of the predictions against the actual values, and calculate the MSE/other success statistics*
 
 Having built the three models, we will now use the test set to test their performances. The models trained using all movies data in the training set are tested against the whole test set, whereas the models trained using post-2010 training data are tested against the post-2010 data in the test set.  
 
