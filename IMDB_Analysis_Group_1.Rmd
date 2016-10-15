@@ -31,7 +31,7 @@ The purpose of this report is to try and understand what sort of factors contrib
 
 From our analyses, we found that ...
 - Budget has the most impact on revenue out of all the variables available in the dataset 
-- Aside from budget, content total cast facebook likes, director facebook likes, ratingsm duration and key genres are also strong factors in determining whether a movie performs well in the box office or not
+- Aside from budget, content total cast facebook likes, director facebook likes, ratings duration and key genres are also strong factors in determining whether a movie performs well in the box office or not
 - Our predictive models are able predict the gross revenue with a Root-Mean-Square Error of 37-56 million USD, depending on the chosen variables in the particular model
 
 However, there are many limitations to this dataset, including a limited number of variables and a clear bias in the number of English movies vs other language movies. Thus, the conclusions drawn from this analysis needs to be verified with a more extensive data set. Moving forward, it would be very useful to obtain data from other movie databases indigenious to countries other than the US and UK e.g. *http://www.bollywoodmdb.com* for Indian Bollywood movies. Though our model is able to predict revenues considerably well for a first attempt, and specifically for movies with revenue up to 50 million USD, it still has difficulties estimating the revenue with decent accuracy for movies with even higher gross revenues. Acquiring more data points and having datasets with relevant variables different from the current ones, can help to improve the accuracy of our predictive models.
@@ -151,19 +151,17 @@ na_values <- na_values[order(na_values[, "Variable Name"]), ]
 kable(na_values, format = "markdown", align = "l", row.names = FALSE)
 ```
 
-*To discuss: since title year is not key to analysis, we shan't propose to remove the whole row altogether. Actually for this particular dataset, these records (with title year NA) has either gross=NA or budget=NA. So we can just remove the records which has budget=NA and gross=NA. -- Siow Meng*
-
 To resolve these issues, the following cleansing process is applied:
 
-* All rows where the title year has a missing value are removed - as there are a high number, and this variable is not expected to be key to the analysis.
 * All rows where gross has a missing value are removed - as there are a high number, and this variable is expected to be one of the output variables
 * All rows where the budget has a missing value are removed - as there are a high number, and this variable is expected to be key to the analysis.
-* The aspect ratio column has a missing value removed - as there are a high number of NAs, and this variable is not expected to be key to the analysis. 
+* After the above processing, there are no more rows where title year has a missing value.
+* The aspect ratio column is removed - as there are a high number of missing values, and this variable is not expected to be key to the analysis. 
 * The IMDB link column is removed - as this variable is not expected to be key to the analysis
 
 ```{r, echo = FALSE}
 ## To remove rows where NAs are present for any of the applicable columns
-movies <- movies[complete.cases(movies[c("title_year","budget","gross")]),]
+movies <- movies[complete.cases(movies[c("budget","gross")]),]
 ## To remove aspect ratio and imdb link columns
 movies$aspect_ratio <- NULL
 movies$movie_imdb_link <- NULL
@@ -194,9 +192,7 @@ movies$movie_title <- sapply(movies$movie_title, FUN = movie_title_processing)
 
 Although some of these steps reduce the sample size for analysis, the rows removed would either cause later analysis to fail, cause the dataset to be inconsistent across various pieces of analysis, or produce misleading results.
 
-This cleansed dataset (of `r nrow(movies)` rows) contains no NA values and is used for the remainder of the analysis. The head of the data frame is printed here:
-
-*\@George, I agree with your comment to include the head, I have also included the scipen option below so that the budget does not show in scientific notation, but please let me know if you think this makes it look messier*
+This cleansed dataset (of `r nrow(movies)` rows) contains no missing values and is used for the remainder of the analysis. The head of the data frame is printed here:
 
 ```{r, echo = FALSE, message = FALSE, results = "asis"}
 set.seed(1)
@@ -292,7 +288,7 @@ post2010plot <- ggplot(data = meltedmovies2010, aes(x=Var1, y=Var2, fill=value))
 grid.arrange(post2005plot, post2010plot, widths=c(2,2.4), ncol=2)
 ```
 
-To additionally look at some key statistics regarding our output variable, the maximum is $`r format(max(movies$gross), big.mark= ",")`, the minimum is $`r format(min(movies$gross), big.mark= ",")`, and the standard deviation is $`r format(sd(movies$gross), big.mark= ",")`. This high standard deviation (and therefore variance), is expected as per the theory. The distribution and log distribution can be seen below, the first of which is positively skewed, and the second is negatively skewed.
+These relationships are explored throughout this report, in particular the relationship with the target output variable, gross revenue. Additionally, to look at some key statistics regarding our output variable: the maximum is $`r format(max(movies$gross), big.mark= ",")`, the minimum is $`r format(min(movies$gross), big.mark= ",")`, and the standard deviation is $`r format(sd(movies$gross), big.mark= ",")`. This high standard deviation (and therefore variance), is expected as per the theory. The distribution and log distribution can be seen below, the first of which is positively skewed, and the second is negatively skewed.
 
 ```{r echo=FALSE}
 ##function to create human readable axis labels.
@@ -342,9 +338,9 @@ grid.arrange(reg,log,ncol=2)
 
 The descriptive analysis below focuses on individual variables and relationships in turn, drawing both from the above correlations, and from relationships between numerican and non-numerical variables.
 
-### Language  
+### English and Non-English Language Movie Comparison
 
-The following chart illustrates the changes of average gross revenues from year 1920 to 2016. We can observe a large fluctuation between 1920 and 1968, this can be attributed to the lack of data during this period. The dataset only contains `r nrow(movies[movies$title_year <= 1968, ])` records from 1920 to 1968, whereas there are `r nrow(movies[movies$title_year > 1968, ])` records of movies screened after 1968.
+The following chart illustrates the changes of average gross revenues from 1920 to 2016. We can observe a large fluctuation between 1920 and 1968, this can be attributed to the lack of data during this period. The dataset only contains `r nrow(movies[movies$title_year <= 1968, ])` records from 1920 to 1968, whereas there are `r nrow(movies[movies$title_year > 1968, ])` records of movies screened after 1968.
 
 ```{r RevByYear, echo = FALSE, fig.width = 10, fig.align = "center"}
 revYear <- ddply(movies, ~ title_year, summarise, meanRev = mean(gross, na.rm = TRUE))
@@ -356,7 +352,7 @@ ggplot(data = revYear, aes(x = title_year, y = meanRev)) +
     labs(title = "Average Gross Revenue from Year 1920 to 2016", x = "Year", y = "Average Gross Revenue") + 
     scale_x_continuous(breaks = seq(1920, 2016, 8), limits = c(1920, 2016)) +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10),
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 ```
 
@@ -364,7 +360,7 @@ The two charts below compare the gross revenues achieved by English and non-Engl
 
 For English movies, the huge fluctuations in early years are due to the small amount of movie data before year 1968. After 1968, the average gross revenue grew steadily to around US$80 million in year 2016.  
 
-For non-English movies, we can observe fluctuations across the entire period (from 1920 to 2016). This is likely caused by the lack of non-English movie data. There are only `r nrow(movies[movies$language != "English", ])` non-English movies in the dataset, compared to `r nrow(movies[movies$language == "English", ])` English movies. In recent years (after year 1990), the average gross revenue of non-English movies range from below US$10 thousand to over US$100 million.
+For non-English movies, we can observe fluctuations across the entire period (from 1920 to 2016). This is likely caused by the relative lack of non-English movie data. There are only `r nrow(movies[movies$language != "English", ])` non-English movies in the dataset, compared to `r nrow(movies[movies$language == "English", ])` English movies. In recent years (after year 1990), the average gross revenue of non-English movies range from below US$10 thousand to over US$100 million.
 
 ```{r RevByYearLanguage, echo = FALSE, fig.width = 10, fig.align = "center"}
 revLanguage <- ddply(movies, ~ title_year + language, summarise, meanRev = mean(gross, na.rm = TRUE))
@@ -377,13 +373,13 @@ ggplot(data = revLanguage, aes(x = title_year, y = meanRev, colour = language)) 
     labs(title = "Average Gross Revenue of Movies from Year 1920 to 2016", x = "Year", y = "Average Gross Revenue") + 
     scale_x_continuous(breaks = seq(1920, 2016, 8), limits = c(1920, 2016)) +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10),
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
     facet_grid(~ language) +
     theme(legend.position = "None") +
     annotation_logticks(sides = "lr", colour = "gray") 
 ```
 
-Next, we separate the movie data into two groups: USA and non-USA. From the charts below, USA movies exhibit a similar pattern as the English movies. There is still a large fluctuations within the non-USA group. The number of USA movies clearly dominate this dataset.  
+Next, we separate the movie data into two alternative groups: USA and non-USA. Comparing the charts above and below, we can see USA movies exhibit a similar pattern as the English movies. The number of USA movies clearly dominate this dataset.  
 
 ```{r RevByYearCountry, echo = FALSE, fig.width = 10, fig.align = "center"}
 revCountry <- ddply(movies, ~ title_year + country, summarise, meanRev = mean(gross, na.rm = TRUE))
@@ -397,16 +393,18 @@ ggplot(data = revCountry, aes(x = title_year, y = meanRev, colour = country)) +
     labs(title = "Average Gross Revenue of Movies from Year 1920 to 2016", x = "Year", y = "Average Gross Revenue") + 
     scale_x_continuous(breaks = seq(1920, 2016, 8), limits = c(1920, 2016)) +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10),
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
     facet_grid(~ country) +
     theme(legend.position = "None") +
     annotation_logticks(sides = "lr", colour = "gray") 
 
 ```
 
+#### IMDB Score relationship with gross revenue
+
 This subsection inspects the effect of IMDB score on gross revenue. From the two plots below, it can be observed that gross revenue is positively correlated with IMDB score for all the four groups (i.e. USA, Non-USA, English, and non-English).  
 
-From the first plot, both English and non-English movies have positive correlation between gross revenue and IMDB score. Note that non-English movies generally have much lower gross revenues and the y-axis of this plot is on logarithmic scale. As a result, English movies have stronger correlation than non-English movies (even though non-English movies seem to have higher slope). This is as expected since most (if not all) IMDB users are English speakers. A favourable IMDB score would reflect a higher popularity amongst English-speaking audiences. On the other hand, non-English movies might not be targeted to English-speaking populations. Hence a higher IMDB score might not reflect the true popularity of non-English movies.  
+From the first plot, we can see both English and non-English movies have positive correlation between gross revenue and IMDB score. Note that non-English movies generally have much lower gross revenues and the y-axis of this plot is on logarithmic scale. As a result, English movies have stronger correlation than non-English movies (even though non-English movies seem to have higher slope). This is as expected since most (if not all) IMDB users are English speakers. A favourable IMDB score would reflect a higher popularity amongst English-speaking audiences. On the other hand, non-English movies might not be targeted to English-speaking populations. Hence a higher IMDB score might not reflect the true popularity of non-English movies.  
 
 ```{r GrossVSScoreEnglish, echo = FALSE, fig.width = 10, fig.align = "center"}
 
@@ -421,7 +419,7 @@ ggplot(data = movies, aes(x = imdb_score, y = gross, colour = english)) +
          x = "IMDB Score", y = "Gross Revenue") + 
     scale_colour_discrete(name = "Languages") +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10),
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
     scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 
@@ -438,7 +436,7 @@ ggplot(data = movies, aes(x = imdb_score, y = gross, colour = us_or_others)) +
     labs(title = "Gross Revenue against IMDB Score for USA and non-USA Movies", x = "IMDB Score", y = "Gross Revenue") + 
     scale_colour_discrete(name = "Countries") +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10),
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
     scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 
@@ -446,10 +444,7 @@ ggplot(data = movies, aes(x = imdb_score, y = gross, colour = us_or_others)) +
 
 ### Country
 
-In this section, we look at whether the country of origin has a huge influence on:
-
-1. The number of movies a country produces.
-2. The revenue that a movie generates. 
+In this section, we look at whether the country of origin has a huge influence on: The number of movies a country produces, and the revenue that a movie generates. 
 
 Then, we check if there is any relationship between the gross revenue and IMDB score for countries with more than 10 movies.
 
@@ -474,12 +469,20 @@ ggplot(data = topcountries, aes(x = country, y = freq, fill = country)) +
 
 # Subsetting the countries with 10 or more movies
 countries <- subset(movies, country %in% c("Australia", "Canada", "China", "France", "Germany", "Hong Kong", "India", "Italy", "Japan", "Spain", "UK", "USA"))
+```
 
+Looking at the barplot, we observe that the number of movies originating in USA is almost 10 times that of UK. Also, the largest number of movies originate from Europe. On the other end, fewer than 20 movies in our dataset originate from Asia.
+
+```{r echo = FALSE, fig.width = 10, fig.align = "center", message=FALSE, warning=FALSE}
 # Plot of gross revenue for the above countries
 gross <- countries$gross
 ggplot(countries, aes(country, gross, fill = country)) + 
-    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(title = "Gross revenue of movies by country", x = "", y = "Gross revenue") + theme_bw() + theme(legend.position = "None") + theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank()) + scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) 
+    geom_boxplot() + stat_summary(fun.y=mean, colour="red", geom="point", size=1, show.legend = FALSE) + labs(title = "Gross revenue of movies by country", x = "", y = "Gross revenue") + theme_bw() + theme(legend.position = "None") + theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank()) + scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) 
+```
 
+Next, we look at the gross revenues for the countries with 10 or more movies. The boxplots above indicate that the movies originating from these countries have a mean revenue of 1 million. All USA releases in our dataset generated more than 10 million, and at least 50% of movies from Australia, UK, Japan and Germany generated revenues of over 10 million. On the other hand, no movies from India, China and Italy in our dataset generated more than 10 million.
+
+```{r echo = FALSE, fig.width = 10, fig.align = "center", message=FALSE, warning=FALSE}
 # Plot of gross revenue vs IMDB score for the above countries
 score <- countries$imdb_score
 ggplot(countries, aes(x = score, y = gross, colour = country)) + 
@@ -488,32 +491,23 @@ ggplot(countries, aes(x = score, y = gross, colour = country)) +
   theme_few() + 
   theme(legend.position = "None") + 
     scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("100", "10,000", "1 million", "100 millions", "1 billion")) +
+                  labels = c("100", "10,000", "1 million", "100 million", "1 billion")) +
     geom_jitter(alpha = 0.2) + 
     labs(title = "IMDB Score and Gross Revenue for different countries", x = "IMDB Score", y = "Gross Revenue") +
     facet_wrap(~ country, nrow = 2) +
     theme_bw() + 
     theme(legend.position = "None") + 
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
     scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 ```
 
-Looking at the barplot, we observe that the number of movies originating in USA is almost 10 times that of UK. Also, the most number of movies originate from Europe. On the other end, no more than 20 movies in our dataset originate from asia.
-
-Next, we will look at the gross revenues for the countries with 10 or more movies. The boxplots indicate that the movies originating from these countries have a mean revenue of 1 million. All USA releases generate more than 10 million. At least 50% of movies from Australia, UK, Japan and Germany generate revenues of over 10 million. On the other hand, no movies from India, China and Italy generate more than 10 million.
-
-Lastly, when we look at the scatterplots, we see that UK & US movies seem to show some symmetry about 'y = x' but the other countries have too few movies to determine whether there is any relationship between gross revenue and IMDB score.
-
+Lastly, when we look at the scatterplots, we see that UK & US movies seem to show some symmetry about 'y = x', with no immediately obvious correlation, but the other countries have too few movies to determine whether there is any relationship between gross revenue and IMDB score.
 
 ### Budget
 
 For movie budget, it has been remarked by IMDB that the reported figures on the website are the 'negative costs' of a movie, so purely the production costs and excluding advertising and promotion costs. IMDB has also remarked that the budget costs are not very accurate and may actually be a estimate ballpark, as they can be very difficult to calculate and reported budgets may increase over time.
-
-1. Budget of movies
-
-2. Budget of films in the top 13 countries (with 10 or more movies in the data set, the rest have been omitted)
 
 ```{r, echo = FALSE, message = FALSE, fig.width = 10, fig.align = "center"}
 ##Histogram for movie budget
@@ -521,12 +515,16 @@ ggplot(data = movies, aes(x = budget)) +
     geom_histogram(fill = "#FF9999", colour = "black") + 
     theme_bw() +
     scale_x_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) + 
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) + 
     labs(x = "Budget (USD)", y = "Count", title = "Budget of Movies") +
     annotation_logticks(sides = "tb", colour = "gray") 
 
 #movieswithinrange <- count(movies$budget > 1000000 & movies$budget < 100000000)
+```
 
+From the above histogram with count of movies across different budgets, we can see most movies are around the ballpark range of 1 million to 100 million, with around 85% of the movies falling under the range of 1 million to 100 million. A negative skew in the data can be observed. 
+
+```{r echo = FALSE, message = FALSE, fig.width = 10, fig.align = "center"}
 
 ##Country vs budget boxplot
 
@@ -549,16 +547,14 @@ ggplot(budgetcountry, aes(x = country, y = budget, fill = country)) +
     theme_bw() +  theme(legend.position="none") + 
     theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank()) + 
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10))
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10))
 ```
 
-From the histogram with count of movies across different budgets, we can see most movies are around the ballpark range of 1 million to 100 million, with around 85% of the movies falling under the range of 1 million to 100 million. A negative skew in the data can be observed. 
-
-From the boxplots, we can see that the average budget on the films across different countries is similar, around a ballpark range of 10 million to 100 million. Mexico and Italy appears to have a lower average for film budget than the rest of ther other countries. (the data has been subsetted to include only countries with over 10 movies in the data set)
+The boxplots above show the budget of films in the top 13 countries - these are countries with 10 or more movies in the data set, the rest have been omitted. From this, we can see that the average budget on the films across different countries is similar, around a ballpark range of 10 million to 100 million. Mexico and Italy appears to have a lower average for film budget than the rest of ther other countries.
 
 ### Genres
 
-Next, we will try to find out some information about the genres the movies belong to and some summary statistics for them. We must note that each movie may belong to more than one genre. In that case, each movie is counted as many times as the number of genres it belongs to. In the following graphs, we only present the most popular genres. The less popolar genres which include less than 10 movies have been omitted.
+In this section we will explore some information about the genres of the movies in our dataset, and some summary statistics for them. We must note that each movie may belong to more than one genre. In that case, in this section each movie is counted as many times as the number of genres it belongs to. In the following graphs, we only present the most popular genres. The less popular genres which include less than 10 movies have been omitted.
 
 The first graph shows the number of movies per genre. Dramas and comedies are by far the most popular genres, followed by thriller, action and romance movies. 
 
@@ -634,17 +630,17 @@ ggplot(movies_and_genres, aes(genre, gross, fill = genre)) +
     theme(legend.position = "None") +
     theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank(), axis.title.y = element_blank()) + 
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10))
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10))
 ```
 
-Finally, we observe the diffirences between genres based not only on their gross revenue but also on theit IMDB score. 
+Finally, we observe the differences between genres based not only on their gross revenue but also on their IMDB score. 
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # Scatter plots of genres based on gross and imdb score
 ggplot(movies_and_genres, aes(x = score, y = gross, colour = genre)) + 
     geom_jitter(alpha = 0.1) +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
     scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
     labs(title = "Gross Revenue and IMDB score for different genres", y = "Gross Revenue", x = "IMDB Score") +
     facet_wrap(~ genre) +
@@ -655,7 +651,7 @@ ggplot(movies_and_genres, aes(x = score, y = gross, colour = genre)) +
 
 ### Plot Keywords
 
-We perform a similar analysis to the previous one, but this time based on plot keywords. Again, each movie may have more than one keywords that describe its plot. However, if one movie has more than one keywords, we will count it as many times as the keywords used to describe it. To simplify things, we will only look at the 20 most popular keywords, as the vast majority of all the possible keywords appear only a few times in the whole dataset and doesn't provide us with useful insights. As we see, the most popular keywords are love, friend, murder and death, followed by some less usual ones.
+In this section, we perform a similar analysis to the above, but this time based on plot keywords. Again, each movie may have more than one keyword that describes its plot. However, if a movie has more than one keyword, we will count it as many times as the keywords used to describe it. To simplify things, we will only look at the 20 most frequently used keywords, as the vast majority of all the possible keywords appear only a few times in the whole dataset and do not provide us with useful insights. As we see, the most frequently used keywords are love, friend, murder and death, followed by some less usual ones.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 movies0 <- movies[movies$plot_keywords != "", ]
@@ -709,7 +705,7 @@ ggplot(keywords_sum, aes(x = keywords, y = sum, fill = keywords)) +
           axis.title.x = element_blank(), axis.title.y = element_blank()) 
 ```
 
-Same as before, we create a boxplot graph based on the keywords to observe how gross revenue is distributed among the most popular plot keywords. We observe that the differences in the distribution of gross revenue among keywords are not that great in comparison with those based on genres. Interestingly, however, it seems that the most popular keywords are not the ones that bring the greatest gross revenue, while somee less populat keywords appear to bring greatest gross revenue on average.
+Similarly to the genre analysis, we create a boxplot graph based on the keywords to observe how gross revenue is distributed among the most frequently used plot keywords. We observe that the differences in the distribution of gross revenue among keywords are not that large in comparison with those based on genres. Interestingly, however, it seems that the most frequently used keywords are not the ones that bring the greatest gross revenue, while some less frequently used keywords appear to bring the greatest gross revenue on average.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 ## Create an appropriate dataframe with gross, imdb_score and keywords    for each movie
@@ -731,17 +727,17 @@ ggplot(movies_and_keywords, aes(keywords, gross, fill = keywords)) +
     theme(legend.position = "None") +
     theme(axis.ticks.y = element_blank(), panel.grid.major.y = element_blank(), axis.title.x = element_blank(), axis.title.y = element_blank()) + 
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10))
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10))
 ```
 
-Again, we observe the diffirences between plot keywords based not only on their gross revenue but also on theit IMDB score. 
+Again, we observe the differences between plot keywords based not only on their gross revenue but also on their IMDB score. 
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # Scatter plots of keywords based on gross and imdb score
 ggplot(movies_and_keywords, aes(x = score, y = gross, colour = keywords)) + 
     geom_jitter(alpha = 0.2) +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
     scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), limits = c(1, 10)) +
     labs(title = "Gross Revenue and IMDB score for different keywords", y = "Gross Revenue", x = "IMDB Score") +
     facet_wrap(~ keywords, nrow = 4) +
@@ -749,8 +745,6 @@ ggplot(movies_and_keywords, aes(x = score, y = gross, colour = keywords)) +
     theme(legend.position = "None") +
     annotation_logticks(sides = "lr", colour = "gray") 
 ```
-
-*Should we move the "IMDB score of movies by keyword" plot to appendix? -- Siow Meng*
 
 ### Gross revenue over time
 
@@ -785,7 +779,7 @@ convert_decade <- function(year){
 movies$decade <- sapply(movies$title_year, FUN = convert_decade)
 ```
 
-Whereas in the past, movies were the principal source of entertainment, there are today several other sources to consider. While they are not consumed in the same way, they can be considered serious competitors to the classic movie. Some of the sources are high budget TV-Shows, video games, and user created content to name a few. It is therefore of interest to analyse the development of gross revenue over time.
+Whereas in the past, movies were a principal source of entertainment, there are today several other sources to consider. While they are not consumed in the same way, they can be considered serious competitors to the classic movie. Some of these sources are high budget TV-Shows, video games, and user created content to name a few. It is therefore of interest to analyse the development of gross revenue over time.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # plot gross vs. years
@@ -796,13 +790,13 @@ ggplot(temp, aes(x = factor(title_year), y = gross, fill = factor(title_year))) 
     theme(axis.text.x=element_text(angle = 45, hjust = 0.5, vjust = 0.5), legend.position = "None", axis.title.x = element_blank()) +
     labs(title = "Gross Revenue from 1920 to 2016", x = "", y = "Gross Revenue") + 
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billion"), limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
     scale_x_discrete(breaks = seq(1920, 2016, 2), labels = seq(1920, 2016, 2), drop = FALSE) +
     annotation_logticks(sides = "lr", colour = "gray") 
 
 ```
 
-The above plot shows gross revenue against from 1920 to 2016. Overall the plot shows a slight upward trend. However, there are two sections with distinct behaviors. The first section includes movies from 1920 to 1972 and shows a big variance between mean gross revenue for different years. The second section includes movies from 1972 to onwards. This section shows a smaller variance in mean gross revenue for different years. In addition, the plot has more outliers with low revenues than outliers with high revenues. Several release years, however, include fewer than ten movies and can therefore not be considered representative of a year's gross revenue. To get a more accurate picture the following two plots remove years with less than ten entries.
+The above plot shows gross revenue against from 1920 to 2016. Overall the plot shows a slight upward trend. However, there are two sections with distinct behaviors. The first section includes movies from 1920 to 1972 and shows a large variance between mean gross revenue for different years. The second section includes movies from 1972 to onwards. This section shows a smaller variance in mean gross revenue for different years. In addition, the plot has more outliers with low revenues than outliers with high revenues. Several release years, however, include fewer than ten movies and can therefore not be considered representative of a year's gross revenue. To get a more accurate picture the following two plots remove years with less than ten entries.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 # plot all years that have at least ten movies
@@ -817,7 +811,7 @@ p1 <- ggplot(temp, aes(x = factor(title_year), y = gross, fill = factor(title_ye
     theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5), legend.position = "None", axis.title.x = element_blank()) +
     labs(title = "Gross Revenue for Years with more than 10 Movies", x = "", y = "Gross Revenue") +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "1 billions"),  limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "1 billion"),  limits = c(1, 1e+10)) +
    annotation_logticks(sides = "lr", colour = "gray") 
 
 lm_model2 <- lm(log10(gross) ~ title_year, data = temp)
@@ -832,7 +826,7 @@ p2 <- ggplot(temp, aes(x = title_year, y = gross, colour = factor(title_year))) 
     theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5), legend.position = "None", axis.title.x = element_blank()) +
     scale_x_continuous(breaks = seq(min(temp$title_year), max(temp$title_year), by = 1), 0.5) +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 
 grid.arrange(p1, p2, ncol=1)
@@ -854,7 +848,7 @@ p1 <- ggplot(temp, aes(x = factor(title_year), y = gross, fill = factor(title_ye
     theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5), legend.position = "None", axis.title.x = element_blank()) +
     labs(title = "Gross Revenue from 2005 to 2016", x = "", y = "Gross Revenue") +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "1 billions"),  limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "1 billion"),  limits = c(1, 1e+10)) +
    annotation_logticks(sides = "lr", colour = "gray") 
 
 lm_model2 <- lm(log10(gross) ~ title_year, data = temp)
@@ -869,13 +863,13 @@ p2 <- ggplot(temp, aes(x = title_year, y = gross, colour = factor(title_year))) 
     theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5), legend.position = "None", axis.title.x = element_blank()) +
     scale_x_continuous(breaks = seq(min(temp$title_year), max(temp$title_year), by = 1), 0.5) +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
     annotation_logticks(sides = "lr", colour = "gray") 
 
 grid.arrange(p1, p2, ncol=1)
 ```
 
-The above plot shows the development of gross revenue since the release of Facebook in 2005. There is an upward trend compared to the plot with displaying years with more than ten entries.
+The above plot shows the development of gross revenue since the release of Facebook in 2005. There is an upward trend (note, the y axis is logarithmic), which is a different pattern compared to the plot with displaying all years with more than ten entries.
 
 ```{r, echo = FALSE}
 # create function that converts years into decades
@@ -921,9 +915,7 @@ dirpercentage <- round(100 * length(sorteddirectorsummary$number_of_movies[sorte
                        / length(sorteddirectorsummary$number_of_movies), 2)
 ```
 
-Before looking into the relationship with the key output variable, gross revenue, descriptive statistics of the director data are explored. There are `r nrow(sorteddirectorsummary)` distinct directors in the data sample, the density of movies per director is shown on the figure on the right.
-
-This is clearly positively skewed, with many directors having only 1 movie in the dataset, and only a few having significantly more. In fact, approximately  `r dirpercentage`% of those directors have only 1 movie in the top 5000, leaving `r 100-dirpercentage`% that have more than 1.
+Before looking into the relationship with the key output variable, gross revenue, we look into some descriptive statistics of the director data in the sample. There are `r nrow(sorteddirectorsummary)` distinct directors represented, the density of movies per director is shown on the figure on the right. This is clearly positively skewed, with many directors having only one movie in the dataset, and only a few having significantly more. In fact, approximately  `r dirpercentage`% of those directors have only one movie in this sample, leaving `r 100-dirpercentage`% that have more than one.
 
 ```{r echo=FALSE}
 ##add # of movies per director to the main dataset.
@@ -936,11 +928,11 @@ movieswithdirectordata <- rename(movieswithdirectordata, c('number_of_movies' = 
 ggplot(movieswithdirectordata, aes(x = dir_number_of_movies, y = gross)) + 
     geom_jitter(alpha = 0.1, width = 1) +
     theme_bw() +
-    labs(x = "Number of movies\nper director", y = "Gross Revenue") + 
-    scale_y_continuous(label = human_usd) + 
+    labs(x = "Number of movies\nper director", y = "Gross Revenue") + scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
+    annotation_logticks(sides = "lr", colour = "gray") + 
     scale_x_continuous(breaks = c(0, 5, 10, 15, 20, 25, 30), limits = c(0, 30)) +
     geom_smooth()
-##*Shall I convert the y-axis of the following graphs into log scale? I also set the limits of x-axis to [0, 30] and we miss 1 observation with x value >100. --George*##
 ```
 
 An initial look at the relationship between the number of movies that the director has in the dataset, and the gross revenue of those movies does not show a clearly defined correlation, which can be seen in the figure on the left.
@@ -950,13 +942,12 @@ To check against one potential confounder for the relationship that number of mo
 
 ```{r echo=FALSE}
 c <- cor.test(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget)
-pander(c, caption="")
+pander(c, caption=paste("Pearson's Product-Moment Correlation test for number of movies per director against budget, correlation =",round(cor(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget),3)))
 ```
-*Do we use percentage sign to display correlation value? -- Siow Meng*
 
-Even though this correlation was found to be statistically significant, with a p-value of `r c$p.value`, it is quite small (`r round(cor(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget), 3)`%), so the analysis of movies by director sample on gross revenue can be continued without an obvious confounder of budget.
+Even though this correlation was found to be statistically significant, with a p-value of `r c$p.value`, it is quite small (`r round(cor(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget), 3)`), so analysis of movies by director sample on gross revenue can be continued without an obvious confounder of budget.
 
-Focusing on the relationship between gross revenue and number of movies per director with the additional dimension of genres, there is an approximate pattern of a positive correlation up to 10 movies by director, and then a less predictable path for those with directors with higher numbers of movies.
+Focusing on the relationship between gross revenue and number of movies per director with the additional dimension of genres, we can see from the figure below there is an approximate pattern of a slight positive correlation up to 10 movies by director (also note the y axis is of log scale), and then a less predictable path for those with directors with higher numbers of movies.
 
 ```{r echo = FALSE}
 movies_and_genres_withdirectordata <- merge(movies_and_genres, movieswithdirectordata[,c("movie_title","dir_number_of_movies")], by = "movie_title")
@@ -965,8 +956,10 @@ movies_and_genres_withdirectordata <- merge(movies_and_genres, movieswithdirecto
 ```{r echo = FALSE, fig.width = 10, fig.align = "center", warning = FALSE, message = FALSE}
 ##requires the above
 ggplot(movies_and_genres_withdirectordata, aes(x = dir_number_of_movies, y = gross, colour = genre)) + 
-  geom_jitter(alpha = 0.1) + 
-    scale_y_continuous(label=human_usd) + 
+  geom_jitter(alpha = 0.1) +
+    labs(x = "Number of movies\nper director", y = "Gross Revenue") + scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
+                  labels = c("1", "100", "10,000", "1m", "100 m", "10 bn"), limits = c(1, 1e+10)) +
+    annotation_logticks(sides = "lr", colour = "gray") + 
     labs(title = "Gross Revenue and # of director movies for different genres", x = "# of Movies by Director", 
          y = "Gross Revenue") + 
     facet_wrap(~ genre) + 
@@ -988,17 +981,12 @@ movieswithdirectordata$more_than_ten_movies <- factor(movieswithdirectordata$mor
 ##calculate the percentage of movies where the director has more than ten movies
 morethantenmovpercentage <- round(100*length(movieswithdirectordata$more_than_ten_movies[movieswithdirectordata$more_than_ten_movies == "10+"])/length(movieswithdirectordata$more_than_ten_movies), 2)
 ```
-Only approximately `r morethantendirpercentage`% directors have more than ten movies, which, when considering movies, constitutes approximately `r morethantenmovpercentage`% of movies in our sample.
+
+In terms of the impact that this pattern may have on our dataset, only approximately `r morethantendirpercentage`% directors have more than ten movies, which, when considering movies, constitutes approximately `r morethantenmovpercentage`% of movies in our sample, so the positive trend at the low end of the scale may be more useful in prediction than the behaviour at the higher end.
 
 # Inferential Data Analysis
 
-*For now, each have a section with one comparison and test/set of tests (t.test, var.test, cor.test etc.), it is expected this section will also include plots, later we can discuss how this flows into a narrative - we should let everyone in the slack group know what we're doing so that we don't overlap unecessarily*
-
-*It is expected that these will be related to how inputs are correlated with the two outcome variables (gross and imdb_score)*
-
 ### Language and Country  
-
-*The boxplots below are drawn on normal scale since we'll want to visualize the huge variance difference between English and non-English movies. The coord_cartesian is used to set the y range while not discarding the values outside of this range.*  
 
 From the descriptive analysis section, we learned that the English movies (in this dataset) are generally more popular than non-English movies. In this section, we shall perform hypothesis testing to check if there is any statistically significant difference in the average gross revenues achieved by English and non-English movies.  
 
@@ -1015,8 +1003,8 @@ ggplot(data = movies, aes(x = english, y = gross, fill = english)) +
     labs(title = "Gross Revenue of English and non-English Movies", 
          x = "", y = "Gross Revenue") + 
     scale_y_continuous(breaks = c(0, 15e+06, 30e+06, 45e+06, 60e+06, 75e+06), 
-                       labels = c("0", "15 millions", "30 millions", "45 millions", 
-                                  "60 millions", "75 millions")) + 
+                       labels = c("0", "15 million", "30 million", "45 million", 
+                                  "60 million", "75 million")) + 
     coord_cartesian(ylim = c(0, 80e6)) + 
     theme(legend.position = "none", axis.ticks.x = element_blank(), 
           panel.grid.major.x = element_blank(), axis.title.x = element_blank())
@@ -1050,8 +1038,8 @@ ggplot(data = movies, aes(x = us_or_others, y = gross, fill = us_or_others)) +
     labs(title = "Gross Revenue of USA and non-USA Movies", 
          x = "", y = "Gross Revenue") + 
     scale_y_continuous(breaks = c(0, 15e+06, 30e+06, 45e+06, 60e+06, 75e+06), 
-                       labels = c("0", "15 millions", "30 millions", "45 millions", 
-                                  "60 millions", "75 millions")) + 
+                       labels = c("0", "15 million", "30 million", "45 million", 
+                                  "60 million", "75 million")) + 
     coord_cartesian(ylim = c(0, 80e6)) + 
     theme(legend.position = "none", axis.ticks.x = element_blank(), 
           panel.grid.major.x = element_blank(), axis.title.x = element_blank())
@@ -1099,7 +1087,7 @@ ggplot(topratedmovies, aes(contentrating, contentgross, fill = contentrating)) +
     labs(title = "Gross Revenue of movies by rating", x = "Content Rating", y = "Gross Revenue") +
     theme_bw() +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
     theme(legend.position = "none", axis.ticks.x = element_blank(), panel.grid.major.x = element_blank()) +
     annotation_logticks(sides = "lr", colour = "gray") 
 
@@ -1134,9 +1122,9 @@ ggplot(data = movies, aes(x = budget, y = gross)) +
     theme_bw() + 
     labs(x = "Budget", y = "Gross Revenue", title = "Budget versus Gross Revenue") +
     scale_x_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
     annotation_logticks(sides = "tlbr", colour = "gray") 
 
 #covariance test
@@ -1156,9 +1144,9 @@ ggplot(budgetcountry, aes(x = budget, y = gross, colour = country)) +
     labs(title = "Budget and Gross Revenue for different countries", x = "Budget", y = "Gross Revenue") +       
     theme_bw() + 
     scale_x_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
     scale_y_log10(breaks = c(1, 1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("1", "100", "10,000", "1 million", "100 millions", "10 billions"), limits = c(1, 1e+10)) +
+                  labels = c("1", "100", "10,000", "1 million", "100 million", "10 billion"), limits = c(1, 1e+10)) +
     annotation_logticks(sides = "tlbr", colour = "gray") +
     facet_wrap(~ country) +
     theme(legend.position = "None")
@@ -1193,16 +1181,16 @@ ggplot() +
                   label = avg_gross[seq(2, dim(avg_gross)[1], 2), ]$genre), 
                   check_overlap = F, nudge_y = 0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
     scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                  labels = c("100", "10,000", "1 million", "100 millions", "1 billion")) +
+                  labels = c("100", "10,000", "1 million", "100 million", "1 billion")) +
     scale_x_log10(breaks = c(0.15e+08, 0.5e+08, 1e+08), 
-                  labels = c("15 millions", "50 millions", "100 millions")) +
+                  labels = c("15 million", "50 million", "100 million")) +
     labs(title = "Gross Revenue for different genres", x = "Predicted Gross Revenue", y = "Observed Gross Revenue") +
     theme_bw() + 
     theme(legend.position = "None") + 
     annotation_logticks(sides = "tlbr", colour = "gray") 
 ```
 
-We see that Documentaries are the less prfitable by far with an average estimated gross revenue of US$ `r round(min(avg_gross$predicted_gross)/10^6, 2)` millions, while the most profitable ones appear to be Animation movies, with a gross revenue of US$ `r round(max(avg_gross$predicted_gross)/10^6, 2)` millions, followed by Adventure, Family, Fantasy and Action movies. The difference between the highest and lowest average gross revenues based on genres is US$ `r round((max(avg_gross$predicted_gross) - min(avg_gross$predicted_gross))/10^6, 2)` millions. The rest genres appear to have more or less the same predicted gross revenue. To find out if those differences in the predicted  gross revenue values are significant, we will perform some T-tests between the average gross revenues of movies of different genres, which are actually corresponging to the predicted gross revenue values.
+We see that Documentaries are the less prfitable by far with an average estimated gross revenue of US$ `r round(min(avg_gross$predicted_gross)/10^6, 2)` million, while the most profitable ones appear to be Animation movies, with a gross revenue of US$ `r round(max(avg_gross$predicted_gross)/10^6, 2)` million, followed by Adventure, Family, Fantasy and Action movies. The difference between the highest and lowest average gross revenues based on genres is US$ `r round((max(avg_gross$predicted_gross) - min(avg_gross$predicted_gross))/10^6, 2)` million. The rest genres appear to have more or less the same predicted gross revenue. To find out if those differences in the predicted  gross revenue values are significant, we will perform some T-tests between the average gross revenues of movies of different genres, which are actually corresponging to the predicted gross revenue values.
 
 ```{r echo = FALSE, results="asis"}
 pander(t.test(movies_and_genres_full$gross[movies_and_genres_full$genre == "Animation"], movies_and_genres_full$gross[movies_and_genres_full$genre == "Documentary"]), caption = "T-Test for Gross Revenue between Animation and Documentary movies")
@@ -1244,16 +1232,16 @@ ggplot() +
                    label = avg_gross[seq(2, dim(avg_gross)[1], 2), ]$keywords), 
                check_overlap = F, nudge_y = 0.2, nudge_x = 0, size = 3, angle = 45, fontface = "bold") + 
     scale_y_log10(breaks = c(1e+02, 1e+04, 1e+06, 1e+08, 1e+10), 
-                labels = c("100", "10,000", "1 million", "100 millions", "1 billion")) +
+                labels = c("100", "10,000", "1 million", "100 million", "1 billion")) +
     scale_x_log10(breaks = c(0.3e+08, 0.5e+08, 0.7e+08), 
-                labels = c("30 millions", "50 millions", "70 millions")) +
+                labels = c("30 million", "50 million", "70 million")) +
     labs(title = "Gross Revenue for different keywords", x = "Predicted Gross Revenue", y = "Observed Gross Revenue") +
     theme_bw() + 
     theme(legend.position = "None") +
     annotation_logticks(sides = "tlbr", colour = "gray") 
 ```
 
-In contrast with the genres of the movies, the differences  in the average gross revenue based on the keywords is not that great. In particular, among the 20 most populat keywords *alien* seems to be the most profitable and *boy* the less profitable one with predicted gross revenues of US$ `r round(max(avg_gross$predicted_gross)/10^6, 2)` millions and US$ `r round(min(avg_gross$predicted_gross)/10^6, 2)` millions respectively. The difference between those two is US$ `r round((max(avg_gross$predicted_gross) -  min(avg_gross$predicted_gross))/10^6, 2)` millions. Same as before, we will perform some T-tests between the average gross revenues of the movies with the most and least profitable plot keywords in order to find out if those differences are significant.
+In contrast with the genres of the movies, the differences  in the average gross revenue based on the keywords is not that great. In particular, among the 20 most populat keywords *alien* seems to be the most profitable and *boy* the less profitable one with predicted gross revenues of US$ `r round(max(avg_gross$predicted_gross)/10^6, 2)` million and US$ `r round(min(avg_gross$predicted_gross)/10^6, 2)` million respectively. The difference between those two is US$ `r round((max(avg_gross$predicted_gross) -  min(avg_gross$predicted_gross))/10^6, 2)` million. Same as before, we will perform some T-tests between the average gross revenues of the movies with the most and least profitable plot keywords in order to find out if those differences are significant.
 
 ```{r echo=FALSE}
 pander(t.test(movies_and_keywords_full$gross[movies_and_keywords_full$keywords == "alien"], movies_and_keywords_full$gross[movies_and_keywords_full$keywords == "boy"]), caption = "T-Test for Gross Revenue between alien and boy keywords")
