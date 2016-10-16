@@ -154,7 +154,6 @@ To resolve these issues, the following cleansing process is applied:
 
 * All rows where gross has a missing value are removed - as there are a high number, and this variable is expected to be one of the output variables
 * All rows where the budget has a missing value are removed - as there are a high number, and this variable is expected to be key to the analysis.
-<<<<<<< HEAD
 * After the above processing, there are no more rows where title year has a missing value.
 * The aspect ratio column is removed - as there are a high number of missing values, and this variable is not expected to be key to the analysis. 
 * The IMDB link column is removed - as this variable is not expected to be key to the analysis
@@ -1370,6 +1369,13 @@ fullmodel2010 <- lm(gross ~ budget + num_voted_users + PG_13 + duration + cast_t
 stargazer(list(fullmodel, fullmodel2010), type = "html", align = TRUE, column.labels=c("For all years", "From 2010 onwards"),
           dep.var.labels = "Gross revenue", no.space = TRUE, title = "Linear Regression results")
 
+# Log Model
+fullmodel_log <- lm(log(gross) ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews,  data = trainwithdirectorandgenredata)
+
+fullmodel2010_log <- lm(log(gross) ~ budget + num_voted_users + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + num_user_for_reviews,  data = trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >=2010,])
+
+stargazer(list(fullmodel_log, fullmodel2010_log), type = "html", align = TRUE, column.labels=c("For all years", "From 2010 onwards"),
+          dep.var.labels = "Log(Gross revenue)", no.space = TRUE, title = "Linear Regression results (Log Model)")
 ```
 </center>
 
@@ -1427,6 +1433,22 @@ englishmodel2010 <- lm(gross ~ budget + movie_facebook_likes + cast_total_facebo
 stargazer(list(englishmodel, englishmodel2010), type = "html", align = TRUE, 
           column.labels=c("For all years", "From 2010 onwards"),
           dep.var.labels = "Gross revenue", no.space = TRUE, title = "Linear Regression results")
+
+##Log Model
+englishmodel_log <- lm(log(gross) ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes 
+              + imdb_score + PG_13 + Action + Adventure + Animation + Documentary + Fantasy + Family 
+              + us_or_others + english, 
+              data = trainwithdirectorandgenredata)
+
+englishmodel2010_log <- lm(log(gross) ~ budget + movie_facebook_likes + cast_total_facebook_likes + director_facebook_likes 
+                  + imdb_score + PG_13 + Action + Adventure + Animation + Documentary + Fantasy + Family 
+                  + us_or_others + english, 
+                  data = trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year >= 2010, ])
+
+stargazer(list(englishmodel_log, englishmodel2010_log), type = "html", align = TRUE, 
+          column.labels=c("For all years", "From 2010 onwards"),
+          dep.var.labels = "Log(Gross revenue)", no.space = TRUE, title = "Linear Regression results (Log Model)")
+
 ```
 </center>
 
@@ -1462,6 +1484,13 @@ knownvariablesmodel2010 <- lm(gross ~ budget + PG_13 + duration + cast_total_fac
 
 stargazer(list(knownvariablesmodel, knownvariablesmodel2010), type = "html", align = TRUE, column.labels=c("For all years", "From 2010 onwards"), 
           dep.var.labels = "Gross revenue", no.space = TRUE, title = "Linear Regression results")
+
+knownvariablesmodel_log <- lm(log(gross) ~ budget + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + more_than_ten_movies, data=trainwithdirectorandgenredata)
+
+knownvariablesmodel2010_log <- lm(log(gross) ~ budget + PG_13 + duration + cast_total_facebook_likes + director_facebook_likes + Animation + Family + Mystery + Drama + more_than_ten_movies, data=trainwithdirectorandgenredata[trainwithdirectorandgenredata$title_year>=2010, ])
+
+stargazer(list(knownvariablesmodel_log, knownvariablesmodel2010_log), type = "html", align = TRUE, column.labels=c("For all years", "From 2010 onwards"), 
+          dep.var.labels = "Log(Gross revenue)", no.space = TRUE, title = "Linear Regression results (Log Model)")
 ```
 </center>
 
@@ -1520,6 +1549,28 @@ rownames(rmsetable) <- c("Full Model", "English Model", "Known Variables Model")
 colnames(rmsetable) <- c("Model using all data", "Model using post 2010 data")
 pander(rmsetable, format="markdown")
 
+## Log Model
+##calculate the prediction and RMSE for all 3 models using all data and data post 2010
+fullmodelpre_log <- exp(predict(fullmodel_log, test))
+fullmodelrmse_log <- sqrt(mean((fullmodelpre_log - test$gross)^2))
+englishmodelpre_log <- exp(predict(englishmodel_log, test))
+englishmodelrmse_log <- sqrt(mean((englishmodelpre_log - test$gross)^2))
+knownvariablesmodelpre_log <- exp(predict(knownvariablesmodel_log, test))
+knownvariablesmodelrmse_log <- sqrt(mean((knownvariablesmodelpre_log - test$gross)^2))
+
+fullmodel2010pre_log <- exp(predict(fullmodel2010_log, test[test$title_year >= 2010, ]))
+fullmodel2010rmse_log <- sqrt(mean((fullmodel2010pre_log - test$gross[test$title_year >= 2010])^2))
+englishmodel2010pre_log <- exp(predict(englishmodel2010_log, test[test$title_year >= 2010, ]))
+englishmodel2010rmse_log <- sqrt(mean((englishmodel2010pre_log - test$gross[test$title_year >= 2010])^2))
+knownvariablesmodel2010pre_log <- exp(predict(knownvariablesmodel2010_log, test[test$title_year >= 2010, ]))
+knownvariablesmodel2010rmse_log <- sqrt(mean((knownvariablesmodel2010pre_log - test$gross[test$title_year >= 2010])^2))
+
+##turn RMSE data into a table for display with columns of "all data" and "post 2010", and rows of model type
+rmsetable_log <- data.frame(alldata=c(fullmodelrmse_log, englishmodelrmse_log, knownvariablesmodelrmse_log), post2010 = c(fullmodel2010rmse_log, englishmodel2010rmse_log, knownvariablesmodel2010rmse_log))
+rownames(rmsetable_log) <- c("Full Model (Log)", "English Model(Log)", "Known Variables Model (Log)")
+colnames(rmsetable_log) <- c("Model using all data", "Model using post 2010 data")
+pander(rmsetable_log, format="markdown")
+
 ```
 
 For each test scenario, we included two plots:  
@@ -1553,6 +1604,33 @@ plot4 <- ggplot(data = dffullmodel2010, aes(x = y_predict, y = y_actual - y_pred
     coord_cartesian(xlim = c(-0.2e8, 2.5e8), ylim = c(-1.5e8, 2e8)) + 
     scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Full Model post 2010")
 grid.arrange(plot1, plot2, plot3, plot4, ncol=2)
+
+##Plot the predictions and residuals for full model (log) with all data
+dffullmodel_log <- data.frame(y_actual = test$gross, y_predict = fullmodelpre_log)
+plot1_log <- ggplot(data = dffullmodel_log, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2.5e8), ylim = c(0, 3e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("Full Model (Log) All Data")
+plot2_log <- ggplot(data = dffullmodel_log, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2.5e8), ylim = c(-1.5e8, 2e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Full Model (Log) All Data")
+##Plot the predictions and residuals for full model (log) post 2010
+dffullmodel2010_log <- data.frame(y_actual = test$gross[test$title_year>=2010], y_predict = fullmodel2010pre_log)
+plot3_log <- ggplot(data = dffullmodel2010_log, aes(x = y_predict, y = y_actual)) + geom_point(colour = "blue") + 
+    geom_abline(colour = "red") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2.5e8), ylim = c(0, 3e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("Full Model (Log) post 2010")
+plot4_log <- ggplot(data = dffullmodel2010_log, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "blue") + geom_hline(yintercept = 0, colour = "red") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2.5e8), ylim = c(-1.5e8, 2e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Full Model (Log) post 2010")
+grid.arrange(plot1_log, plot2_log, plot3_log, plot4_log, ncol=2)
+
 ```
 
 The full model is the best performing linear model (with lowest RMSE). Most of the points are reasonably close to the straight lines. However, the model does overestimate the popularity of certain movies. The residual tends to increase as the predicted value increases.  
@@ -1561,7 +1639,7 @@ The other full model (which is trained using post-2010 data) seems to perform mu
 
 ```{r echo=FALSE, fig.align="center"}
 
-##Plot the predictions and residuals for facebook model with all data
+##Plot the predictions and residuals for english model with all data
 dfenglishmodel <- data.frame(y_actual = test$gross, y_predict = englishmodelpre)
 englishmodelplot1 <- ggplot(data = dfenglishmodel, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
     geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
@@ -1573,7 +1651,7 @@ englishmodelplot2 <- ggplot(data = dfenglishmodel, aes(x = y_predict, y = y_actu
     xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
     coord_cartesian(xlim = c(-0.2e8, 2.5e8), ylim = c(-1.5e8, 2e8)) + 
     scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("English Model All Data")
-##Plot the predictions and residuals for facebook model post 2010
+##Plot the predictions and residuals for english model post 2010
 dfenglishmodel2010 <- data.frame(y_actual = test$gross[test$title_year>=2010], y_predict = englishmodel2010pre)
 englishmodelplot3 <- ggplot(data = dfenglishmodel2010, aes(x = y_predict, y = y_actual)) + 
     geom_point(colour = "blue") + 
@@ -1587,6 +1665,33 @@ englishmodelplot4 <- ggplot(data = dfenglishmodel2010, aes(x = y_predict, y = y_
     coord_cartesian(xlim = c(-0.2e8, 2.5e8), ylim = c(-1.5e8, 2e8)) + 
     scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("English Model post 2010")
 grid.arrange(englishmodelplot1, englishmodelplot2, englishmodelplot3, englishmodelplot4, ncol=2)
+
+##Plot the predictions and residuals for english model (log) with all data
+dfenglishmodel_log <- data.frame(y_actual = test$gross, y_predict = englishmodelpre_log)
+englishmodelplot1_log <- ggplot(data = dfenglishmodel_log, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2.5e8), ylim = c(0, 3e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("English Model (Log) All Data")
+englishmodelplot2_log <- ggplot(data = dfenglishmodel_log, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2.5e8), ylim = c(-1.5e8, 2e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("English Model (Log) All Data")
+##Plot the predictions and residuals for english model (log) post 2010
+dfenglishmodel2010_log <- data.frame(y_actual = test$gross[test$title_year>=2010], y_predict = englishmodel2010pre_log)
+englishmodelplot3_log <- ggplot(data = dfenglishmodel2010_log, aes(x = y_predict, y = y_actual)) + 
+    geom_point(colour = "blue") + 
+    geom_abline(colour = "red") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2.5e8), ylim = c(0, 3e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("English Model (Log) post 2010")
+englishmodelplot4_log <- ggplot(data = dfenglishmodel2010_log, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "blue") + geom_hline(yintercept = 0, colour = "red") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2.5e8), ylim = c(-1.5e8, 2e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("English Model (Log) post 2010")
+grid.arrange(englishmodelplot1_log, englishmodelplot2_log, englishmodelplot3_log, englishmodelplot4_log, ncol=2)
 ```
 
 The English model performs worse than the full model in terms of RMSE. Although the model has more difficulties in identifying hugely successful movies, it is less prone in overestimating the gross revenues of less successful movies. Its residuals also stay within a certain range for most predicted values.  
@@ -1621,6 +1726,34 @@ knownvariablesmodelplot4 <- ggplot(data = dfknownvariablesmodel2010, aes(x = y_p
     coord_cartesian(xlim = c(-0.2e8, 2.5e8), ylim = c(-1.5e8, 1.5e8)) + 
     scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Known Variables Model post 2010")
 grid.arrange(knownvariablesmodelplot1, knownvariablesmodelplot2, knownvariablesmodelplot3, knownvariablesmodelplot4, ncol=2)
+
+##Plot the predictions and residuals for known variables model (log) with all data
+dfknownvariablesmodel_log <- data.frame(y_actual = test$gross, y_predict = knownvariablesmodelpre_log)
+knownvariablesmodelplot1_log <- ggplot(data = dfknownvariablesmodel_log, aes(x = y_predict, y = y_actual)) + geom_point(colour = "red") + 
+    geom_abline(colour = "blue") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2.5e8), ylim = c(0, 3e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("Known Variables Model (Log) All Data")
+knownvariablesmodelplot2_log <- ggplot(data = dfknownvariablesmodel_log, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "red") + geom_hline(yintercept = 0, colour = "blue") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2.5e8), ylim = c(-1.5e8, 2e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Known Variables Model (Log) All Data")
+
+##Plot the predictions and residuals for known variables model (log) post 2010
+dfknownvariablesmodel2010_log <- data.frame(y_actual = test$gross[test$title_year>=2010], y_predict = knownvariablesmodel2010pre_log)
+knownvariablesmodelplot3_log <- ggplot(data = dfknownvariablesmodel2010_log, aes(x = y_predict, y = y_actual)) + geom_point(colour = "blue") + 
+    geom_abline(colour = "red") + xlab("Predicted Gross Revenue (US$)") + 
+    ylab("Actual Gross Revenue(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2.5e8), ylim = c(0, 3e8)) + 
+    scale_y_continuous(label = human_usd)  + scale_x_continuous(label = human_usd) + ggtitle("Known Variables Model (Log) post 2010")
+knownvariablesmodelplot4_log <- ggplot(data = dfknownvariablesmodel2010_log, aes(x = y_predict, y = y_actual - y_predict)) + 
+    geom_point(colour = "blue") + geom_hline(yintercept = 0, colour = "red") + 
+    xlab("Predicted Gross Revenue (US$)") + ylab("Residual(US$)") + 
+    coord_cartesian(xlim = c(-0.2e8, 2.5e8), ylim = c(-1.5e8, 1.5e8)) + 
+    scale_y_continuous(label = human_usd) + scale_x_continuous(label = human_usd) + ggtitle("Known Variables Model (Log) post 2010")
+grid.arrange(knownvariablesmodelplot1_log, knownvariablesmodelplot2_log, knownvariablesmodelplot3_log, knownvariablesmodelplot4_log, ncol=2)
+
 ```
 
 The last model, known variable model, left out some independent variables that are known only after the movie release (e.g. movie facebook likes, IMDB score). Consequently, it is expected to be less accurate in predicting the gross revenue. As expected, it is the worst performing model. It is less accurate in identifying highly successful movies and is prone to overestimate the popularity of certain movies.  
