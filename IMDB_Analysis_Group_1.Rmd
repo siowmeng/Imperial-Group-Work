@@ -1,5 +1,6 @@
 ---
 title: "Analysis of IMDB Movie Dataset"
+author: "Group 1: Siow Meng Low, Louise Fallon, Nikhita Venkatesan, George Pastakas, Cecilia Nok Sze Cheung, Steven Locorotondo"
 output: html_document
 date: "16 October 2016"
 ---
@@ -31,7 +32,7 @@ From our analyses, we found that:
 
 * Budget is correlated with gross revenue, but not particularly strongly. 
 * Language, country, content rating, genres, the number of movies produced by a director and the popularity of cast and director based on facebook likes, all have an impact on gross revenue.
-* Our predictive models are able predict the gross revenue with a Root-Mean-Square Error of 37-56 million, depending on the chosen variables in the particular model.
+* Our predictive models are able to predict the gross revenue with a Root-Mean-Square Error of 37-56 million, depending on the chosen variables in the particular model.
 * To produce a movie that will generate maximum gross revenues, one should consider making a long, animated, family movie, made in the US in English, rated PG-13, including actors as well as directors who are popular on facebook, and the director should have produced at least 10 movies.
 
 However, there are many limitations to this dataset, including a limited number of variables, a clear bias in the number of English movies vs other language movies and movies from US vs movies from other countries. Thus, the findings drawn from this analysis need to be verified with a more extensive data set. Acquiring additional data points of movies from countries other than the US, as well as adding other variables which are likely to impact gross revenue such as profit of a movie, would help to improve the accuracy of our predictive models.
@@ -40,7 +41,7 @@ However, there are many limitations to this dataset, including a limited number 
 
 With the advent of big data and advanced predictive analytics capabilities, very often, producers are trying to determine beforehand what will make a movie successful or fail. Rather than relying on intuition and guesswork, producers such as Netflix are trying to figure out what will make a movie a successful one by analysing historical data available in the movie industry and increase their success rates through the use of data analytics. For Netflix, the recent award-winning drama 'House of Cards' was a success story of theirs - descriptive, prescriptive and predictive analytics were crucial in the process of developing the drama, to gauge what content viewers were interested in.
 
-Similarly, a question can be posed - whether one can predict the successfulness of a movie before it is released in cinemas. Our key objective for this report is to determine what makes a movie popular (based on gross revenue). Descriptive analyses and influential analyses will look at which of the variables available in the dataset affect user ratings and gross revenue and will be followed by an attempt to develop a predictive model. This predictive model will try to determine which movies will be successful based on the relevant variable identified. 10% of the original data has been set aside to act as the test dataset and the model will be evaluated on its accuracy to predict gross revenue using Mean Squared Error and other success statistics.
+Similarly, a question can be posed - whether one can predict the successfulness of a movie before it is released in cinemas. Our key objective for this report is to determine what makes a movie popular (based on gross revenue). Descriptive analyses and inferential analyses will look at which of the variables available in the dataset affect user ratings and gross revenue and will be followed by an attempt to develop a predictive model. This predictive model will try to determine which movies will be successful based on the relevant variable identified. 10% of the original data has been set aside to act as the test dataset and the model will be evaluated on its accuracy to predict gross revenue using Mean Squared Error and other success statistics.
 
 ##Data
 
@@ -876,7 +877,7 @@ p2 <- ggplot(temp, aes(x = title_year, y = gross, colour = factor(title_year))) 
 grid.arrange(p1, p2, ncol=1)
 ```
 
-The above plot shows the development of gross revenue since the widespread popularity of Facebook in 2010. There is an upward trend (note, the y axis is logarithmic), which is a different pattern compared to the plot with displaying all years with more than ten entries.
+The above plot shows the development of gross revenue since the widespread popularity of Facebook in 2010. There is an upward trend, which is a different pattern compared to the plot with displaying all years with more than ten entries.
 
 ```{r, echo = FALSE}
 # create function that converts years into decades
@@ -947,11 +948,11 @@ An initial look at the relationship between the number of movies that the direct
 To check against one potential confounder for the relationship that number of movies per director has with gross, the correlation between movies per director and budget is calculated.
 
 ```{r echo=FALSE}
-c <- cor.test(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget)
-pander(c, caption=paste("Pearson's Product-Moment Correlation test for number of movies per director against budget, correlation =",round(cor(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget),3)))
+cortest1 <- cor.test(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget)
+pander(cortest1, caption=paste("Pearson's Product-Moment Correlation test for number of movies per director against budget, correlation =",round(cor(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget),3)))
 ```
 
-Even though this correlation was found to be statistically significant, with a p-value of `r c$p.value`, it is quite small (`r round(cor(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget), 3)`), so analysis of movies by director sample on gross revenue can be continued without an obvious confounder of budget.
+Even though this correlation was found to be statistically significant, with a p-value of `r cortest1$p.value`, it is quite small (`r round(cor(movieswithdirectordata$dir_number_of_movies, movieswithdirectordata$budget), 3)`), so analysis of movies by director sample on gross revenue can be continued without an obvious confounder of budget.
 
 Focusing on the relationship between gross revenue and number of movies per director with the additional dimension of genres, we can see from the figure below there is an approximate pattern of a slight positive correlation up to 10 movies by director (also note the y axis is of log scale), and then a less predictable path for those with directors with higher numbers of movies.
 
@@ -1133,7 +1134,7 @@ ggplot(data = movies, aes(x = budget, y = gross)) +
 pander(cor.test(movies$budget, movies$gross), caption=paste("Pearson's Product-Moment Correlation Test for Gross Revenue against Budget, correlation =",round(cor(movies$budget, movies$gross),3)))
 ```
 
-The covariance value of `r round(cov(movies$budget, movies$gross), 3)` suggests that there is an upward trend - as budget increases, revenue from the movie increases. The Pearson's correlation test between budget and gross gives us a value of 0.22, which suggests that there is a positive correlation between the budget of a movie and its gross revenue, but the correlation itself is not very strong. Under the confidence level of 95%, the p-value is significant (5.56e-44) and hence, we can reject the null hypothesis that the true correlation is not equal to 0.
+The covariance value of `r round(cov(movies$budget, movies$gross), 3)` suggests that there is an upward trend - as budget increases, revenue from the movie increases. The Pearson's correlation test between budget and gross gives us a value of 0.22, which suggests that there is a positive correlation between the budget of a movie and its gross revenue, but the correlation itself is not very strong. Under the confidence level of 95%, the p-value is significant (5.56e-44) and hence, we can reject the null hypothesis that the true correlation is equal to 0.
 
 If we subset the data by different countries, we still do not see a strong correlation between budget versus gross revenue and cannot see a linear relationship between the two variables. However, a point to note are the limited number of movies from other countries, which is another limiting factor for us to assess whether the investigated relationship is apparent in different countries.
 
@@ -1153,7 +1154,7 @@ ggplot(budgetcountry, aes(x = budget, y = gross, colour = country)) +
 
 ### Genres
 
-We will now see in more detail how the gross revenue of movies differs based on their genre. Because the genre is a nominal variable, the predicted gross revenue for the movies of each genre will equal to the the average value of gross revenue of the observed movies of that particular genre. In the following diagram we can see which genres have the highest and lowest gross revenue on average and in what order.
+We will now see in more detail how the gross revenue of movies differs based on their genre. Because the genre is a nominal variable, the expected gross revenue for the movies of each genre will equal to the the average value of gross revenue of the observed movies of that particular genre. In the following diagram we can see which genres have the highest and lowest gross revenue on average and in what order.
 
 ```{r, echo = FALSE, fig.width = 10, fig.align = "center"}
 genres_model_gross <- lm(gross ~ genre, data = movies_and_genres)
@@ -1189,7 +1190,7 @@ ggplot() +
     annotation_logticks(sides = "tlbr", colour = "gray") 
 ```
 
-We see that Documentaries are the less profitable by far with an average estimated gross revenue of US$ `r round(min(avg_gross$predicted_gross)/10^6, 2)` million, while the most profitable ones appear to be Animation movies, with a gross revenue of US$ `r round(max(avg_gross$predicted_gross)/10^6, 2)` million, followed by Adventure, Family, Fantasy and Action movies. The difference between the highest and lowest average gross revenues based on genres is US$ `r round((max(avg_gross$predicted_gross) - min(avg_gross$predicted_gross))/10^6, 2)` million. The rest genres appear to have more or less the same predicted gross revenue. To find out if those differences in the predicted  gross revenue values are significant, we will perform some T-tests between the average gross revenues of movies of different genres, which are actually corresponging to the predicted gross revenue values.
+We see that Documentaries are the less profitable by far with an average estimated gross revenue of US$ `r round(min(avg_gross$predicted_gross)/10^6, 2)` million, while the most profitable ones appear to be Animation movies, with a gross revenue of US$ `r round(max(avg_gross$predicted_gross)/10^6, 2)` million, followed by Adventure, Family, Fantasy and Action movies. The difference between the highest and lowest average gross revenues based on genres is US$ `r round((max(avg_gross$predicted_gross) - min(avg_gross$predicted_gross))/10^6, 2)` million. The remaining genres appear to have more or less the same expected gross revenue. To find out if those differences in the expected  gross revenue values are significant, we will perform some T-tests between the average gross revenues of movies of different genres.
 
 ```{r echo = FALSE, results="asis"}
 pander(t.test(movies_and_genres_full$gross[movies_and_genres_full$genre == "Animation"], movies_and_genres_full$gross[movies_and_genres_full$genre == "Documentary"]), caption = "T-Test for Gross Revenue between Animation and Documentary movies")
@@ -1203,7 +1204,7 @@ Based on the t-tests we observe that the differences between the average values 
 
 ### Plot Keywords
 
-We will perform a similar analysis to the one we did for genres but this time on the plot keywords of the movies. Again, the keywords are categorical variables, so the predicted values for the gross revenue for each of the keywords will equal the average gross revenue of the observed movies that have that speicific keyword. We will only focus on the 20 most popular keywords, as they are the ones that might have a greatest predicitve power for our future models.
+We will perform a similar analysis to the one we did for genres but this time on the plot keywords of the movies. Again, the keywords are categorical variables, so the expected values for the gross revenue for each of the keywords will equal the average gross revenue of the observed movies that have that speicific keyword. We will only focus on the 20 most popular keywords, as they are the ones that might have a greatest predicitve power for our future models.
 
 ```{r, echo=FALSE, fig.align="center", fig.width=10}
 keywords_model_gross <- lm(gross ~ keywords, data = movies_and_keywords)
@@ -1316,18 +1317,18 @@ To determine whether the difference is statistically significant we run a t test
 
 The data suggests that the average gross revenue is higher for movies where the director has over 10 movies in the sample - which gives evidence to the claim that prolific directors are produce more popular movies (if we see gross revenue as a proxy for popularity).
 
-Also, the opposite of the initial intuition appears to be the case for variance, the movies made by directors with over 10 movies in the sample has higher variance than others. This can be explained by the much larger number of movies made by directors with fewer than 10 movies.
+Also, the opposite of the initial intuition appears to be the case for variance, the movies made by directors with over 10 movies in the sample has higher variance (`r round(var(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="10+"]),3)`) than others, (`r round(var(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="Fewer than 10"]),3)`). This can be explained by the much larger number of movies made by directors with fewer than 10 movies.
 
 ```{r echo = FALSE,  message=FALSE, fig.width = 10, fig.align = "center"}
-t <- t.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="10+"], movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="Fewer than 10"], alternative="greater")
+ttest1 <- t.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="10+"], movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="Fewer than 10"], alternative="greater")
 
-pander(t, caption="T-test of means - Gross revenue for movies with directors with 10+ movies against those with fewer") 
+pander(ttest1, caption="T-test of means - Gross revenue for movies with directors with 10+ movies against those with fewer") 
 ```
 
 ```{r echo = FALSE,  message=FALSE, fig.width = 10, fig.align = "center"}
-v <- var.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="10+"], movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="Fewer than 10"])
+vartest1 <- var.test(movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="10+"], movieswithdirectordata$gross[movieswithdirectordata$more_than_ten_movies=="Fewer than 10"])
 
-pander(v, caption="F-test of variance - Gross revenue for movies with directors with 10+ movies against those with fewer") 
+pander(vartest1, caption="F-test of variance - Gross revenue for movies with directors with 10+ movies against those with fewer") 
 ```
 
 # Predictive Data Analysis
@@ -1653,7 +1654,9 @@ While the full model delivers a reasonably good performance in predicting the mo
 
 ###Limitation of Linear Models
 
-All three linear models predicted that certain movies would have negative gross revenues. Clearly this does not make sense since in worst case, the lowest possible revenue achieved would be zero (when absolutely nobody watches the movie in the cinema). The independent variables, which are negatively correlated with gross revenue, might cause the gross revenue to be a negative number. In this case, we would have to be careful in interpreting the prediction results.
+All three linear models predicted that certain movies would have negative gross revenues. Clearly this does not make sense since in worst case, the lowest possible revenue achieved would be zero (when absolutely nobody watches the movie in the cinema).  
+
+Note that all the three linear models have negative constant terms. Furthermore, the independent variables, which are negatively correlated with gross revenue, might cause the gross revenue to be a negative number. In this case, we would have to be careful in interpreting the prediction results.  
 
 ###Recommendations
 
