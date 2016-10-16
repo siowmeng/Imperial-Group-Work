@@ -29,19 +29,18 @@ The purpose of this report is to try and understand what sort of factors contrib
 
 From our analyses, we found that:
 
-- Budget has the most impact on revenue out of all the variables available in the dataset 
-- Aside from budget, content total cast facebook likes, director facebook likes, ratings duration and key genres are also strong factors in determining whether a movie performs well in the box office or not
-- Our predictive models are able predict the gross revenue with a Root-Mean-Square Error of 37-56 million USD, depending on the chosen variables in the particular model
+* Budget is correlated with gross revenue, but not particularly strongly. 
+* Language, country, content rating, genres, the number of movies produced by a director and the popularity of cast and director based on facebook likes, all have an impact on gross revenue.
+* Our predictive models are able predict the gross revenue with a Root-Mean-Square Error of 37-56 million, depending on the chosen variables in the particular model.
+* To produce a movie that will generate maximum gross revenues, one should consider making a long, animated, family movie, made in the US in English, rated PG-13, including actors as well as directors who are popular on facebook, and the director should have produced at least 10 movies.
 
-However, there are many limitations to this dataset, including a limited number of variables and a clear bias in the number of English movies vs other language movies. Thus, the conclusions drawn from this analysis need to be verified with a more extensive data set. Moving forward, it would be very useful to obtain data from other movie databases indigenious to countries other than the US and the UK, e.g. [Indian Bollywood movies](http://www.bollywoodmdb.com). Though our model is able to predict revenues considerably well for a first attempt, and specifically for movies with revenue up to 50 million USD, it still has difficulties estimating the revenue with decent accuracy for movies with even higher gross revenues. Acquiring more data points and having datasets with relevant variables different from the current ones can help to improve the accuracy of our predictive models.
+However, there are many limitations to this dataset, including a limited number of variables, a clear bias in the number of English movies vs other language movies and movies from US vs movies from other countries. Thus, the findings drawn from this analysis need to be verified with a more extensive data set. Acquiring additional data points of movies from countries other than the US, as well as adding other variables which are likely to impact gross revenue such as profit of a movie, would help to improve the accuracy of our predictive models.
 
 #Introduction
 
 With the advent of big data and advanced predictive analytics capabilities, very often, producers are trying to determine beforehand what will make a movie successful or fail. Rather than relying on intuition and guesswork, producers such as Netflix are trying to figure out what will make a movie a successful one by analysing historical data available in the movie industry and increase their success rates through the use of data analytics. For Netflix, the recent award-winning drama 'House of Cards' was a success story of theirs - descriptive, prescriptive and predictive analytics were crucial in the process of developing the drama, to gauge what content viewers were interested in.
 
 Similarly, a question can be posed - whether one can predict the successfulness of a movie before it is released in cinemas. Our key objective for this report is to determine what makes a movie popular (based on gross revenue). Descriptive analyses and influential analyses will look at which of the variables available in the dataset affect user ratings and gross revenue and will be followed by an attempt to develop a predictive model. This predictive model will try to determine which movies will be successful based on the relevant variable identified. 10% of the original data has been set aside to act as the test dataset and the model will be evaluated on its accuracy to predict gross revenue using Mean Squared Error and other success statistics.
-
-#Methods
 
 ##Data
 
@@ -1764,25 +1763,30 @@ Interestingly, the accuracy of known variables model also improved when it is tr
 
 ##Key Findings
 
-* In this dataset, English/US-made movies, have higher gross revenues than Non-English/Non-US-made movies, this is in line with the theory.
-* R-rated movies appear to have a lower gross revenue than PG/PG-13 rated movies, again, this is in line with the expected theory.
-* Although budget and revenue are correlated, this correlation is not particularly strong. Although this positive correlation is in line with the expected theory, the fact that it is not particularly strong shows that investors into movie venures take on a lot of risk, as there is only a low amount of variance that can be explained by budget alone.
-* Gross revenue has been overall on the decline since 1980, but with a recent uptick in trend if we look more closely at the post 2010 data, and in prediction, the year of release is not statistically significant. There were  opposing theoretical mechanisms that would explain the year of release's impact on gross revenue, so this analysis supports the claim that these mechanisms roughly cancel each other out, although this may change if the increase in revenue we have seen since 2010 continues.
-* The genres that have the highest gross revenues are Animation, Adventure, Family, Fantasy and Action, and the genre with the lowest gross revenue is Documentary, which has a significantly lower revenue than the remaining genres, which are fairly well clustered together.
-* The number of movies produced by a director has a positive impact on the gross revenue, in particular there is usually an increase in gross revenue if the movie has a director with more than 10 movies in the sample.
-* The data available, with the models created in this report, only explain approximately 66% of the variance in gross revenue, and the model containing only factors known before the release of the model, explains only approximately 52% of the variance.
+###Relevant Factors for Prediction of Movie Gross Revenue
+This report has explored and identified some key factors that have a correlation with the gross revenue, and may be used for prediction. In this dataset, English/US-made movies, have higher gross revenues than Non-English/Non-US-made movies, this is in line with the theory. R-rated movies appear to have a lower gross revenue than PG/PG-13 rated movies, again, this is in line with the expected theory.
 
-If the outcomes of this report were used to make a movie to maximise gross revenues, that movie would be a long, Animated, Family movie, made in the US in the English language, rated PG-13, casted by actors who are popular on facebook, made by a director who has a lot of facebook likes and has already made at least 9 movies. Although the plot keyword analysis would suggest that the movie was about aliens seeking revenge on an island, this may be seen as too derivative of the movie with the highest revenue in our sample, Avatar, and as such we would recommend a more original plot.
+Budget and revenue were found to be correlated, but this correlation is not particularly strong. Although this positive correlation is in line with the expected theory, the fact that it is not particularly strong shows that investors into movie venures take on a lot of risk, as there is only a low amount of variance that can be explained by budget alone.
 
-###Limitation of Linear Models
+Gross revenue has been overall on the decline since 1980, but with a recent uptick in trend if we look more closely at the post 2010 data, and in prediction, the year of release is not statistically significant. There were  opposing theoretical mechanisms that would explain the year of release's impact on gross revenue, so this analysis supports the claim that these mechanisms roughly cancel each other out, although this may change if the increase in revenue we have seen since 2010 continues.
 
-All the three linear models predicted that certain movies would have negative gross revenues. Clearly this does not make sense since in worst case, the lowest possible revenue achieved would be zero (when absolutely nobody watches the movie in cinema).  
+As expected, gross revenue also seems to be dependent on genre. The genres that have the highest gross revenues are Animation, Adventure, Family, Fantasy and Action, and the genre with the lowest gross revenue is Documentary, which has a significantly lower revenue than the remaining genres, which are fairly well clustered together. 
 
-This is the limitation of our linear models: the independent variables, which are negatively correlated with gross revenue, might cause the gross revenue to be a negative number. In this case, we would have to be careful in interpreting the prediction results.  
+The number of movies produced by a director appears to have a positive impact on the gross revenue, in particular there is usually an increase in gross revenue if the movie has a director with more than 10 movies in the sample. The popularity of the cast and director, as measured through facebook likes, also appear to have a positive impact on the gross revenue, although the quality of this data input should be more fully explored to verify and help to interpret these findings.
 
 ###Accuracy of Predictive Models
 
-While the full model delivers a reasonably good performance in predicting the movie popularity, the Root-Mean-Square Error is still rather high (around US$40 million). The key factors constituting a popular movie might not be captured in this Kaggle dataset. To improve the prediction accuracy, we could potentially explore other metadata of movies. For instance, we could inspect whether the movie is a remake/prequel/sequel of a popular movie, adapted from a popular novel, biography or computer game.  
+The models created in this report had higher accuracy when using post 2010 data, which was to be expected as key variables became relevant at this point in time. The best performing model managed to explain approximately 66% of the variance in gross revenue, and the model containing only factors known before the release of the model, explains only approximately 52% of the variance.
+
+While the full model delivers a reasonably good performance in predicting the movie gross revenue, the Root-Mean-Square Error is still rather high (around US$40 million). The key factors constituting a popular movie might not be captured in this Kaggle dataset. To improve the prediction accuracy, we could potentially explore other metadata of movies, explored further below.  
+
+###Limitation of Linear Models
+
+All three linear models predicted that certain movies would have negative gross revenues. Clearly this does not make sense since in worst case, the lowest possible revenue achieved would be zero (when absolutely nobody watches the movie in the cinema). The independent variables, which are negatively correlated with gross revenue, might cause the gross revenue to be a negative number. In this case, we would have to be careful in interpreting the prediction results.
+
+###Recommendations
+
+If the outcomes of this report were used to make a movie to maximise gross revenues, that movie would be a long, Animated, Family movie, made in the US in the English language, rated PG-13, including by actors who are popular on facebook, made by a director who has a lot of facebook likes and has already made at least 10 movies. Although the plot keyword analysis would suggest that the movie was about aliens seeking revenge on an island, this may be seen as too derivative of the movie with the highest revenue in our sample, Avatar, and as such we would recommend a more original plot.
 
 ##Next Steps
 
@@ -1794,9 +1798,9 @@ This report focuses on the relationship between these variables and the domestic
 * The imdb score, which can be seen as a proxy for "quality" of a movie. 
 * The profit of a movie, which was not available in our dataset.
 
-Further data collection would likely improve the predictive model. There are some key variables that were not present in the data which are likely to have an impact on the gross revenue of movies. These factors could include the date of release, the marketing budget and channels, the number of theatres showing the movie on initial release, the studio, whether or not the movie is a sequel or part of a franchise, the age of the leading actors, the number of movies that the actors have previously starred in etc., from this list in particular, it is expected that the date of release will have a large impact on the gross revenue prediction, as cinema habits are usually season-dependent.
+Further data collection would likely improve the predictive model. There are some key variables that were not present in the data which are likely to have an impact on the gross revenue of movies. These factors could include the date of release, the marketing budget and channels, the number of theatres showing the movie on initial release, the studio, whether or not the movie is a sequel or part of a franchise, whether it was adapted from a book or video game, the age of the leading actors, the number of movies that the actors have previously starred in etc., from this list in particular, it is expected that the date of release will have a large impact on the gross revenue prediction, as cinema habits are usually season-dependent.
 
-Additionally, some of the limitations of the data could be overcome to improve the accuracy and relevance of the results. For example, only taking into account cast and director facebook likes at the time that the movie was released or proposed (depending on the stage of the process that the model would be used in practice). The data scraping process for the . As is usual in predictive modelling, having a higher number of input samples would also likely improve the accuracy of the model, and in this case, if we want to forecast global movie revenues, our dataset would be improved by having a wider set of movies from countries other than the USA.
+Additionally, some of the limitations of the data could be overcome to improve the accuracy and relevance of the results. For example, only taking into account cast and director facebook likes at the time that the movie was released or proposed (depending on the stage of the process that the model would be used in practice). The data scraping process for the  country of origin could also be improved to refer to where the movie was produced, as well as or instead of the current data, which related more to where it was shot. As is usual in predictive modelling, having a higher number of input samples would also likely improve the accuracy of the model, and in this case, if we want to forecast global movie revenues, our dataset would be improved by having a wider set of movies from countries other than the USA.
 
 Similarly, more complex analysis could be done including natural language processing and semantic analysis of the script for example for sentiment analysis, or including additional text features such as frequency of certain words, number of words per minute, proportion of male to female lines etc. Cluster analysis could also be performed on movies to see whether there are similarities that help to determine the gross revenue (potentially by considering groups of actors and directors that regularly work with each other).
 
