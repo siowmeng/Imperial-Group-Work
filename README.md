@@ -1,26 +1,4 @@
-# Imperial-Group-Work
+# BA1820 Group 1 Project
 
-Louise checking that she can edit things :)
-And now checking if she can make changes directly.
-And again for fun :)
-
-Steven's turn now :)
-
-By Siow Meng, without using pull request
-
-Conflict (by Siow Meng)
-By Siow Meng, without using pull request
-
-This is yet another test Stevennnn.
-
-This is George, again
-
-This is Cecilia
-
-This is Nikhita
-
-Just testing this to see that it works
-
-Push and pull responsibly :) Steven
-
-Yes, I will :) Nikhita :)
+IMDB Analysis to try and understand what sort of factors contribute to the successfulness of a movie.
+Findings can be found in IMDB_Analysis_Group_1.Rmd
