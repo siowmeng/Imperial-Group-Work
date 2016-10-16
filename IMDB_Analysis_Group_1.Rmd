@@ -1055,13 +1055,13 @@ ggplot(data = movies, aes(x = us_or_others, y = gross, fill = us_or_others)) +
 The below table tabulates the t-test results. The results show that the average gross revenues of USA movies are significantly higher than non-USA movies.  
 
 ```{r usameantest, echo = FALSE, results = TRUE, fig.width = 10, fig.align = "center"}
-pander(t.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater"), caption="")
+pander(t.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater"), caption="T-Test of means - Gross Revenue for USA and Non-USA movies")
 ```
 
 In addition, the gross revenues of USA movies vary greatly (wider range of gross revenues), compared to non-USA movies. The below variance test output confirms this.  
 
 ```{r usavartest, echo = FALSE, results = TRUE, fig.width = 10, fig.align = "center"}
-pander(var.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater"), caption="")
+pander(var.test(movies$gross[movies$country == "USA"], movies$gross[movies$country != "USA"], alternative = "greater"), caption="F-Test of variance - Gross Revenue for USA and Non-USA movies")
 ```
 
 In summary, we are confident to say that the English movies in this dataset are generally more popular than non-English movies.  
